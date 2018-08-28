@@ -1,0 +1,37 @@
+<launch>
+
+  <!-- Configure your camera info as needed -->
+  <node name="camera_server" pkg="core_rover" type="camera_server.py" output="screen">  
+    <rosparam>
+        port:       10720
+        n_cams:     5
+        
+        cam_0:
+          id:      '046d:0825'
+          name:    'VR Cam'
+          default:  True
+          
+        cam_1:  
+          id:      'very:fake'
+          name:    'Gimbal Cam'
+          default:  True
+          
+        cam_2:  
+          id:      'also:fake'
+          name:    'WebCam1'
+          default:  False
+          
+        cam_3:  
+          id:      'much:fake'
+          name:    'WebCam2'
+          default:  False
+          
+        cam_4:  
+          id:      'such:fake'
+          name:    'WebCam3'
+          default:  False
+          
+    </rosparam>    
+  </node>
+
+</launch>
