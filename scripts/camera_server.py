@@ -123,7 +123,7 @@ def start_stream(streams, hosts, port, id_list, i):
   
   dev_list = get_vid_devs(id_list) # Recompute device list
   if dev_list[i] is not None:
-    streams[i] = create_stream(hosts[i], port, dev_list[i])
+    streams[i] = create_stream(hosts[i], port + i, dev_list[i])
     streams[i].set_state(gst.STATE_PLAYING)
 
 
@@ -149,7 +149,7 @@ def main():
          
   signal.signal(signal.SIGINT, signal_handler) # Register sigint handler
   
-  port   = rospy.get_param("~port")   # Port number for UDP streaming
+  port   = rospy.get_param("~port")   # Base port number for UDP streaming
   n_devs = rospy.get_param("~n_cams") # Number of cameras
   
   id_list = get_cam_param("id", n_devs)   # List of video device ids 

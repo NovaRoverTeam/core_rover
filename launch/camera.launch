@@ -7,29 +7,29 @@
         n_cams:     5
         
         cam_0:
-          id:      '046d:0825'
+          id:      'also:fake'
           name:    'VR Cam'
-          default:  True
+          default:  False
           
         cam_1:  
           id:      'very:fake'
           name:    'Gimbal Cam'
-          default:  True
+          default:  False
           
         cam_2:  
-          id:      'also:fake'
-          name:    'WebCam1'
-          default:  False
+          id:      '046d:0825'
+          name:    'Webcam Rectangular'
+          default:  True
           
         cam_3:  
-          id:      'much:fake'
-          name:    'WebCam2'
-          default:  False
+          id:      '046d:09a1'
+          name:    'Webcam Sphere Legs'
+          default:  True
           
         cam_4:  
-          id:      'such:fake'
-          name:    'WebCam3'
-          default:  False
+          id:      '046d:0824'
+          name:    'Webcam Sphere Focus'
+          default:  True
           
     </rosparam>    
   </node>
