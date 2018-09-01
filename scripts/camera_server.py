@@ -12,12 +12,19 @@ import StringIO
 import sys
 from enum import Enum
 
+from base_station.srv import * # Import custom msg
+from core_rover.msg import CameraStatus
+
 # Enumerator for gstreamer camera status
 class StreamStatus(Enum):
   GST_STATE_FAILURE             = 0
   GST_STATE_SUCCESS             = 1
   GST_STATE_ASYNC               = 2
   GST_STATE_CHANGE_NO_PREROLL   = 3  
+  
+loop_hz = 1  # Rate of main loop, in Hz
+des_con = [] # Global vars, set whether we want a stream on or not
+cur_con = []
 
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -127,16 +134,30 @@ def start_stream(streams, hosts, port, id_list, i):
     streams[i].set_state(gst.STATE_PLAYING)
 
 
+def handle_connect_stream(req):
+    global des_con
+    
+    des_con[req.cam_id] = req.on
+      
+    res = ToggleStreamResponse(True, "yep switchoed to " + str(des_con[req.cam_id]))    
+    return res       
+
+
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # main():
 #
 #    Main function.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 def main():
-  rospy.init_node('camera_server')
-  rate = rospy.Rate(1)
+  global des_con
   
-  # TODO Implement service server for receiving camera requests
+  rospy.init_node('camera_server')
+  rate = rospy.Rate(loop_hz)  
+  
+  server = rospy.Service('connect_stream', ToggleStream, 
+                          handle_connect_stream)
+                          
+  pub = rospy.Publisher('camera_status', CameraStatus, queue_size=1)
   
   # Set up custom sigint handler
   def signal_handler(sig, frame):
@@ -170,7 +191,10 @@ def main():
   while not rospy.is_shutdown():  
       
     for i in range(n_devs):
-           
+    
+      msg = CameraStatus() # Populate camera status message with info
+      msg.cam_id = i
+                 
       if des_con[i] is True: # If we have been requested to stream this camera
       
         if streams[i] is None: # If no stream, create one
@@ -189,7 +213,7 @@ def main():
                          
             start_stream(streams, hosts, port, id_list, i) # Restart stream
             
-            cur_con[i] = False    # Record that the stream is inactive 
+            cur_con[i] = False    # Record that the stream is inactive
             
           # If stream fine, give status message
           elif cur_con[i] is False:         
@@ -197,7 +221,27 @@ def main():
             rospy.loginfo("Camera " + str(i) + " (" + names[i] 
                           + ") successfully connected.") 
             cur_con[i] = True     # Record that the stream is now active
-    
+      
+      elif cur_con[i] is True: # If this camera is streaming but should stop
+      
+        streams[i].set_state (gst.STATE_NULL); # Stop stream
+        streams[i] = None                      # Remove stream
+        cur_con[i] = False                     # Record disconnection
+        
+      # Is the camera physically plugged in? Report with camera status
+      if dev_list[i] is not None:
+        msg.plugged = True
+      else:
+        msg.plugged = False    
+      
+      # Is the camera streaming? Report with camera status  
+      if cur_con[i] is True:
+        msg.streaming = True
+      else:
+        msg.streaming = False
+      
+      pub.publish(msg)   
+      
     rate.sleep()
   
  
