@@ -63,7 +63,7 @@ def get_vid_devs(id_list):
       except ValueError: # Device with desired id is not available
         pass      
         
-    print(dev_ordered)
+    rospy.loginfo(dev_ordered)
     return dev_ordered
     
   except subprocess.CalledProcessError: # unable to grep dev names
