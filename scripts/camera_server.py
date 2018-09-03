@@ -172,13 +172,14 @@ def main():
   
   port   = rospy.get_param("~port")   # Base port number for UDP streaming
   n_devs = rospy.get_param("~n_cams") # Number of cameras
+  default_host = rospy.get_param("~host_def") # Default host IP address
   
   id_list = get_cam_param("id", n_devs)   # List of video device ids 
   names   = get_cam_param("name", n_devs) # Camera names
   des_con = get_cam_param("default", n_devs) # Camera names
   
   cur_con = [False]*n_devs     # Current streams   
-  hosts = ["127.0.0.1"]*n_devs # TODO Get host from service call
+  hosts = [default_host]*n_devs # TODO Get host from service call
    
   dev_list = get_vid_devs(id_list) # Get available devices  
   streams = [None]*n_devs          # Initialise stream array

@@ -5,6 +5,7 @@
     <rosparam>
         port:       10720
         n_cams:     5
+        host_def:   '192.168.1.200'
         
         cam_0:
           id:      'also:fake'
