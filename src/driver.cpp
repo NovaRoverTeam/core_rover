@@ -47,7 +47,7 @@ void drive_cmd_cb(const nova_common::DriveCmd::ConstPtr& msg)
 //--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 // SigintHandler():
 //
-//		Overrides the default SIGINT exit function when pressing CTRL+C.
+//    Overrides the default SIGINT exit function when pressing CTRL+C.
 //--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 void SigintHandler(int sig)
 {
