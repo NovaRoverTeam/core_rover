@@ -134,6 +134,11 @@ def start_stream(streams, hosts, port, id_list, i):
     streams[i].set_state(gst.STATE_PLAYING)
 
 
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# handle_connect_stream():
+#
+#  Service server handler for connecting a camera stream.
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 def handle_connect_stream(req):
     global des_con
     
