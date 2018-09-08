@@ -159,10 +159,10 @@ def main():
   rospy.init_node('camera_server')
   rate = rospy.Rate(loop_hz)  
   
-  server = rospy.Service('connect_stream', ToggleStream, 
+  server = rospy.Service('/core_rover/connect_stream', ToggleStream, 
                           handle_connect_stream)
                           
-  pub = rospy.Publisher('camera_status', CameraStatus, queue_size=1)
+  pub = rospy.Publisher('/core_rover/camera_status', CameraStatus, queue_size=1)
   
   # Set up custom sigint handler
   def signal_handler(sig, frame):
