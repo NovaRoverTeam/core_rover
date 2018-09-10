@@ -47,8 +47,8 @@ def get_vid_devs(id_list):
       
     ids = [] # Create list of video device ids  
     for i in range(len(devs)):  
-      bash_cmd  = "cat /sys/class/video4linux/" + devs[i]
-      bash_cmd += "/name | grep -oP '\(\K[^\)]+'"
+      bash_cmd  = "cat /sys/class/video4linux/" + devs[i] + "/name "
+      bash_cmd += "| grep -oP '\(\K[^\)]+'" # Uncomment for intgr. cam
       output = subprocess.check_output(['bash','-c', bash_cmd])
       ids.append(output.strip("\n"))
       

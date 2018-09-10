@@ -5,12 +5,12 @@
     <rosparam>
         port:       10720
         n_cams:     5
-        host_def:   '192.168.1.200'
+        host_def:   '127.0.0.1'
         
         cam_0:
-          id:      'also:fake'
+          id:      'Integrated Camera: Integrated C'
           name:    'VR Cam'
-          default:  False
+          default:  True
           
         cam_1:  
           id:      'very:fake'
@@ -20,17 +20,17 @@
         cam_2:  
           id:      '046d:0825'
           name:    'Webcam Rectangular'
-          default:  True
+          default:  False
           
         cam_3:  
           id:      '046d:09a1'
           name:    'Webcam Sphere Legs'
-          default:  True
+          default:  False
           
         cam_4:  
           id:      '046d:0824'
           name:    'Webcam Sphere Focus'
-          default:  True
+          default:  False
           
     </rosparam>    
   </node>
