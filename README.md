@@ -5,5 +5,5 @@ Provides control, sensing and management systems to run on board the rover.
 
 - GStreamer for Python:
 ```
-sudo apt-get install python-gst0.10 gstreamer0.10-plugins-good
+sudo apt install python-gst0.10 gstreamer0.10-plugins-good
 ```
