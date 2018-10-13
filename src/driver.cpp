@@ -75,7 +75,7 @@ void drive_cmd_cb(const nova_common::DriveCmd::ConstPtr& msg)
   double speedFactor  = 1.0;    //currently not in use, but can be used to increase/decrease speed by a factor
   double speeds[NMOTORS];       //array to update motor values
 
-  int speed = msg->rpm / 2;     //speed = forward or reverse
+  int speed = msg->rpm * 2;     //speed = forward or reverse
   int steer = msg->steer_pct; //steer = steering percentage left or right
 
     //updating individual motor values to change speed and or direction
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
   signal(SIGINT, quit);
 
   //subscribing to drive_cmd topic and callback: drive_cmd_cb
-  ros::Subscriber drive_cmd_sub = n->subscribe("/core_rover/rover_manager/drive_cmd", 1, drive_cmd_cb);
+  ros::Subscriber drive_cmd_sub = n->subscribe("/core_rover/driver/drive_cmd", 1, drive_cmd_cb);
 
   // TODO Declare service clients for simulator rover stuff
 
