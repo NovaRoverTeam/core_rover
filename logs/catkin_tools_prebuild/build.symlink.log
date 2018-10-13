@@ -1,0 +1,8 @@
+Symlinking /home/turtle/catkin_ws/src/github/core_rover/devel/./_setup_util.py
+Symlinking /home/turtle/catkin_ws/src/github/core_rover/devel/./setup.bash
+Symlinking /home/turtle/catkin_ws/src/github/core_rover/devel/./env.sh
+Symlinking /home/turtle/catkin_ws/src/github/core_rover/devel/./setup.zsh
+Symlinking /home/turtle/catkin_ws/src/github/core_rover/devel/./setup.sh
+Symlinking /home/turtle/catkin_ws/src/github/core_rover/devel/share/catkin_tools_prebuild/cmake/catkin_tools_prebuildConfig-version.cmake
+Symlinking /home/turtle/catkin_ws/src/github/core_rover/devel/share/catkin_tools_prebuild/cmake/catkin_tools_prebuildConfig.cmake
+Symlinking /home/turtle/catkin_ws/src/github/core_rover/devel/lib/pkgconfig/catkin_tools_prebuild.pc

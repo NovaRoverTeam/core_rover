@@ -48,6 +48,7 @@ add_dependencies(driver core_rover_generate_messages_cpp)
 
 target_link_libraries(driver ${catkin_LIBRARIES})
 
+<<<<<<< HEAD
 
 
 
@@ -57,3 +58,5 @@ target_link_libraries(driver ${catkin_LIBRARIES})
 #target_link_libraries(pioneer3at
 #	${catkin_LIBRARIES}
 #)
+=======
+>>>>>>> 150e5811394a538e129e9c0a7878b58eb830d542
