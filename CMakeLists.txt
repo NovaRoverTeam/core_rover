@@ -48,12 +48,3 @@ add_dependencies(driver core_rover_generate_messages_cpp)
 
 target_link_libraries(driver ${catkin_LIBRARIES})
 
-#instructions for pioneer3at node
-
-add_executable(pioneer3at src/pioneer3at.cpp)
-
-add_dependencies(pioneer3at core_rover_generate_messages_cpp)
-
-target_link_libraries(pioneer3at
-	${catkin_LIBRARIES}
-)

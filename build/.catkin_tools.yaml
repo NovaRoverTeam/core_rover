@@ -1,0 +1,6 @@
+devel_space: /home/turtle/catkin_ws/src/github/core_rover/devel
+install: false
+install_space: /home/turtle/catkin_ws/src/github/core_rover/install
+profile: default
+source_space: /home/turtle/catkin_ws/src/github/core_rover/src
+workspace: /home/turtle/catkin_ws/src/github/core_rover

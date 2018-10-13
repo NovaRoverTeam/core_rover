@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/turtle/catkin_ws/src/github/core_rover/install/setup.sh
