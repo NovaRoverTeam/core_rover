@@ -169,7 +169,7 @@ def auto():
     
     rospy.init_node('auto', anonymous=True)
     	
-    route = [ [30, -75], [-10, 0]]
+    route = [ [22.5, 24.2], [-10, 0]]
     #how to get north direction from world info? or gps ref point?
     
     desPos = DesPosClass(route[0][0], route[0][1])
@@ -178,7 +178,7 @@ def auto():
     compass_sub = rospy.Subscriber("/pioneer3at/compass/values", MagneticField, compass_callback)
     pub = rospy.Publisher('/core_rover/driver/drive_cmd', DriveCmd, queue_size=10)
     
-    while True:
+    while not rospy.is_shutdown():
         rospy.loginfo("cat")
         beta = Angle_Between(roveyPos.latitude, roveyPos.longitude, desPos.latitude, desPos.longitude)
         distance = Distance_Between(roveyPos.latitude, roveyPos.longitude, desPos.latitude, desPos.longitude)
@@ -189,16 +189,19 @@ def auto():
         rospy.loginfo("orientation: %s", orientation)
         
         turn = Turn_Direction(beta, orientation)
+
+        rpm_limit   = rospy.get_param('RPM_limit')
+        steer_limit = rospy.get_param('steer_limit')
         
         msg = DriveCmd()
-        msg.rpm = 10
-        msg.steer_pct = turn/180
+        msg.rpm       = rpm_limit*10
+        msg.steer_pct = steer_limit*10*turn/180
         pub.publish(msg)
         
         #if distance < 3:
         #   desPos.set_coords(route[1][0], route[1][1])    
 
-        time.sleep(1)
+        time.sleep(0.1)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 #   Initialiser
