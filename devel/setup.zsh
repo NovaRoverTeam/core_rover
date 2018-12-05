@@ -1,1 +1,0 @@
-/home/turtle/catkin_ws/src/github/core_rover/devel/.private/catkin_tools_prebuild/setup.zsh

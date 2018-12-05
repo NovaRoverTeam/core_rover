@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
 	sensor_msgs
 	message_generation
 	tf
+  webots_ros
 )
 
 ## Generate services in the 'srv' folder
@@ -43,20 +44,10 @@ include_directories(
 
 
 add_executable(driver src/driver.cpp)
-
 add_dependencies(driver core_rover_generate_messages_cpp)
-
 target_link_libraries(driver ${catkin_LIBRARIES})
 
-<<<<<<< HEAD
+add_executable(sim_init src/sim_init.cpp)
+add_dependencies(sim_init core_rover_generate_messages_cpp)
+target_link_libraries(sim_init ${catkin_LIBRARIES})
 
-
-
-# ------ instructions for pioneer3at node -------
-#add_executable(pioneer3at src/pioneer3at.cpp)
-#add_dependencies(pioneer3at core_rover_generate_messages_cpp)
-#target_link_libraries(pioneer3at
-#	${catkin_LIBRARIES}
-#)
-=======
->>>>>>> 150e5811394a538e129e9c0a7878b58eb830d542

@@ -5,6 +5,8 @@ import time
 from sensor_msgs.msg import NavSatFix, MagneticField
 from webots_ros.srv import set_float
 from nova_common.msg import DriveCmd
+from nova_common.srv import *
+
 
 class DesPosClass(object):
 
@@ -17,7 +19,7 @@ class DesPosClass(object):
     def __init__(self, lat, lng):
         self.latitude = lat
         self.longitude = lng  
-    
+
     #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
     # set_coords
     #   
@@ -27,7 +29,8 @@ class DesPosClass(object):
     def set_coords(self, lat, lng):
         self.latitude = lat
         self.longitude = lng
-   
+
+
 class RoveyPosClass(object):
 
     #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -51,7 +54,7 @@ class RoveyPosClass(object):
     def set_coords(self, lat, lng):
         self.latitude = lat
         self.longitude = lng 
-        
+
     #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
     # set_orientation():
     #   
@@ -61,6 +64,7 @@ class RoveyPosClass(object):
     def set_orientation(self, x, z):
         self.x = x
         self.z = z  
+
         
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # Bearing_In_Degrees():
@@ -76,6 +80,7 @@ def Bearing_In_Degrees(x, z):
     if bearing < 0:
         bearing = bearing + 360.0
     return bearing;
+
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # Angle_Between():
@@ -100,6 +105,7 @@ def Distance_Between(lat1, lng1, lat2, lng2):
     distance = math.sqrt((lat2-lat1)**2 + (lng2-lng1)**2)
     return distance
     
+
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # Turn_Direction():
 #   
@@ -109,28 +115,29 @@ def Distance_Between(lat1, lng1, lat2, lng2):
 def Turn_Direction(beta, orientation):
     if beta < 180:
         if (orientation < (beta+180)) & (orientation > beta):
-            rospy.loginfo("turn left")
+            rospy.logdebug("turn left")
             turn = (orientation-beta) * -1
         elif orientation < beta:
-            rospy.loginfo("turn right")
+            rospy.logdebug("turn right")
             turn = beta-orientation
         else:
-            rospy.loginfo("turn right")
+            rospy.logdebug("turn right")
             turn = (360-orientation)+beta
     else:
         if (orientation > (beta-180)) & (orientation < beta):
-            rospy.loginfo("turn right")
+            rospy.logdebug("turn right")
             turn = beta-orientation
         elif orientation > beta:
-            rospy.loginfo("turn left")
+            rospy.logdebug("turn left")
             turn = (orientation-beta) * -1
         else:
-            rospy.loginfo("turn left")
+            rospy.logdebug("turn left")
             turn = ((360-beta)+orientation) * -1
             
-    rospy.loginfo("turn: %s", turn)        
+    rospy.logdebug("turn: %s", turn)        
     return turn
-            
+
+
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # gps_callback():
 #   
@@ -141,7 +148,8 @@ def gps_callback(gpsData):
     lat = gpsData.latitude
     lng = gpsData.longitude
     roveyPos.set_coords(lat,lng)
-    #rospy.loginfo("lat: %s, long: %s", lat, lng)
+    #rospy.logdebug("lat: %s, long: %s", lat, lng)
+
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # compass_callback():
@@ -153,10 +161,30 @@ def compass_callback(compassData):
     x = compassData.magnetic_field.x
     z = compassData.magnetic_field.z
     roveyPos.set_orientation(x,z)
-    #rospy.loginfo("x: %s, z: %s", x, z)
+    #rospy.logdebug("x: %s, z: %s", x, z)
+
+
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# handle_start_auto():
+#
+#  Service server handler for starting autonomous mission.
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
+def handle_start_auto(req):
+    global desPos
+    global auto_engaged
+
+    # Set the desired latitude and longitude from the service request
+    desPos.set_coords(req.latitude, req.longitude)
+    auto_engaged = True
+
+    res = StartAutoResponse()
+    res.success = True
+    return res
 
 
 roveyPos = RoveyPosClass(0,0,0,0)
+desPos = DesPosClass(0, 0)
+auto_engaged = False   # Flag variable for enabling autonomous mode
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # auto():
@@ -166,42 +194,47 @@ roveyPos = RoveyPosClass(0,0,0,0)
 def auto():
 
     global roveyPos
+    global desPos
+    global auto_engaged
     
     rospy.init_node('auto', anonymous=True)
+    rate = rospy.Rate(2) # Loop rate in Hz
     	
-    route = [ [22.5, 24.2], [-10, 0]]
+    #route = [ [22.5, 24.2], [-10, 0]]
     #how to get north direction from world info? or gps ref point?
-    
-    desPos = DesPosClass(route[0][0], route[0][1])
     
     gps_sub = rospy.Subscriber("/pioneer3at/gps/values", NavSatFix, gps_callback)
     compass_sub = rospy.Subscriber("/pioneer3at/compass/values", MagneticField, compass_callback)
     pub = rospy.Publisher('/core_rover/driver/drive_cmd', DriveCmd, queue_size=10)
+
+    server = rospy.Service('/core_rover/start_auto', StartAuto, handle_start_auto)
     
     while not rospy.is_shutdown():
-        rospy.loginfo("cat")
-        beta = Angle_Between(roveyPos.latitude, roveyPos.longitude, desPos.latitude, desPos.longitude)
-        distance = Distance_Between(roveyPos.latitude, roveyPos.longitude, desPos.latitude, desPos.longitude)
-        orientation = Bearing_In_Degrees(roveyPos.x, roveyPos.z)
         
-        rospy.loginfo("beta: %s", beta)
-        rospy.loginfo("distance: %s", distance)
-        rospy.loginfo("orientation: %s", orientation)
-        
-        turn = Turn_Direction(beta, orientation)
+        if auto_engaged is True:
+            beta = Angle_Between(roveyPos.latitude, roveyPos.longitude, desPos.latitude, desPos.longitude)
+            distance = Distance_Between(roveyPos.latitude, roveyPos.longitude, desPos.latitude, desPos.longitude)
+            orientation = Bearing_In_Degrees(roveyPos.x, roveyPos.z)
+            
+            rospy.logdebug("beta: %s", beta)
+            rospy.logdebug("distance: %s", distance)
+            rospy.logdebug("orientation: %s", orientation)
+            
+            turn = Turn_Direction(beta, orientation)
 
-        rpm_limit   = rospy.get_param('RPM_limit')
-        steer_limit = rospy.get_param('steer_limit')
-        
-        msg = DriveCmd()
-        msg.rpm       = rpm_limit*10
-        msg.steer_pct = steer_limit*10*turn/180
-        pub.publish(msg)
-        
-        #if distance < 3:
-        #   desPos.set_coords(route[1][0], route[1][1])    
+            rpm_limit   = rospy.get_param('RPM_limit')
+            steer_limit = rospy.get_param('steer_limit')
+            
+            msg = DriveCmd()
+            msg.rpm       = rpm_limit*10
+            msg.steer_pct = steer_limit*10*turn/180
+            pub.publish(msg)
+            
+            #if distance < 3:
+            #   desPos.set_coords(route[1][0], route[1][1])    
 
-        time.sleep(0.1)
+        rate.sleep()
+
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 #   Initialiser

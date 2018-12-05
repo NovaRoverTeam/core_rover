@@ -23,13 +23,8 @@ static const char *motorNames[NMOTORS] = {
 
 int main(int argc, char **argv) {
 
-  if (argc != 1) {
-    ROS_INFO("Usage: $ init_simulator.");
-    return 1;
-  }
-
   // create a node named 'init_simulator' on ROS network
-  ros::init(argc, argv, "init_simulator", ros::init_options::AnonymousName);
+  ros::init(argc, argv, "sim_init", ros::init_options::AnonymousName);
   n = new ros::NodeHandle;
   
   ros::spinOnce();
@@ -142,17 +137,5 @@ int main(int argc, char **argv) {
   gyro_srv.request.value = 32;
   set_gyro_client.call(gyro_srv);
 
-  // main loop
-  while (ros::ok()) {
-    if (!timeStepClient.call(timeStepSrv) || !timeStepSrv.response.success) {
-      ROS_ERROR("Failed to call service time_step for next step.");
-      break;
-    }
-    ros::spinOnce();
-  }
-  timeStepSrv.request.value = 0;
-  timeStepClient.call(timeStepSrv);
-
-  ros::shutdown();
   return 0;
 }
