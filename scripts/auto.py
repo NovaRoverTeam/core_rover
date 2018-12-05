@@ -4,7 +4,8 @@ import math
 import time
 from sensor_msgs.msg import NavSatFix, MagneticField
 from webots_ros.srv import set_float
-from nova_common.msg import DriveCmd
+<<<<<<< HEAD
+from nova_common.msg import *
 from nova_common.srv import *
 
 
@@ -235,10 +236,49 @@ def auto():
 
         rate.sleep()
 
+    route = [ [22.5, 24.2], [-10, 0]]
+    
+    desPos = DesPosClass(route[0][0], route[0][1])
+    
+    gps_sub     = rospy.Subscriber("/pioneer3at/gps/values", NavSatFix, gps_callback)
+    compass_sub = rospy.Subscriber("/pioneer3at/compass/values", MagneticField, compass_callback)
+    drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
+    status_pub  = rospy.Publisher("/core_rover/auto_status", AutoStatus, queue_size=10)
+    
+    while not rospy.is_shutdown():
+        
+        beta = Angle_Between(roveyPos.latitude, roveyPos.longitude, desPos.latitude, desPos.longitude)
+        distance = Distance_Between(roveyPos.latitude, roveyPos.longitude, desPos.latitude, desPos.longitude)
+        orientation = Bearing_In_Degrees(roveyPos.x, roveyPos.z)
+        turn = Turn_Direction(beta, orientation)
+        
+        rospy.loginfo("cat")
+        rospy.loginfo("beta: %s", beta)
+        rospy.loginfo("distance: %s", distance)
+        rospy.loginfo("orientation: %s", orientation)
+        
+        rpm_limit   = rospy.get_param('RPM_limit')
+        steer_limit = rospy.get_param('steer_limit')
+        
+        drive_msg = DriveCmd()
+        drive_msg.rpm       = rpm_limit*10
+        drive_msg.steer_pct = steer_limit*10*turn/180
+        drive_pub.publish(drive_msg)
+        
+        status_msg = AutoStatus()
+        status_msg.latitude  = roveyPos.latitude
+        status_msg.longitude = roveyPos.longitude
+        status_msg.bearing   = orientation
+        status_pub.publish(status_msg)
+        
+        #if distance < 3:
+        #   desPos.set_coords(route[1][0], route[1][1])    
+
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 #   Initialiser
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 if __name__ == '__main__':
     auto()
+
 
