@@ -4,7 +4,6 @@ import math
 import time
 from sensor_msgs.msg import NavSatFix, MagneticField
 from webots_ros.srv import set_float
-<<<<<<< HEAD
 from nova_common.msg import *
 from nova_common.srv import *
 
