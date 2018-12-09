@@ -10,7 +10,7 @@
         cam_0:
           id:      'Integrated Camera: Integrated C'
           name:    'VR Cam'
-          default:  False
+          default:  True
           
         cam_1:  
           id:      'very:fake'
@@ -20,7 +20,7 @@
         cam_2:  
           id:      '046d:0825'
           name:    'Webcam Rectangular'
-          default:  True
+          default:  False
           
         cam_3:  
           id:      '046d:09a1'

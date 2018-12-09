@@ -26,7 +26,6 @@ loop_hz = 1  # Rate of main loop, in Hz
 des_con = [] # Global vars, set whether we want a stream on or not
 cur_con = []
 
-
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # get_vid_devs():
 #
@@ -48,7 +47,7 @@ def get_vid_devs(id_list):
     ids = [] # Create list of video device ids  
     for i in range(len(devs)):  
       bash_cmd  = "cat /sys/class/video4linux/" + devs[i] + "/name "
-      bash_cmd += "| grep -oP '\(\K[^\)]+'" # Uncomment for intgr. cam
+      #bash_cmd += "| grep -oP '\(\K[^\)]+'" # Comment for intgr. cam
       output = subprocess.check_output(['bash','-c', bash_cmd])
       ids.append(output.strip("\n"))
       

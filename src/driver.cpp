@@ -50,7 +50,6 @@ using namespace std;
 #define DECREASE_FACTOR    0.9
 #define BACK_SLOWDOWN      0.9
 
-
 bool simulator = true;
 
 ros::NodeHandle *n; // Create node handle to talk to ROS
@@ -62,14 +61,12 @@ static const char *motorNames[NMOTORS] = {
   "back_left_wheel", "back_right_wheel"
 };
 
-
 //--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-// drive_cmd_cb():
-//
+// DriveCmdCb():
 //    Callback function for receiving driving commands from the
 //    rover_manager.
 //--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
-void drive_cmd_cb(const nova_common::DriveCmd::ConstPtr& msg)
+void DriveCmdCb(const nova_common::DriveCmd::ConstPtr& msg)
 {
   //Instantiiating vars
   double speedFactor  = 1.0;    //currently not in use, but can be used to increase/decrease speed by a factor
@@ -84,10 +81,6 @@ void drive_cmd_cb(const nova_common::DriveCmd::ConstPtr& msg)
     speeds[2] = speed + steer;
     speeds[3] = speed - steer;
 
-  //the below are prints for speed and steer.
-  //ROS_INFO("RPM: %d", msg->rpm);
-  //ROS_INFO("steer: %f", msg->steer_pct);
-
   // set speeds
   for (int i=0; i<NMOTORS; ++i) {
     ros::ServiceClient set_velocity_client;
@@ -101,7 +94,6 @@ void drive_cmd_cb(const nova_common::DriveCmd::ConstPtr& msg)
 
 //--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 // quit():
-//
 //    Overrides the default SIGINT exit function when pressing CTRL+C.
 //--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 void quit(int sig) {
@@ -115,10 +107,8 @@ void quit(int sig) {
   exit(0);
 }
 
-
 //--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 // main():
-//
 //    Main function. This will run first.
 //--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 int main(int argc, char **argv)
@@ -130,8 +120,8 @@ int main(int argc, char **argv)
   // Declare subscriber to drive cmds
   signal(SIGINT, quit);
 
-  //subscribing to drive_cmd topic and callback: drive_cmd_cb
-  ros::Subscriber drive_cmd_sub = n->subscribe("/core_rover/driver/drive_cmd", 1, drive_cmd_cb);
+  //subscribing to drive_cmd topic and callback: DriveCmdCb
+  ros::Subscriber drive_cmd_sub = n->subscribe("/core_rover/driver/drive_cmd", 1, DriveCmdCb);
 
   // TODO Declare service clients for simulator rover stuff
 
