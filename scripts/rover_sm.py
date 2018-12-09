@@ -62,27 +62,31 @@ class RoverStateMachine():
         # Initialise the global state parameter
         self.setMode('Standby')
 
+    # Helper methods
+    def getMission(self):
+        return rospy.get_param('/core_rover/Mission')
+
+    def getConnectivity(self):
+        return rospy.get_param('/core_rover/Connectivity')
 
     def setMode(self, mode):
         rospy.set_param('/core_rover/Mode', mode)
 
+    # "Conditions" functions
     def missionSCI(self):
-        mission = rospy.get_param('Mission')
-        return mission == 'SCI'
+        return self.getMission() == 'SCI'
 
     def missionAUT(self):
-        mission = rospy.get_param('Mission')
-        return mission == 'AUT'
+        return self.getMission() == 'AUT'
 
     def missionERTorEQP(self):
-        mission = rospy.get_param('Mission')
-        return (mission == 'ERT' or mission == 'EQP')
+        return (self.getMission() == 'ERT' 
+             or self.getMission() == 'EQP')
 
     def connected(self):
-        connectivity = rospy.get_param('/core_rover/Connectivity')
-        return connectivity != 'Full_Loss'
+        return self.getConnectivity != 'Full_Loss'
 
-
+    # "After" functions
     def standby(self):
         self.setMode('Standby')
 

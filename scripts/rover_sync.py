@@ -17,10 +17,31 @@ class RoverSync:
     rospy.init_node('rover_sync')
 
     self.req_change_mode_server = rospy.Service(
-        '/core_rover/req_change_mode', ChangeMode,
-         self.handleReqChangeMode)
+      '/core_rover/req_change_mode', ChangeMode,
+      self.handleReqChangeMode)
+    
+    self.req_change_mission_server = rospy.Service(
+      '/core_rover/req_change_mission', ChangeMode,
+      self.handleReqChangeMission)
 
     self.rover_sm = RoverStateMachine() # Initialise state machine
+
+  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+  # handleReqChangeMission():
+  #   Service server handler for handling requests for Mission change.
+  #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
+  def handleReqChangeMission(self, req):
+
+    # Change Mode to Standby
+    res_mode = self.handleReqChangeMode(ChangeModeRequest('Standby'))
+
+    if res_mode.success:
+      rospy.set_param('/core_rover/Mission', req.mode)
+      message = "Successfully changed Mission to " + req.mode + "."
+    else:
+      message = "Unable to change Mission. " + res_mode.message
+      
+    return ChangeModeResponse(res_mode.success, message)
 
   #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
   # handleReqChangeMode():

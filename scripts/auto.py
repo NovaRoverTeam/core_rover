@@ -144,6 +144,12 @@ def compassCallback(compassData):
     #rospy.logdebug("x: %s, z: %s", x, z)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# getMode(): Retrieve Mode from parameter server.
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
+def getMode():
+    return rospy.get_param('/core_rover/Mode')
+
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # handleStartAuto():
 #  Service server handler for starting autonomous mission.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
@@ -151,13 +157,20 @@ def handleStartAuto(req):
     global des_pos
     global auto_engaged
 
-    # Set the desired latitude and longitude from the service request
-    des_pos.setCoords(req.latitude, req.longitude)
-    auto_engaged = True
+    if getMode() == 'Auto':
+        # Set the desired latitude and longitude from the service request
+        des_pos.setCoords(req.latitude, req.longitude)
+        auto_engaged = True
 
-    res = StartAutoResponse()
-    res.success = True
-    return res
+        # TODO Create and use state machine for autonomous mission
+        # Reset state machine here
+
+        return StartAutoResponse(True, 
+            "Successfully started Auto mission.")
+    else:
+        return StartAutoResponse(False, 
+            "Unable to start mission, must be in Auto mode.")
+
 
 rovey_pos = RoveyPosClass(0,0,0,0)
 des_pos = DesPosClass(0, 0)
