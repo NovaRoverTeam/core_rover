@@ -3,32 +3,37 @@
   <!-- Configure your camera info as needed -->
   <node name="camera_server" pkg="core_rover" type="camera_server.py" output="screen">  
     <rosparam>
-        port:       10720
-        n_cams:     5
-        host_def:   '127.0.0.1'
+        port:        10720
+        n_cams:      5
+        def_dest:   '127.0.0.1'
         
         cam_0:
           id:      'Integrated Camera: Integrated C'
-          name:    'VR Cam'
-          default:  True
+          usb:      True
+          name:    'IntegratedCam'
+          default:  False
           
         cam_1:  
-          id:      'very:fake'
-          name:    'Gimbal Cam'
+          id:      '192.168.1.51'
+          usb:      False
+          name:    'GimbalCam1'
           default:  False
           
         cam_2:  
           id:      '046d:0825'
+          usb:      True
           name:    'Webcam Rectangular'
           default:  False
           
         cam_3:  
           id:      '046d:09a1'
+          usb:      True
           name:    'Webcam Sphere Legs'
           default:  False
           
         cam_4:  
           id:      '046d:0824'
+          usb:      True
           name:    'Webcam Sphere Focus'
           default:  False
           
