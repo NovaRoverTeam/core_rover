@@ -7,3 +7,8 @@ Provides control, sensing and management systems to run on board the rover.
 ```
 sudo apt install python-gst0.10 gstreamer0.10-plugins-good
 ```
+
+- Python module *transitions*:
+```
+pip install transitions
+```
