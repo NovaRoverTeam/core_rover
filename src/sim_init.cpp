@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
   // enable lidar
   ros::ServiceClient set_lidar_client;
   webots_ros::set_int lidar_srv;
-  set_lidar_client = n->serviceClient<webots_ros::set_int>("pioneer3at/Sick_LMS_291/enable");
+  set_lidar_client = n->serviceClient<webots_ros::set_int>("/pioneer3at/Hokuyo_UTM_30LX/enable");
   lidar_srv.request.value = TIME_STEP;
   if (set_lidar_client.call(lidar_srv) && lidar_srv.response.success) {
     ROS_INFO("Lidar enabled.");
