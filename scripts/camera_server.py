@@ -157,11 +157,10 @@ class CameraServer:
   #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
   def createIPCamStream(self, i):
     
-    description = ("rtspsrc location=rtsp://nova@" + self.ids[i] 
-      + ":88/videoMain ! udpsink host=" + self.dests[i] 
-      + " port=" + str(self.port + i))
-
-    print description
+    description = ("rtspsrc location=rtsp://nova:@" + self.ids[i] 
+      + ":88/videoMain ! decodebin ! jpegenc"
+      + " ! rtpjpegpay ! udpsink host=" + self.dests[i] 
+      + " port=" + str(self.port + i) + " sync=false")
 
     return gst.parse_launch(description)    
     
