@@ -7,9 +7,7 @@ from webots_ros.srv import set_float
 from nova_common.msg import *
 from nova_common.srv import *
 
-#this is just case auto2 self implodes for whatever reason 
-
-class DesPosClass(object):
+class WaypointClass(object):
 
     def __init__(self, lat, lng):
         self.latitude = lat
@@ -123,37 +121,25 @@ def compassCallback(compassData):
     #rospy.logdebug("x: %s, z: %s", x, z)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# waypointCallback():
+#    Callback for the orientation of the rover
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--  
+def waypointCallback(waypointData):
+    global waypoint
+    lat = waypointData.latitude
+    lng = waypointData.longitude
+    waypoint.setCoords(lat,lng)
+    print(lat)
+
+
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # getMode(): Retrieve Mode from parameter server.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 def getMode():
     return rospy.get_param('/core_rover/Mode')
 
- #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-# handleStartAuto():
-#  Service server handler for starting autonomous mission.
-#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
-def handleStartAuto(req):
-    global des_pos
-    global auto_engaged
-
-    if getMode() == 'Auto':
-        # Set the desired latitude and longitude from the service request
-        des_pos.setCoords(req.latitude, req.longitude)
-        auto_engaged = True
-
-        # TODO Create and use state machine for autonomous mission
-        # Reset state machine here
-
-        return StartAutoResponse(True, 
-            "Successfully started Auto mission.")
-    else:
-        return StartAutoResponse(False, 
-            "Unable to start mission, must be in Auto mode.") 
-
-
 rovey_pos = RoveyPosClass(0,0,0,0)
-des_pos = DesPosClass(0, 0)
-auto_engaged = False   # Flag variable for enabling autonomous mode
+waypoint = WaypointClass(0, 0)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # auto():
@@ -165,26 +151,26 @@ def auto():
     global des_pos
     global auto_engaged
     
+    print("dog")
     rospy.init_node('auto', anonymous=True)
     rate = rospy.Rate(2) # Loop rate in Hz
 
     #how to get north direction from world info? or gps ref point?
 
-    server = rospy.Service('/core_rover/start_auto', StartAuto, handleStartAuto)
-
     gps_sub     = rospy.Subscriber("/pioneer3at/gps/values", NavSatFix, gpsCallback)
     compass_sub = rospy.Subscriber("/pioneer3at/compass/values", MagneticField, compassCallback)
+    waypoint_sub = rospy.Subscriber("/core_rover/navigation/waypoint_coords", NavSatFix, waypointCallback)
     drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
     status_pub  = rospy.Publisher("/core_rover/auto_status", AutoStatus, queue_size=10)
-    
+    print("fish")
     while not rospy.is_shutdown():
 
         orientation = bearingInDegrees(rovey_pos.x, rovey_pos.z)
 
-        if auto_engaged is True:
+        if getMode() == 'Auto':
         
-            beta = angleBetween(rovey_pos.latitude, rovey_pos.longitude, des_pos.latitude, des_pos.longitude)
-            distance = distanceBetween(rovey_pos.latitude, rovey_pos.longitude, des_pos.latitude, des_pos.longitude)
+            beta = angleBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
+            distance = distanceBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
             turn = turnDirection(beta, orientation)
             
             rospy.loginfo("cat")
@@ -200,7 +186,7 @@ def auto():
             drive_msg.steer_pct = steer_limit*10*turn/180
             drive_pub.publish(drive_msg)
             
-            #if distance < 3:
+            #if distance < :
             #   desPos.set_coords(route[1][0], route[1][1])   
 
         # TODO adjust rate that AutoStatus is published
