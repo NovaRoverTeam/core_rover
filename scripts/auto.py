@@ -7,8 +7,14 @@ from webots_ros.srv import set_float
 from nova_common.msg import *
 from nova_common.srv import *
 
-#this is just case auto2 self implodes for whatever reason 
+#this is just case auto2 self implodes for whatever reason. Otherwise, ignore this 
+# and just look at auto2.py 
 
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# DesPosClass:
+#    Creates a class for the GPS coords given by the competition.
+#    This is updated by the GUI    
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 class DesPosClass(object):
 
     def __init__(self, lat, lng):
@@ -19,6 +25,10 @@ class DesPosClass(object):
         self.latitude = lat
         self.longitude = lng
 
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# RoveyPosClass:
+#    Creates a class for the location of the rover
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 class RoveyPosClass(object):
 
     def __init__(self, lat, lng, x, z):
@@ -150,7 +160,9 @@ def handleStartAuto(req):
         return StartAutoResponse(False, 
             "Unable to start mission, must be in Auto mode.") 
 
-
+ #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# Global variables
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 rovey_pos = RoveyPosClass(0,0,0,0)
 des_pos = DesPosClass(0, 0)
 auto_engaged = False   # Flag variable for enabling autonomous mode

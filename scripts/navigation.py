@@ -5,6 +5,11 @@ from webots_ros.srv import set_float
 from nova_common.msg import *
 from nova_common.srv import *
 
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# DesPosClass:
+#    Creates a class for the GPS coords given by the competition.
+#    This is updated by the GUI    
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 class DesPosClass(object):
 
     def __init__(self, lat, lng):
@@ -15,6 +20,10 @@ class DesPosClass(object):
         self.latitude = lat
         self.longitude = lng
 
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# RoveyPosClass:
+#    Creates a class for the location of the rover
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 class RoveyPosClass(object):
 
     def __init__(self, lat, lng):
@@ -25,6 +34,10 @@ class RoveyPosClass(object):
         self.latitude = lat
         self.longitude = lng 
 
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# gpsCallback():
+#    Callback for the location of the rover
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--    
 def gpsCallback(gpsData):
     global rovey_pos
     lat = gpsData.latitude
@@ -32,9 +45,16 @@ def gpsCallback(gpsData):
     rovey_pos.setCoords(lat,lng)
     #rospy.logdebug("lat: %s, long: %s", lat, lng)
 
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# getMode(): Retrieve Mode from parameter server.
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 def getMode():
     return rospy.get_param('/core_rover/Mode')
 
+ #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# handleStartAuto():
+#  Service server handler for starting autonomous mission.
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 def handleStartAuto(req):
     global des_pos
     global auto_engaged
@@ -53,10 +73,18 @@ def handleStartAuto(req):
         return StartAutoResponse(False, 
             "Unable to start mission, must be in Auto mode.")
 
+
+ #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# Global variables
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 rovey_pos = RoveyPosClass(0,0)
 des_pos = DesPosClass(0, 0)
 auto_engaged = False   # Flag variable for enabling autonomous mode
 
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# navigation():
+#    Main function
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def navigation():
     global rovey_pos
     global des_pos
@@ -73,6 +101,10 @@ def navigation():
     while not rospy.is_shutdown():
 
         if auto_engaged is True:
+
+            #add code to generate waypoints somewhere in here. 
+            # also are you publishing waypoints one at a time? if so, gotta write something so 
+            # the navigation node knows when to send the next waypoint. maybe using rover position?
 
             waypoint_msg = NavSatFix()
             waypoint_msg.latitude = des_pos.latitude

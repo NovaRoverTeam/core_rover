@@ -7,6 +7,11 @@ from webots_ros.srv import set_float
 from nova_common.msg import *
 from nova_common.srv import *
 
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# DesPosClass:
+#    Creates a class for the GPS coords given by the competition.
+#    This is updated by subscribing to the navigation node   
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 class WaypointClass(object):
 
     def __init__(self, lat, lng):
@@ -17,6 +22,10 @@ class WaypointClass(object):
         self.latitude = lat
         self.longitude = lng
 
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# RoveyPosClass:
+#    Creates a class for the location of the rover
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 class RoveyPosClass(object):
 
     def __init__(self, lat, lng, x, z):
@@ -122,7 +131,7 @@ def compassCallback(compassData):
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # waypointCallback():
-#    Callback for the orientation of the rover
+#    Callback for the waypoint coords passed from navigation node
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--  
 def waypointCallback(waypointData):
     global waypoint
@@ -131,28 +140,29 @@ def waypointCallback(waypointData):
     waypoint.setCoords(lat,lng)
     print(lat)
 
-
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # getMode(): Retrieve Mode from parameter server.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 def getMode():
     return rospy.get_param('/core_rover/Mode')
 
+ #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# Global variables
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 rovey_pos = RoveyPosClass(0,0,0,0)
 waypoint = WaypointClass(0, 0)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-# auto():
+# auto2():
 #    Main function
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
-def auto():
+def auto2():
 
     global rovey_pos
     global des_pos
     global auto_engaged
     
-    print("dog")
-    rospy.init_node('auto', anonymous=True)
+    rospy.init_node('auto2', anonymous=True)
     rate = rospy.Rate(2) # Loop rate in Hz
 
     #how to get north direction from world info? or gps ref point?
@@ -162,7 +172,7 @@ def auto():
     waypoint_sub = rospy.Subscriber("/core_rover/navigation/waypoint_coords", NavSatFix, waypointCallback)
     drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
     status_pub  = rospy.Publisher("/core_rover/auto_status", AutoStatus, queue_size=10)
-    print("fish")
+    
     while not rospy.is_shutdown():
 
         orientation = bearingInDegrees(rovey_pos.x, rovey_pos.z)
@@ -173,7 +183,7 @@ def auto():
             distance = distanceBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
             turn = turnDirection(beta, orientation)
             
-            rospy.loginfo("cat")
+            rospy.loginfo("fish")
             rospy.loginfo("beta: %s", beta)
             rospy.loginfo("distance: %s", distance)
             rospy.loginfo("orientation: %s", orientation)
@@ -202,5 +212,5 @@ def auto():
 # Initialiser
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 if __name__ == '__main__':
-    auto()
+    auto2()
 
