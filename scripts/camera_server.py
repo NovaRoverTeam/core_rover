@@ -203,7 +203,7 @@ class CameraServer:
       
       self.des_con[req.cam_id] = req.on
         
-      return ToggleStreamResponse(True, "yep switchoed to " 
+      return ToggleStreamResponse(True, "yep switched to " 
         + str(self.des_con[req.cam_id]))   
 
   #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
