@@ -7,8 +7,6 @@ project(core_rover)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-add_definitions(-std=c++11)
-
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
@@ -19,9 +17,6 @@ find_package(catkin REQUIRED COMPONENTS
 	tf
   webots_ros
 )
-
-find_package (Threads REQUIRED)
-find_package(SDL2 REQUIRED)
 
 ## Generate services in the 'srv' folder
  add_service_files(
@@ -44,7 +39,6 @@ catkin_package(
 include_directories(
   # include
   ${catkin_INCLUDE_DIRS}
-  "${PROJECT_SOURCE_DIR}/include"
 )
 
 
@@ -56,12 +50,4 @@ target_link_libraries(driver ${catkin_LIBRARIES})
 add_executable(sim_init src/sim_init.cpp)
 add_dependencies(sim_init core_rover_generate_messages_cpp)
 target_link_libraries(sim_init ${catkin_LIBRARIES})
-
-target_link_libraries(driver ${PROJECT_SOURCE_DIR}/lib/x86-64/libCTRE_Phoenix.a)
-target_link_libraries(driver ${PROJECT_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixCCI.a)
-target_link_libraries(driver ${PROJECT_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixPlatformLinuxSocketCan.a)
-target_link_libraries(driver ${PROJECT_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixCanutils.a)
-
-target_link_libraries(driver Threads::Threads)
-
 

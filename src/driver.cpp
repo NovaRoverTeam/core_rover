@@ -34,12 +34,29 @@
 #include <iostream>
 #include <math.h>
 #include <string>
+
+//--*-- Talon SRX includes
+#define Phoenix_No_WPI // remove WPI dependencies
+#include "ctre/Phoenix.h"
+#include "ctre/phoenix/platform/Platform.h"
+#include "ctre/phoenix/unmanaged/Unmanaged.h"
+#include "ctre/phoenix/MotorControl/CAN/WPI_TalonSRX.h"
+#include <string>
+#include <iostream>
+#include <chrono>
+#include <thread>
+#include <SDL2/SDL.h>
+#include <unistd.h>
+
 using namespace std;
 
 int speed;
 int steer;
 
 ros::NodeHandle *n; // Create node handle to talk to ROS
+
+TalonSRX talon2(2);
+TalonSRX talon4(4);
 
 //--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 // DriveCmdCb():
@@ -62,6 +79,12 @@ void DriveCmdCb(const nova_common::DriveCmd::ConstPtr& msg)
 int main(int argc, char **argv)
 {
 
+  //Talon SRX Setup
+  std::string interface;
+  interface = "can0";
+  ctre::phoenix::platform::can::SetCANInterface(interface.c_str());
+
+
   ros::init(argc, argv, "driver", ros::init_options::AnonymousName); // Initialise node
   n = new ros::NodeHandle;
 
@@ -71,7 +94,7 @@ int main(int argc, char **argv)
   // Boolean variable describing whether we are using the simulator
   // or a real rover. Later we will retrieve this as a launch
   // file parameter.
-  bool simulator = true;
+  bool simulator = false;
 
   double wheel[6]; //array to update motor values
 
@@ -79,6 +102,7 @@ int main(int argc, char **argv)
   ros::ServiceClient set_velocity_client;
   core_rover::set_float set_velocity_srv;
   
+
   while (ros::ok()) // Main loop
   {
     if (simulator) //add condition if auto mode
@@ -106,7 +130,21 @@ int main(int argc, char **argv)
     else
     {
       // Do nothing for now. Later we will communicate with the
-      // real rover.
+      // real rover. -50 to 50 for RPM | -100 to 100 for steer
+      //float talon_speed = speed / 50;
+      //float talon_steer = steer / 100;
+      //float talon2_speed = talon_speed - talon_steer;
+      //float talon4_speed = talon_speed + talon_steer;
+      float talon_speed = 0.0;
+      if(speed>0){
+         talon_speed = 0.3;
+}
+      else if (speed<0){
+         talon_speed = -0.3;
+}
+      talon2.Set(ControlMode::PercentOutput, talon_speed);
+      talon4.Set(ControlMode::PercentOutput, talon_speed);
+      ctre::phoenix::unmanaged::FeedEnable(100);
     }
 
     ros::spinOnce();   // Messages are received and callbacks called
