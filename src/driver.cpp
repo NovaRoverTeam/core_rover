@@ -71,7 +71,16 @@ int main(int argc, char **argv)
   // Boolean variable describing whether we are using the simulator
   // or a real rover. Later we will retrieve this as a launch
   // file parameter.
-  bool simulator = true;
+  string vehicle;
+  bool simulator;
+  
+  n->getParam("~Vehicle", vehicle);
+  if (vehicle.compare("Simulator")){
+    simulator = true;
+  }
+  else {
+    simulator = false;
+  }
 
   double wheel[6]; //array to update motor values
 
