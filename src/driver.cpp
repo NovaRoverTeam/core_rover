@@ -55,8 +55,13 @@ int steer;
 
 ros::NodeHandle *n; // Create node handle to talk to ROS
 
+//Declaring and creating talonSRX objects to control the 6 motors. 
+TalonSRX talon1(1); 
 TalonSRX talon2(2);
+TalonSRX talon3(3);
 TalonSRX talon4(4);
+TalonSRX talon5(5);
+TalonSRX talon6(6);
 
 //--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 // DriveCmdCb():
@@ -96,13 +101,14 @@ int main(int argc, char **argv)
   string vehicle;
   bool simulator;
   
-  n->getParam("~Vehicle", vehicle);
+  /*n->getParam("~Vehicle", vehicle);
   if (vehicle.compare("Simulator")){
     simulator = true;
   }
   else {
     simulator = false;
-  }
+  }*/
+  simulator = false;
 
   double wheel[6]; //array to update motor values
 
@@ -139,19 +145,34 @@ int main(int argc, char **argv)
     {
       // Do nothing for now. Later we will communicate with the
       // real rover. -50 to 50 for RPM | -100 to 100 for steer
-      //float talon_speed = speed / 50;
-      //float talon_steer = steer / 100;
-      //float talon2_speed = talon_speed - talon_steer;
+      float talon_speed = speed / 50.0;
+      float talon_steer = steer / 100.0;
+      //float talon2_speed = talon_speed - talon_steer; 
       //float talon4_speed = talon_speed + talon_steer;
-      float talon_speed = 0.0;
-      if(speed>0){
+      talon_speed = 0.0;
+     /* if(speed>0){
          talon_speed = 0.3;
 }
       else if (speed<0){
          talon_speed = -0.3;
-}
-      talon2.Set(ControlMode::PercentOutput, talon_speed);
-      talon4.Set(ControlMode::PercentOutput, talon_speed);
+}*/
+
+      talon_speed = speed/50.0;
+      float right = talon_speed - talon_steer;   //Positive turn decreases right motors speeds to turn right.
+      float left = talon_speed + talon_steer;
+      
+      printf("%f",talon_speed);
+
+      //LEFT SIDE
+      talon1.Set(ControlMode::PercentOutput, left);
+      talon2.Set(ControlMode::PercentOutput, left);
+      talon3.Set(ControlMode::PercentOutput, left);
+      //RIGHT SIDE
+      talon4.Set(ControlMode::PercentOutput, right);
+      talon5.Set(ControlMode::PercentOutput, right);
+      talon6.Set(ControlMode::PercentOutput, right);
+
+      //Enable rover with a timeout of 100ms
       ctre::phoenix::unmanaged::FeedEnable(100);
     }
 
