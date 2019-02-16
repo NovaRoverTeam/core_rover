@@ -100,15 +100,13 @@ int main(int argc, char **argv)
   // or a real rover. 
   string vehicle;
   bool simulator;
-  
-  /*n->getParam("~Vehicle", vehicle);
-  if (vehicle.compare("Simulator")){
-    simulator = true;
-  }
-  else {
-    simulator = false;
-  }*/
   simulator = false;
+
+	//It's supposed to detect the vehicle but this don't work yet :'(
+  //n->getParam("~Vehicle", vehicle);
+  //if (vehicle.compare("Simulator")){
+  //  simulator = true;
+  //}
 
   double wheel[6]; //array to update motor values
 
@@ -143,8 +141,7 @@ int main(int argc, char **argv)
     }
     else
     {
-      // Do nothing for now. Later we will communicate with the
-      // real rover. -50 to 50 for RPM | -100 to 100 for steer
+      //-50 to 50 for RPM | -100 to 100 for steer
       float talon_speed = speed / 50.0;
       float talon_steer = steer / 100.0;
       //float talon2_speed = talon_speed - talon_steer; 
