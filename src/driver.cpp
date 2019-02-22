@@ -61,7 +61,7 @@ TalonSRX talon2(2);
 TalonSRX talon3(3);
 TalonSRX talon4(4);
 TalonSRX talon5(5);
-TalonSRX talon6(6);
+TalonSRX talon0(0);
 
 //--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 // DriveCmdCb():
@@ -88,8 +88,10 @@ int main(int argc, char **argv)
   std::string interface;
   interface = "can0";
   ctre::phoenix::platform::can::SetCANInterface(interface.c_str());
-
-
+  talon0.SetInverted(true);
+  talon1.SetInverted(true);
+  talon2.SetInverted(true);
+  talon2.SetNeutralMode(Brake);
   ros::init(argc, argv, "driver", ros::init_options::AnonymousName); // Initialise node
   n = new ros::NodeHandle;
 
@@ -163,11 +165,11 @@ int main(int argc, char **argv)
       //LEFT SIDE
       talon1.Set(ControlMode::PercentOutput, left);
       talon2.Set(ControlMode::PercentOutput, left);
-      talon3.Set(ControlMode::PercentOutput, left);
+      talon0.Set(ControlMode::PercentOutput, left);
       //RIGHT SIDE
       talon4.Set(ControlMode::PercentOutput, right);
       talon5.Set(ControlMode::PercentOutput, right);
-      talon6.Set(ControlMode::PercentOutput, right);
+      talon3.Set(ControlMode::PercentOutput, right);
 
       //Enable rover with a timeout of 100ms
       ctre::phoenix::unmanaged::FeedEnable(100);
