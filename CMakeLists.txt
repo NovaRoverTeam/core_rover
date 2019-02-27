@@ -62,6 +62,10 @@ target_link_libraries(driver ${PROJECT_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixCCI
 target_link_libraries(driver ${PROJECT_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixPlatformLinuxSocketCan.a)
 target_link_libraries(driver ${PROJECT_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixCanutils.a)
 
+add_executable(testUART src/testUART.cpp)
+add_dependencies(testUART core_rover_generate_messages_cpp)
+target_link_libraries(testUART ${catkin_LIBRARIES})
+
 target_link_libraries(driver Threads::Threads)
 
 
