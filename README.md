@@ -3,7 +3,7 @@ Provides control, sensing and management systems to run on board the rover.
 
 # Dependencies
 
-Linus version 6.04 with ROS kinetic installed.
+Linux version 6.04 with ROS kinetic installed.
 http://wiki.ros.org/ROS/Tutorials
 
 Ensure you have base_station, nova_common, and webots_ros repositories in your catkin workspace as well, and that you have installed all of their dependencies.
