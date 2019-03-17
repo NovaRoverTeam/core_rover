@@ -63,11 +63,11 @@ def spiralSearch(current_pos,no_of_waypoints,rang_min,rang_max):
     theta = numpy.linspace(rang_min,rang_max,num=no_of_waypoints)
     dd_const = 2 # No of degrees(lat long) the rover moves outward as it rotates theta degrees
     r = 2*theta
-    x=r*numpy.cos(theta) + current_pos.longitude
-    y=r*numpy.sin(theta) + current_pos.latitude
+    lng=r*numpy.cos(theta) + current_pos.longitude
+    lat=r*numpy.sin(theta) + current_pos.latitude
     searchPath=list()
     for i in range(len(x)):
-        searchPath.append(RoveyPosClass(x[i],y[i]))
+        searchPath.append(RoveyPosClass(lat[i],lng[i]))
     return searchPath
  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # handleStartAuto():
@@ -79,6 +79,7 @@ def handleStartAuto(req):
     global new_destination
     global waypoint_list
     global waypoint_iter
+    global spiral_engaged
     if getMode() == 'Auto':
         # Set the desired latitude and longitude from the service request
         des_pos.setCoords(req.latitude, req.longitude)
@@ -86,6 +87,7 @@ def handleStartAuto(req):
         waypoint_list = wayPoint(rovey_pos.longitude,rovey_pos.latitude,des_pos.longitude,des_pos.latitude,4)
         waypoint_iter = iter(waypoint_list)
         new_destination = True
+        spiral_engaged = False
         rospy.loginfo('DESTINATION:' + str(des_pos))
         rospy.loginfo('WaypointList: ' + str(waypoint_list))
         # TODO Create and use state machine for autonomous mission
