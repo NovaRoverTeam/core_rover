@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 import rospy
-import pygst
-pygst.require("0.10")
-import gst
-import pygtk
-import gtk
+
+import gi
+gi.require_version('Gst', '1.0')
+gi.require_version('GstBase', '1.0')
+gi.require_version('Gtk', '3.0')
+from gi.repository import GObject, Gst, GstBase, Gtk, GObject
 import signal
 import subprocess
 import os
@@ -36,6 +37,7 @@ class CameraServer:
   #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--    
   def __init__(self):
 
+    Gst.init(None)
     rospy.init_node('camera_server')
 
     _ = rospy.Service('/core_rover/connect_stream', 
@@ -62,7 +64,7 @@ class CameraServer:
     for i in range(self.n_devs): 
       if self.des_con[i] is True:
         self.startStream(i)
-
+        
   #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
   # initParams():
   #    Grab initial parameters from ROS param server.
@@ -85,12 +87,9 @@ class CameraServer:
   def setupSig(self):
 
     def signal_handler(sig, frame):
-      try:
-        gtk.main_quit() # Shut down gstreamer
-      except RuntimeError:
-        rospy.loginfo("Forcing gstreamer shutdown.")
-        rospy.signal_shutdown("SIGINT") # Shut down ROS   
-        sys.exit(1)      
+      rospy.loginfo("Forcing gstreamer shutdown.")
+      rospy.signal_shutdown("SIGINT") # Shut down ROS   
+      sys.exit(1)      
           
     signal.signal(signal.SIGINT, signal_handler) # Register sigint handler
 
@@ -147,7 +146,7 @@ class CameraServer:
       + " ! image/jpeg,width=640, height=480,framerate=30/1 ! rtpjpegpay"
       + " ! udpsink host=" + self.dests[i] + " port=" + str(self.port + i))
     
-    return gst.parse_launch(description)
+    return Gst.parse_launch(description)
 
   #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
   # createIPCamStream():
@@ -157,12 +156,12 @@ class CameraServer:
   #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
   def createIPCamStream(self, i):
     
-    description = ("rtspsrc location=rtsp://nova:@" + self.ids[i] 
+    description = ("rtspsrc location=rtsp://nova:rovanova@" + self.ids[i] 
       + ":88/videoMain ! decodebin ! jpegenc"
       + " ! rtpjpegpay ! udpsink host=" + self.dests[i] 
       + " port=" + str(self.port + i) + " sync=false")
 
-    return gst.parse_launch(description)    
+    return Gst.parse_launch(description)    
     
   #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
   # getCamParam():
@@ -192,7 +191,7 @@ class CameraServer:
     else: # If IP device
       self.streams[i] = self.createIPCamStream(i)
 
-    self.streams[i].set_state(gst.STATE_PLAYING)
+    self.streams[i].set_state(Gst.State.PLAYING)
 
   #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
   # handleConnectStream():
@@ -219,7 +218,7 @@ class CameraServer:
         self.startStream(i)          
       
       else: # If stream already exists, check status         
-        current, _, _ = self.streams[i].get_state() 
+        current, _, _ = self.streams[i].get_state(Gst.CLOCK_TIME_NONE)
         
         # If stream has failed
         if StreamStatus(current) is not StreamStatus.GST_STATE_SUCCESS:          
@@ -227,7 +226,7 @@ class CameraServer:
             rospy.loginfo("Camera " + str(i) + " (" + self.names[i] 
                           + ") disconnected. Attempting to reconnect.") 
                           
-          self.streams[i].set_state (gst.STATE_NULL); # Stop stream                         
+          self.streams[i].set_state (Gst.State.NULL); # Stop stream                         
           self.startStream(i) # Restart stream
           
           self.cur_con[i] = False    # Record that the stream is inactive
@@ -241,7 +240,7 @@ class CameraServer:
     
     elif self.cur_con[i] is True: # If this camera is streaming but should stop
     
-      self.streams[i].set_state (gst.STATE_NULL); # Stop stream
+      self.streams[i].set_state (Gst.State.NULL); # Stop stream
       self.streams[i] = None                      # Remove stream
       self.cur_con[i] = False                     # Record disconnection
 
@@ -294,6 +293,7 @@ def main():
   camera_server = CameraServer()
   
   rate = rospy.Rate(loop_hz)  
+  
    
   while not rospy.is_shutdown():  
       
@@ -301,6 +301,7 @@ def main():
       camera_server.refreshCamera(i)
       
     rate.sleep()
+    
   
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # Initialiser.
@@ -308,7 +309,7 @@ def main():
 if __name__ == '__main__':
   try:
     start = main()   
-    gtk.main()
+    
        
   except rospy.ROSInterruptException:
     pass
