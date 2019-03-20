@@ -178,26 +178,31 @@ int main(int argc, char **argv) {
 			(float)mag_z_raw,
 		};
 		
-		//printf("X: %1.6f, Y: %1.6f, Z: %1.6f\n", (float)mag_x_raw/32768, (float)mag_y_raw/32768, (float)mag_z_raw/32768);
+		printf("X: %1.6f, Y: %1.6f, Z: %1.6f\n", (float)mag_x_raw/32768, (float)mag_y_raw/32768, (float)mag_z_raw/32768);
 		
 		// Sensor Fusion
 		// Calibrate sensors
-		gyro_cal = FusionCalibrationInertial(gyro_raw, FUSION_ROTATION_MATRIX_IDENTITY, gyro_sensitivity, FUSION_VECTOR3_ZERO);
-		acc_cal = FusionCalibrationInertial(acc_raw, FUSION_ROTATION_MATRIX_IDENTITY, gyro_sensitivity, FUSION_VECTOR3_ZERO);
-		mag_cal = FusionCalibrationMagnetic(mag_raw, FUSION_ROTATION_MATRIX_IDENTITY, hardIronBias);
+		//gyro_cal = FusionCalibrationInertial(gyro_raw, FUSION_ROTATION_MATRIX_IDENTITY, gyro_sensitivity, FUSION_VECTOR3_ZERO);
+		//acc_cal = FusionCalibrationInertial(acc_raw, FUSION_ROTATION_MATRIX_IDENTITY, gyro_sensitivity, FUSION_VECTOR3_ZERO);
+		//mag_cal = FusionCalibrationMagnetic(mag_raw, FUSION_ROTATION_MATRIX_IDENTITY, hardIronBias);
 		
 		// Update AHRS
-		gyro_cal = FusionBiasUpdate(&fusionBias, gyro_cal); // gyroscope bias correction
-		FusionAhrsUpdate(&fusionAhrs, gyro_cal, acc_cal, mag_cal, samplePeriod);
+		//gyro_cal = FusionBiasUpdate(&fusionBias, gyro_cal); // gyroscope bias correction
+		//FusionAhrsUpdate(&fusionAhrs, gyro_cal, acc_cal, mag_cal, samplePeriod);
 		
 		// Get Euler Angles
-		eulerAngles = FusionQuaternionToEulerAngles(FusionAhrsGetQuaternion(&fusionAhrs));
-		printf("Roll = %0.1f, Pitch = %0.1f, Yaw = %0.1f\n", eulerAngles.angle.roll, eulerAngles.angle.pitch, eulerAngles.angle.yaw);
-        nova_common::IMU imu_msg;
-        imu_msg.pitch = eulerAngles.angle.pitch;
-        imu_msg.roll = eulerAngles.angle.roll;
-        imu_msg.yaw = eulerAngles.angle.yaw;
-        imu_pub.publish(imu_msg);
+		//eulerAngles = FusionQuaternionToEulerAngles(FusionAhrsGetQuaternion(&fusionAhrs));
+		//printf("Roll = %0.1f, Pitch = %0.1f, Yaw = %0.1f\n", eulerAngles.angle.roll, eulerAngles.angle.pitch, eulerAngles.angle.yaw);
+
+		nova_common::IMU imu_msg;
+		//imu_msg.pitch = eulerAngles.angle.pitch;
+		//imu_msg.roll = eulerAngles.angle.roll;
+		//imu_msg.yaw = eulerAngles.angle.yaw;
+
+		//to do: filter magnetometer value (eg. mean filter) and publish them in a ros message
+		//then match xyz values to 8 compass directions (flat AND 4 tilt directions)
+		//look into wireshielding / differential i2c bus 
+		imu_pub.publish(imu_msg);
 	} while(ros::ok());
 	
 	return 0;

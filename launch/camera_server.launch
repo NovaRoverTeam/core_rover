@@ -14,7 +14,7 @@
           default:  False
           
         cam_1:  
-          id:      '192.168.1.51'
+          id:      '192.168.1.52'
           usb:      False
           name:    'GimbalCam1'
           default:  False

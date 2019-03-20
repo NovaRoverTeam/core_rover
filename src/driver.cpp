@@ -160,7 +160,7 @@ int main(int argc, char **argv)
       float right = talon_speed - talon_steer;   //Positive turn decreases right motors speeds to turn right.
       float left = talon_speed + talon_steer;
       
-      printf("%f",talon_speed);
+      //printf("%f",talon_speed);
 
       //LEFT SIDE
       talon1.Set(ControlMode::PercentOutput, left);
