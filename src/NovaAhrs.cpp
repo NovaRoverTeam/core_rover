@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 
+#include <nova_common/IMU.h>
 FusionBias fusionBias;
 FusionAhrs fusionAhrs;
 float samplePeriod = 0.05f;
@@ -42,8 +43,9 @@ FusionVector3 hardIronBias = {
 int main(int argc, char **argv) {
 	
 	ros::init(argc, argv, "NovaAhrs", ros::init_options::AnonymousName); // Initialise node
-    n = new ros::NodeHandle;
-	
+        ros::NodeHandle n;
+	ros::Publisher imu_pub = n.advertise<nova_common::IMU>("/nova_common/imu", 1);
+ 
 	// initialise gyroscope bias correction with stationary threshold of 0.5 degrees/s
 	FusionBiasInitialise(&fusionBias, 0.5f, samplePeriod);
 	
@@ -191,6 +193,11 @@ int main(int argc, char **argv) {
 		// Get Euler Angles
 		eulerAngles = FusionQuaternionToEulerAngles(FusionAhrsGetQuaternion(&fusionAhrs));
 		printf("Roll = %0.1f, Pitch = %0.1f, Yaw = %0.1f\n", eulerAngles.angle.roll, eulerAngles.angle.pitch, eulerAngles.angle.yaw);
+        nova_common::IMU imu_msg;
+        imu_msg.pitch = eulerAngles.angle.pitch;
+        imu_msg.roll = eulerAngles.angle.roll;
+        imu_msg.yaw = eulerAngles.angle.yaw;
+        imu_pub.publish(imu_msg);
 	} while(ros::ok());
 	
 	return 0;
