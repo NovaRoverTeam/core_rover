@@ -66,6 +66,14 @@ add_executable(testUART src/testUART.cpp)
 add_dependencies(testUART core_rover_generate_messages_cpp)
 target_link_libraries(testUART ${catkin_LIBRARIES})
 
+add_executable(NovaAhrs src/NovaAhrs.cpp)
+add_dependencies(NovaAhrs core_rover_generate_messages_cpp)
+target_link_libraries(NovaAhrs ${catkin_LIBRARIES})
+
+add_executable(gps_node src/gps_node.cpp)
+add_dependencies(gps_node core_rover_generate_messages_cpp)
+target_link_libraries(gps_node ${catkin_LIBRARIES})
+
 target_link_libraries(driver Threads::Threads)
 
 
