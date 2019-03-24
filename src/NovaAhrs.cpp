@@ -45,8 +45,9 @@ int main(int argc, char **argv) {
 	
 	ros::init(argc, argv, "NovaAhrs", ros::init_options::AnonymousName); // Initialise node
         ros::NodeHandle n;
-	ros::Publisher mag_pub = n.advertise<sensor_msgs::MagneticField>("/nova_common/MagnetometerRaw", 1);
- 
+	ros::Publisher magRaw_pub = n.advertise<sensor_msgs::MagneticField>("/nova_common/MagnetometerRaw", 1);
+ 	ros::Publisher magFiltered_pub = n.advertise<sensor_msgs::MagneticField>("/nova_common/MagnetometerFiltered", 1);
+
 	// initialise gyroscope bias correction with stationary threshold of 0.5 degrees/s
 	FusionBiasInitialise(&fusionBias, 0.5f, samplePeriod);
 	
@@ -108,6 +109,14 @@ int main(int argc, char **argv) {
 	unsigned long time_now_us = (unsigned long)(t_val.tv_sec * 1000000) + (unsigned long)t_val.tv_usec;
 	unsigned long next_read_us = (unsigned long)time_now_us + (unsigned long)(samplePeriod * 1000000.0f);
 	
+	// Initialise low pass filter for the magnetometer
+
+	int timeConstant = 1000; //1 second time constant for now
+	int milisSamplePeriod= 1000*samplePeriod
+	lowpassfilter smoothed_mag_x(timeConstant, milisSamplePeriod); 
+	lowpassfilter smoothed_mag_y(timeConstant, milisSamplePeriod);
+	lowpassfilter smoothed_mag_z(timeConstant, milisSamplePeriod);
+
 	//main loop
 	do {	
 		// request single magnetometer read
@@ -200,7 +209,6 @@ int main(int argc, char **argv) {
 		//imu_msg.roll = eulerAngles.angle.roll;
 		//imu_msg.yaw = eulerAngles.angle.yaw;
 
-		//to do: filter magnetometer value (eg. mean filter) and publish them in a ros message
 		//then match xyz values to 8 compass directions (flat AND 4 tilt directions)
 		//look into wireshielding / differential i2c bus 
 		//imu_pub.publish(imu_msg);
@@ -208,7 +216,15 @@ int main(int argc, char **argv) {
 		mag_msg.magnetic_field.x = (float)mag_x_raw/32768;
 		mag_msg.magnetic_field.y = (float)mag_y_raw/32768;
 		mag_msg.magnetic_field.z = (float)mag_z_raw/32768;
-		mag_pub.publish(mag_msg);
+		magRaw_pub.publish(mag_msg);
+		
+		magSmooth.magnetic_field.x = smoothed_mag_x.ProcessSample(mag_msg.magnetic_field.x)
+		magSmooth.magnetic_field.y = smoothed_mag_y.ProcessSample(mag_msg.magnetic_field.y)
+		magSmooth.magnetic_field.z = smoothed_mag_z.ProcessSample(mag_msg.magnetic_field.z)
+		sensor_msgs::MagneticField magSmooth; 
+		
+		magFiltered_pub.publish(mag_msg)
+
 	} while(ros::ok());
 	
 	return 0;
