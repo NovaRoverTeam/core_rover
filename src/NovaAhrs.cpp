@@ -112,10 +112,10 @@ int main(int argc, char **argv) {
 	// Initialise low pass filter for the magnetometer
 
 	int timeConstant = 1000; //1 second time constant for now
-	int milisSamplePeriod= 1000*samplePeriod
-	lowpassfilter smoothed_mag_x(timeConstant, milisSamplePeriod); 
-	lowpassfilter smoothed_mag_y(timeConstant, milisSamplePeriod);
-	lowpassfilter smoothed_mag_z(timeConstant, milisSamplePeriod);
+	int millisecondSamplePeriod= 1000*samplePeriod
+	lowpassfilter smoothed_mag_x(timeConstant, millisecondSamplePeriod); 
+	lowpassfilter smoothed_mag_y(timeConstant, millisecondSamplePeriod);
+	lowpassfilter smoothed_mag_z(timeConstant, millisecondSamplePeriod);
 
 	//main loop
 	do {	
