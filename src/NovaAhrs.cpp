@@ -13,8 +13,9 @@
 #include <sys/ioctl.h>
 #include <linux/i2c-dev.h>
 #include <stdio.h>
+#include <cmath.h>
 #include <sys/time.h>
-
+#include "utils/lowpassfilter.h"
 #include <nova_common/IMU.h>
 FusionBias fusionBias;
 FusionAhrs fusionAhrs;
@@ -112,10 +113,10 @@ int main(int argc, char **argv) {
 	// Initialise low pass filter for the magnetometer
 
 	int timeConstant = 1000; //1 second time constant for now
-	int millisecondSamplePeriod= 1000*samplePeriod
-	lowpassfilter smoothed_mag_x(timeConstant, millisecondSamplePeriod); 
-	lowpassfilter smoothed_mag_y(timeConstant, millisecondSamplePeriod);
-	lowpassfilter smoothed_mag_z(timeConstant, millisecondSamplePeriod);
+	int milliSamplePeriod =floor(1000*samplePeriod)
+	lowpassfilter smoothed_mag_x(timeConstant, milliSamplePeriod); 
+	lowpassfilter smoothed_mag_y(timeConstant, milliSamplePeriod);
+	lowpassfilter smoothed_mag_z(timeConstant, milliSamplePeriod);
 
 	//main loop
 	do {	
