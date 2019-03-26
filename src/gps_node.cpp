@@ -16,14 +16,15 @@
 #include "ros/ros.h"
 #include <string.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <errno.h>
 //#include <wiringPi.h>
 //#include <wiringSerial.h>
-#include <gps/Gps.h>
+#include <nova_common/Gps.h>
 #include <sstream>
 #define LOOP_HERTZ 1	// GPS sends data every ~1 second
-//char GPS_data_array[40];	// Holds data from the GLL line to be parsed
+char GPS_data_array[40];	// Holds data from the GLL line to be parsed
 double latitude, longitude;
 bool use_fake; // Use fake coords?
 double fake_lat, fake_long; // Fake GPS coords
@@ -100,7 +101,7 @@ int main(int argc, char **argv) {
 	ros::init(argc, argv, "gps");	// Initialise ROS package
 	ros::NodeHandle n("/");
 	//ros::NodeHandle np("~"); // Private nodehandle
-	ros::Publisher sensor_pub = n.advertise<gps::Gps>("/gps/gps_data", 1000);
+	ros::Publisher sensor_pub = n.advertise<nova_common::Gps>("/gps/gps_data", 1000);
 	ros::Rate loop_rate(LOOP_HERTZ);	// Define loop rate
 	
 	int fd;
@@ -121,10 +122,11 @@ int main(int argc, char **argv) {
 	//ROS_INFO_STREAM("use_fake is " << use_fake);
 	
 	// Attempt to open UART
+	if((fd = open("/dev/ttyS0",9600))<0) {
 ////////////	if((fd=serialOpen("/dev/ttyS0",9600))<0) {	// 9600 baudrate determined from module datasheet
-////////////		printf("Unable to open serial device\n");
-////////////		return 1;
-////////////	}
+		printf("Unable to open serial device\n");
+		return 1;
+	}
 	
 	// Attempt to setup WiringPi
 ////////////	if(wiringPiSetup() == -1) {
@@ -132,13 +134,16 @@ int main(int argc, char **argv) {
 ////////////	}
 	
 	while (ros::ok()) {
-		gps::Gps msg;
+		nova_common::Gps msg;
 
 		while(1) {
 			//if(!use_fake) // Use real GPS data
 			//{
 			// If there is new UART data...
-			if(serialDataAvail(fd)) {
+			size_t nb;
+			ioctl(fd, FIONREAD, &nb);
+			if(nb > 0){//serialDataAvail(fd)) {
+				read(fd, &uartChar, 1);
 				// ... retrieve the next character
 ////////////				uartChar = serialGetchar(fd);
 				
