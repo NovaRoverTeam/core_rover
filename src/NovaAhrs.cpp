@@ -19,6 +19,7 @@
 FusionBias fusionBias;
 FusionAhrs fusionAhrs;
 float samplePeriod = 0.05f;
+#include <sensor_msgs/MagneticField.h>
 
 ros::NodeHandle *n; // Create node handle to talk to ROS
 
@@ -44,7 +45,7 @@ int main(int argc, char **argv) {
 	
 	ros::init(argc, argv, "NovaAhrs", ros::init_options::AnonymousName); // Initialise node
         ros::NodeHandle n;
-	ros::Publisher imu_pub = n.advertise<nova_common::IMU>("/nova_common/imu", 1);
+	ros::Publisher mag_pub = n.advertise<sensor_msgs::MagneticField>("/nova_common/MagnetometerRaw", 1);
  
 	// initialise gyroscope bias correction with stationary threshold of 0.5 degrees/s
 	FusionBiasInitialise(&fusionBias, 0.5f, samplePeriod);
@@ -178,7 +179,7 @@ int main(int argc, char **argv) {
 			(float)mag_z_raw,
 		};
 		
-		printf("X: %1.6f, Y: %1.6f, Z: %1.6f\n", (float)mag_x_raw/32768, (float)mag_y_raw/32768, (float)mag_z_raw/32768);
+		//printf("X: %1.6f, Y: %1.6f, Z: %1.6f\n", (float)mag_x_raw/32768, (float)mag_y_raw/32768, (float)mag_z_raw/32768);
 		
 		// Sensor Fusion
 		// Calibrate sensors
@@ -194,7 +195,7 @@ int main(int argc, char **argv) {
 		//eulerAngles = FusionQuaternionToEulerAngles(FusionAhrsGetQuaternion(&fusionAhrs));
 		//printf("Roll = %0.1f, Pitch = %0.1f, Yaw = %0.1f\n", eulerAngles.angle.roll, eulerAngles.angle.pitch, eulerAngles.angle.yaw);
 
-		nova_common::IMU imu_msg;
+		//nova_common::IMU imu_msg;
 		//imu_msg.pitch = eulerAngles.angle.pitch;
 		//imu_msg.roll = eulerAngles.angle.roll;
 		//imu_msg.yaw = eulerAngles.angle.yaw;
@@ -202,7 +203,12 @@ int main(int argc, char **argv) {
 		//to do: filter magnetometer value (eg. mean filter) and publish them in a ros message
 		//then match xyz values to 8 compass directions (flat AND 4 tilt directions)
 		//look into wireshielding / differential i2c bus 
-		imu_pub.publish(imu_msg);
+		//imu_pub.publish(imu_msg);
+		sensor_msgs::MagneticField mag_msg;
+		mag_msg.magnetic_field.x = (float)mag_x_raw/32768;
+		mag_msg.magnetic_field.y = (float)mag_y_raw/32768;
+		mag_msg.magnetic_field.z = (float)mag_z_raw/32768;
+		mag_pub.publish(mag_msg);
 	} while(ros::ok());
 	
 	return 0;
