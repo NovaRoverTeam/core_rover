@@ -5,7 +5,7 @@
     <rosparam>
         port:        10720
         n_cams:      5
-        def_dest:   '127.0.0.1'
+        def_dest:   '192.168.1.0'
         
         cam_0:
           id:      'Integrated Camera: Integrated C'
@@ -20,19 +20,19 @@
           default:  False
           
         cam_2:  
-          id:      '046d:0825'
+          id:      'UVC Camera (046d:09a1)'
           usb:      True
-          name:    'Webcam Rectangular'
+          name:    'Webcam Sphere Legs'
           default:  False
           
         cam_3:  
-          id:      '046d:09a1'
+          id:      'UVC Camera (046d:09a1)'
           usb:      True
           name:    'Webcam Sphere Legs'
           default:  False
           
         cam_4:  
-          id:      '046d:0824'
+          id:      'UVC Camera (046d:09a1)'
           usb:      True
           name:    'Webcam Sphere Focus'
           default:  False
