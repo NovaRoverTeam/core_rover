@@ -22,7 +22,7 @@
 #include <errno.h>
 //#include <wiringPi.h>
 //#include <wiringSerial.h>
-#include <nova_common/Gps.h>
+#include <sensor_msgs/NavSatFix.h>
 #include <sstream>
 #define LOOP_HERTZ 1	// GPS sends data every ~1 second
 char GPS_data_array[40];	// Holds data from the GLL line to be parsed
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
 	ros::init(argc, argv, "gps");	// Initialise ROS package
 	ros::NodeHandle n("/");
 	//ros::NodeHandle np("~"); // Private nodehandle
-	ros::Publisher sensor_pub = n.advertise<nova_common::Gps>("/gps/gps_data", 1000);
+	ros::Publisher sensor_pub = n.advertise<sensor_msgs::NavSatFix>("/nova_common/gps_data", 1000);
 	ros::Rate loop_rate(LOOP_HERTZ);	// Define loop rate
 	
 	int fd;
@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
 ////////////	}
 	
 	while (ros::ok()) {
-		nova_common::Gps msg;
+		sensor_msgs::NavSatFix msg;
 
 		while(1) {
 			//if(!use_fake) // Use real GPS data
