@@ -167,11 +167,18 @@ def auto():
     
     rospy.init_node('auto', anonymous=True)
     rate = rospy.Rate(2) # Loop rate in Hz
-
+ 
     #how to get north direction from world info? or gps ref point?
-
-    gps_sub     = rospy.Subscriber("/pioneer3at/gps/values", NavSatFix, gpsCallback)
-    compass_sub = rospy.Subscriber("/pioneer3at/compass/values", MagneticField, compassCallback)
+    
+    simulator = False;
+    
+    if simulator == True:
+        gps_sub     = rospy.Subscriber("/pioneer3at/gps/values", NavSatFix, gpsCallback)
+        compass_sub = rospy.Subscriber("/pioneer3at/compass/values", MagneticField, compassCallback)
+    else: 
+        gps_sub     = rospy.Subscriber("/nova_common/gps_data", NavSatFix, gpsCallback)
+        compass_sub = rospy.Subscriber("/nova_common/MagnetometerFiltered", MagneticField, compassCallback)
+        
     waypoint_sub = rospy.Subscriber("/core_rover/navigation/waypoint_coords", NavSatFix, waypointCallback)
     drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
     status_pub  = rospy.Publisher("/core_rover/auto_status", AutoStatus, queue_size=10)
