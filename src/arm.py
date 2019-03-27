@@ -15,7 +15,7 @@ def RightCallback(data):
     data_array = [data.axis_ly_val,data.axis_lx_val,data.trig_l_val]
     for i in range(0,len(data_array)):
 		values[i] = data_array[i]
-		if(i == 2 or i == 5):
+		if(i == 2):
 			sub_data = data_array[i]-0.435
 			if sub_data>0.0:
 				sub_data = sub_data/(1-0.435)
@@ -26,10 +26,10 @@ def RightCallback(data):
 #    can_bus_send(msg)
 
 def LeftCallback(data):
-    data_array = [data.axis_ly_val,data.axis_lx_val,data.trig_l_val]
+    data_array = [data.axis_ly_val,data.axis_lx_val,data.trig_l_val, data.trig_r_val]
     for i in range(0,len(data_array)):
 		values[i+3] = data_array[i]
-		if(i == 2 or i == 5):
+		if(i == 2 or i==3):
 			sub_data = data_array[i]-0.435
 			if sub_data>0.0:
 				sub_data = sub_data/(1-0.435)
@@ -57,6 +57,8 @@ def listener():
 			complete_id = (ids[i] << 4)+field
 			#complete_id = format(complete_id, '#013b')
 			value = int(abs(values[i])*4095)
+			if value<5:
+				value = 0  #Getting rid of off centre
 			bit1 = value>>8&0xFF
 			bit2 = value&0xFF#format(value&0xFF,"#010b")
 			rospy.loginfo(bin(bit2))
@@ -64,7 +66,7 @@ def listener():
  			bus.send(msg)
 			#rospy.loginfo("Id %s", complete_id)
 			
-		time.sleep(0.001)
+		time.sleep(1)
 
 if __name__ == '__main__':
     listener()
