@@ -8,4 +8,4 @@ class FirstOrderLowPass{
     private:
     float state; 
     float alpha;  
-}
+};

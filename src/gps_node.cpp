@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 #include <errno.h>
 //#include <wiringPi.h>
 //#include <wiringSerial.h>
