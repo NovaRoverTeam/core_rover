@@ -8,19 +8,20 @@
 #include "../include/Fusion/Fusion/Fusion.h"
 #include "../include/Fusion/Fusion/FusionAhrs.c"
 #include "../include/Fusion/Fusion/FusionBias.c"
+#include "../include/utils/lowpassfilter.cpp"
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <linux/i2c-dev.h>
 #include <stdio.h>
-#include <cmath.h>
+#include <cmath>
 #include <sys/time.h>
-#include "utils/lowpassfilter.h"
-#include <nova_common/IMU.h>
+#include <sensor_msgs/MagneticField.h>
+
 FusionBias fusionBias;
 FusionAhrs fusionAhrs;
+
 float samplePeriod = 0.05f;
-#include <sensor_msgs/MagneticField.h>
 
 ros::NodeHandle *n; // Create node handle to talk to ROS
 
@@ -113,10 +114,10 @@ int main(int argc, char **argv) {
 	// Initialise low pass filter for the magnetometer
 
 	int timeConstant = 1000; //1 second time constant for now
-	int milliSamplePeriod =floor(1000*samplePeriod)
-	lowpassfilter smoothed_mag_x(timeConstant, milliSamplePeriod); 
-	lowpassfilter smoothed_mag_y(timeConstant, milliSamplePeriod);
-	lowpassfilter smoothed_mag_z(timeConstant, milliSamplePeriod);
+	int milliSamplePeriod =floor(1000*samplePeriod);
+	FirstOrderLowPass smoothed_mag_x(timeConstant, milliSamplePeriod); 
+	FirstOrderLowPass smoothed_mag_y(timeConstant, milliSamplePeriod);
+	FirstOrderLowPass smoothed_mag_z(timeConstant, milliSamplePeriod);
 
 	//main loop
 	do {	
@@ -219,12 +220,12 @@ int main(int argc, char **argv) {
 		mag_msg.magnetic_field.z = (float)mag_z_raw/32768;
 		magRaw_pub.publish(mag_msg);
 		
-		magSmooth.magnetic_field.x = smoothed_mag_x.ProcessSample(mag_msg.magnetic_field.x)
-		magSmooth.magnetic_field.y = smoothed_mag_y.ProcessSample(mag_msg.magnetic_field.y)
-		magSmooth.magnetic_field.z = smoothed_mag_z.ProcessSample(mag_msg.magnetic_field.z)
-		sensor_msgs::MagneticField magSmooth; 
+		sensor_msgs::MagneticField magSmooth;
+		magSmooth.magnetic_field.x = smoothed_mag_x.ProcessSample(mag_msg.magnetic_field.x);
+		magSmooth.magnetic_field.y = smoothed_mag_y.ProcessSample(mag_msg.magnetic_field.y);
+		magSmooth.magnetic_field.z = smoothed_mag_z.ProcessSample(mag_msg.magnetic_field.z);
 		
-		magFiltered_pub.publish(mag_msg)
+		magFiltered_pub.publish(mag_msg);
 
 	} while(ros::ok());
 	
