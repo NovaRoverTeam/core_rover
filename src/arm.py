@@ -9,26 +9,12 @@ bustype = 'socketcan_native'
 channel = 'can0' #cantx is set virtual can, can set up by running the run_can.batch file in sim
 bus = can.interface.Bus(channel=channel, bustype=bustype)  #Define the can bus interface to transmit on. 
 
-values = [0.0,0.0,0.0, 0.0, 0.0, 0.0,0.0] #[Ry, Rx, Rtw, Ly, Lx, Ltw,Claw]
-ids = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]
+values = [0.0,0.0,0.0, 0.0, 0.0, 0.0,0.0] #[Ly, Lx, Ltw, Ry, Rx, Rtw,RClaw]
+ids = [0x02, 0x03, 0x01, 0x04, 0x05, 0x06, 0x07]
 def RightCallback(data):
-    data_array = [data.axis_ly_val,data.axis_lx_val,data.trig_l_val]
+    data_array = [data.axis_ly_val,data.axis_lx_val,data.trig_l_val,data.trig_r_val]
     for i in range(0,len(data_array)):
 		values[i] = data_array[i]
-		if(i == 2):
-			sub_data = data_array[i]-0.435
-			if sub_data>0.0:
-				sub_data = sub_data/(1-0.435)
-			else:
-				sub_data = sub_data/(0.435)
-			values[i]=sub_data
-#    msg = can.Message(arbitration_id=0x32, data=[0x32, 0x32], extended_id = False) 
-#    can_bus_send(msg)
-
-def LeftCallback(data):
-    data_array = [data.axis_ly_val,data.axis_lx_val,data.trig_l_val, data.trig_r_val]
-    for i in range(0,len(data_array)):
-		values[i+3] = data_array[i]
 		if(i == 2 or i==3):
 			sub_data = data_array[i]-0.435
 			if sub_data>0.0:
@@ -36,6 +22,20 @@ def LeftCallback(data):
 			else:
 				sub_data = sub_data/(0.435)
 			values[i+3]=sub_data
+#    msg = can.Message(arbitration_id=0x32, data=[0x32, 0x32], extended_id = False) 
+#    can_bus_send(msg)
+
+def LeftCallback(data):
+    data_array = [data.axis_ly_val,data.axis_lx_val,data.trig_l_val]
+    for i in range(0,len(data_array)):
+		values[i+3] = data_array[i]
+		if(i == 2):
+			sub_data = data_array[i]-0.435
+			if sub_data>0.0:
+				sub_data = sub_data/(1-0.435)
+			else:
+				sub_data = sub_data/(0.435)
+			values[i]=sub_data
    # rospy.loginfo(data_array[2])
 def listener():
 
