@@ -2,8 +2,8 @@
 
 <node pkg="core_rover" type="robot_pose_ekf" name="robot_pose_ekf" output="screen">
   <param name="output_frame" value="odom"/>
-  <remap from="odom_combined" to= "odom/filtered">
-  <remap from="gps" to="/nova_common/gps_data">
+  <remap from="odom_combined" to= "odom/filtered"/>
+  <remap from="gps" to="/nova_common/gps_data"/>
   <param name="freq" value="30.0"/>
   <param name="debug" value="true"/>
   <param name="sensor_timeout" value="1.0"/>  
@@ -13,6 +13,4 @@
   <param name="gps_used" value="true"/>
 </node>
 
-
 </launch>
-
