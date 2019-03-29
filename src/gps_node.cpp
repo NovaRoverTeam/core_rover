@@ -8,7 +8,7 @@
 * www.robotshop.com/ca/en/uart-neo-7m-c-gps-module.html
 *
 * Author: Andrew Stuart
-* Last Modified by: Matthew Harker (22/03/2019)
+* Last Modified by: Matthew Harker (29/03/2019)
 ***************************************************************************************************/
 /***************************************************************************************************
 * INCLUDES, DECLARATIONS AND GLOBAL VARIABLES
@@ -20,15 +20,20 @@
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <errno.h>
-//#include <wiringPi.h>
-//#include <wiringSerial.h>
+#include <boost/algorithm/string.hpp>
+//#include <cmath>
 #include <sensor_msgs/NavSatFix.h>
 #include <sstream>
 #define LOOP_HERTZ 1	// GPS sends data every ~1 second
-char GPS_data_array[40];	// Holds data from the GLL line to be parsed
-double latitude, longitude;
-bool use_fake; // Use fake coords?
+std::string s_data_array;	// Holds data from the GLL line to be parsed
+bool use_fake = false; // Use fake coords?
+bool test_data = false;
 double fake_lat, fake_long; // Fake GPS coords
+bool print_coords = true;
+bool print_ground_speed = false;
+int gps_fix_aquired = -1;
+ros::Publisher lat_long_pub;
+
 /**************************************************************************************************
 * DEGREES-MINUTES-SECONDS TO DECIMAL DEGREES CONVERSION FUNCTION
 *
@@ -46,45 +51,135 @@ float ConvertDMSToDD(int deg, int min, float sec, int dir) {
 	return DecDeg;
 }
 
+int StrToInt(std::string value) {
+	int output = 0;
+	
+	for (int i = 0; i < value.length(); i++) {
+		output *= 10;
+		output += (int)(value[i] - '0');
+	}
+	
+	return output;
+}
+
+float StrToFloat(std::string value) {
+	float output = 0.0f;
+	int decimalPlaces = -1;
+	
+	for (int i = 0; i < value.length(); i++) {
+		if (value[i] == '.') {
+			decimalPlaces++;
+		} else {
+			if (decimalPlaces >= 0) {
+				decimalPlaces++;
+			}
+			
+			output *= 10.0f;
+			output += (float)(value[i] - '0');
+		}
+	}
+	
+	if (decimalPlaces >= 0) {
+		output /= (pow(10, decimalPlaces));
+	}
+	return output;
+}
+
 /***************************************************************************************************
-* DATA PARSING FUNCTIOM
-* This function parses the GLL line sent by module for the GPS coordinates, if it is a valid reading.
-* The output of this function is applied directly to the global variables "latitude" and "longitude".
-*
-* This function assumes that the GLL output format is fixed.
-*
-* Inputs: char *GPS_data_array - The character array containing all required data from the GLL line.
-*
-* todo: modify function to return obtained coordinates using a float array rather than modifying
-* global variables directly.
+* DATA PARSING FUNCTION
+* This function parses the GPRMC line sent by module for the GPS coordinates.
+* The coordinates are then published to ROS.
+* 
+* Ground speed and Heading are also extracted from the GPS module, but are currently not published.
+* 
+* The GPRMC line is stored in the global variable s_data_array as a string, with the line identifier removed
+* Data is stored in comma-delimited fields of varying lengths.
 ***************************************************************************************************/
-void ProcessGPSData(char *GPS_data_array) {
-	int lat_deg, lat_min, long_deg, long_min, lat_dir, long_dir;
-	float lat_sec, long_sec;
-	// Determine latitude in degrees-minutes-seconds (DMS) format.
-	// "GPS_data_array[X]-'0'" converts a number in character format to int, allowing for calculations
-	lat_deg = ((GPS_data_array[1]-'0')*10) + (GPS_data_array[2]-'0');
-	lat_min = ((GPS_data_array[3]-'0')*10) + (GPS_data_array[4]-'0');
-	lat_sec = (((float)(GPS_data_array[6]-'0')/10) + ((float)(GPS_data_array[7]-'0')/100) + ((float)(GPS_data_array[8]-'0')/1000) + ((float)(GPS_data_array[9]-'0')/10000) + ((float)(GPS_data_array[10]-'0')/100000))*60;
-	// Determine latitude direction by checking if character following DMS value is North (N) / South (S).
-	if(GPS_data_array[12]=='N') {
-		lat_dir = 1; // Let 1 represent North, -1 represent South
-	} else {
-		lat_dir = -1;
+void process_GPRMC() {
+	// example data for testing without GPS module
+	if (test_data) {
+		s_data_array = ",123456.78,A,1234.56,N,12345.67,E,1.2,1.2,1234,1.2,E,A*3D";
 	}
-	// Determine longitude in DMS format
-	long_deg = ((GPS_data_array[14]-'0')*100) + ((GPS_data_array[15]-'0')*10) + (GPS_data_array[16]-'0');
-	long_min = ((GPS_data_array[17]-'0')*10) + (GPS_data_array[18]-'0');
-	long_sec = (((float)(GPS_data_array[20]-'0')/10) + ((float)(GPS_data_array[21]-'0')/100) + ((float)(GPS_data_array[22]-'0')/1000) + ((float)(GPS_data_array[23]-'0')/10000) + ((float)(GPS_data_array[24]-'0')/100000))*60;
-	// Determine longitude direction
-	if(GPS_data_array[26]=='E') {
-		long_dir = 1;
-	} else {
-		long_dir = -1;
+				
+	std::vector<std::string> segments;
+	boost::split(segments, s_data_array, [](char c){return (c ==',' || c == '*');}); // split into comma delimited segments
+	
+	// initial data field validation
+	if (segments.size() != 14) {
+		ROS_INFO_STREAM("Incomplete GPS data line");
+		return;
 	}
-	// Convert DMS to DD
-	latitude = ConvertDMSToDD(lat_deg, lat_min, lat_sec, lat_dir);
-	longitude = ConvertDMSToDD(long_deg, long_min, long_sec, long_dir);
+	
+	char checksum = 'G'^'P'^'R'^'M'^'C'; // XOR checksum
+	
+	int target_checksum = 0;
+	sscanf(segments[13].c_str(), "%x", &target_checksum);
+	
+	// iterate bitwise XOR for each character (excluding checksum itself)
+	for (int i = 0; i < s_data_array.length() - 1 - segments[13].length(); i++) {
+		checksum ^= s_data_array[i];
+	}
+	
+	// verify checksum
+	if (checksum != target_checksum) {
+		ROS_INFO_STREAM("GPS checksum mismatch");
+		
+	} else if (segments[2] == "A") { // valid GPS reading
+		// inform that GPS has a fix
+		if (gps_fix_aquired != 1) {
+			gps_fix_aquired = 1;
+			ROS_INFO_STREAM("GPS Fix Aquired");
+		}
+		
+		sensor_msgs::NavSatFix msg;
+		
+		std::string s_timestamp = segments[1]; // timestamp (UTC)    - not used yet
+		std::string s_datestamp = segments[9]; // datestamp (ddmmyy) - not used yet
+		
+		// extract latitude
+		std::string s_latitude = segments[3];
+		msg.latitude = ConvertDMSToDD(
+			StrToInt(s_latitude.substr(0,2)),         // degrees
+			StrToInt(s_latitude.substr(2,2)),         // minutes
+			StrToFloat(s_latitude.substr(4,-1)) * 60, // seconds
+			(segments[4] == "N") ? 1 : -1             // direction
+		);
+		
+		// extract longitude
+		std::string s_longitude = segments[5];
+		msg.longitude = ConvertDMSToDD(
+			StrToInt(s_longitude.substr(0,3)),         // degrees
+			StrToInt(s_longitude.substr(3,2)),         // minutes
+			StrToFloat(s_longitude.substr(5,-1)) * 60, // seconds
+			(segments[6] == "E") ? 1 : -1              // direction
+		);
+		
+		if (print_coords) { // publish coordinates to ROS
+			//ROS_INFO("Latitude: %f, Longitude: %f", msg.latitude, msg.longitude);
+			lat_long_pub.publish(msg);
+		}
+		
+		// extract GPS ground speed
+		std::string s_ground_speed = segments[7];
+		float ground_speed = StrToFloat(s_ground_speed) / 1.944f; // convert knots to m/s
+		
+		// extract GPS heading (degrees true north)
+		std::string s_heading = segments[8];
+		float heading = StrToFloat(s_heading);
+		
+		if (print_ground_speed) { // publish ground speed and heading to ROS (info stream only)
+			ROS_INFO_STREAM("Ground Speed: " << ground_speed << " m/s, Heading: " << heading << " degrees");
+		}
+	} else { // unable to get GPS data
+		// inform that GPS fix is lost
+		if (gps_fix_aquired == 1) {
+			ROS_INFO_STREAM("GPS Fix Lost");
+			gps_fix_aquired = 0;
+		} else if (gps_fix_aquired == -1) {
+			ROS_INFO_STREAM("No GPS Fix");
+			gps_fix_aquired = 0;
+		}
+	}
 }
 
 /***************************************************************************************************
@@ -92,115 +187,92 @@ void ProcessGPSData(char *GPS_data_array) {
 * Sets up UART connection and periodically reads data on connection for new GPS data.
 * This parsed data is then published via ROS.
 * Published messages:
-* Valid Reading - Two message are sent: one containing the latitude coordinates (msg.latitude) and
-* one which contains the longitude coordinates (msg.longitude). Both coordinates are in decimal
-* degrees format.
+* Valid Reading - Sends ROS message containing latitude and longitude in  decimal degrees format.
+*                 Sends Ground speed (m/s) and heading (degrees True North) on ROS info stream
+* 
 * Invalid Reading - Nothing. A warning will be printed to the ROS info stream to inform the user.
 ***************************************************************************************************/
 int main(int argc, char **argv) {
-	setenv("WIRINGPI_GPIOMEM","1",1);	// Set environmental var to allow non-root access to GPIO pins
-	ros::init(argc, argv, "gps");	// Initialise ROS package
+	ros::init(argc, argv, "gps"); // Initialise ROS package
 	ros::NodeHandle n("/");
-	//ros::NodeHandle np("~"); // Private nodehandle
-	ros::Publisher sensor_pub = n.advertise<sensor_msgs::NavSatFix>("/nova_common/gps_data", 1000);
-	ros::Rate loop_rate(LOOP_HERTZ);	// Define loop rate
 	
-	int fd;
+	lat_long_pub = n.advertise<sensor_msgs::NavSatFix>("/nova_common/gps_data", 1000);
+	ros::Rate loop_rate(LOOP_HERTZ); // Define loop rate
+	
+	int fd; // UART file descriptor
 	char uartChar;	// The character retrieved from the UART RX buffer
-	unsigned int enable_data_capture = 0;	// Boolean which is set to 1 (TRUE) when GLL line has been located
-	unsigned int data_is_valid = 0;
-	unsigned int array_index;
-	char data_capture_array[40];
-	bool print_coords = 0;
+	int lineType = -1; // GPS data line type: {-1 = unknown, 0 = unused, 1 = GPRMC}
+	std::string s_lineID = "";
+	unsigned int lineIndex = 0;
 	
-	// Grab params
+	// Grab ROS params
 	//n.getParam("/gps/use_fake", use_fake);
 	//n.getParam("/gps/fake_lat", fake_lat);
 	//n.getParam("/gps/fake_long", fake_long);
-	use_fake=false;
+	//use_fake=false;
 	fake_lat = -37.9089064;
 	fake_long = 145.1338591;
-	//ROS_INFO_STREAM("use_fake is " << use_fake);
 	
 	// Attempt to open UART
-	if((fd = open("/dev/ttyS0",9600))<0) {
-////////////	if((fd=serialOpen("/dev/ttyS0",9600))<0) {	// 9600 baudrate determined from module datasheet
-		printf("Unable to open serial device\n");
+	if((fd = open("/dev/ttyTHS2",9600))<0) {
+		ROS_INFO_STREAM("GPS Serial Connection Failed");
 		return 1;
+	} else {
+		ROS_INFO_STREAM("GPS Connected");
 	}
 	
-	// Attempt to setup WiringPi
-////////////	if(wiringPiSetup() == -1) {
-////////////		printf("Cannot start wiringPi\n");
-////////////	}
-	
+	// main ROS loop
 	while (ros::ok()) {
-		sensor_msgs::NavSatFix msg;
-
-		while(1) {
-			//if(!use_fake) // Use real GPS data
-			//{
-			// If there is new UART data...
-			size_t nb;
-			ioctl(fd, FIONREAD, &nb);
-			if(nb > 0){//serialDataAvail(fd)) {
-				read(fd, &uartChar, 1);
+		// check UART buffer
+		size_t nb;
+		ioctl(fd, FIONREAD, &nb);
+		
+		if (!use_fake) {
+			while(nb > 0) {
+				// If there is new UART data...
 				// ... retrieve the next character
-////////////				uartChar = serialGetchar(fd);
+				read(fd, &uartChar, 1);
+				//printf("%c", uartChar); // debug: print UART input
+				lineIndex++;
 				
-				// If the character is "L", it must be a GLL line
-				if(uartChar=='L') {
-					enable_data_capture = 1;	// So we save the data by enabling data capture
-					array_index = 0;
-					print_coords = 0;
-					data_is_valid = 1;	// Assume that the reading is valid until otherwise
-				} else {
-					// If we are in the GLL line...
-					if(enable_data_capture) {
-						// ... check for EOL char or validity character
-						switch(uartChar) {
-							case '\r':	// EOL found, GLL line over; end data capture
-								enable_data_capture = 0;
-								// If the data is valid...
-								if(data_is_valid) {
-									ProcessGPSData(data_capture_array); // ...obtain coordinates from the data
-									print_coords = 1;
-								} else {
-									// Otherwise, inform user that coordinates could not be obtained
-									ROS_INFO("GPS module cannot locate position.");
-								}
-								break;
-							case 'V':	// If the reading is invalid, the module sends a "V" char
-								data_is_valid = 0;	// Set valid reading boolean to 0 (FALSE)
-							default:
-								data_capture_array[array_index] = uartChar;	// Save all other data if data capture is enabled
-								array_index++;
+				if(uartChar == '$') { // start of new line
+					lineType = -1;
+					lineIndex = 0;
+					s_lineID = "";
+					s_data_array = "";
+				} else if (lineType == -1) {
+					// within the line ID
+					s_lineID += uartChar;
+					
+					if (lineIndex == 5) { // end of lineID segment - set lineType based on lineID
+						if (s_lineID == "GPRMC") {
+							lineType = 1;
+						} else {
+							lineType = 0;
+						}
+					}
+				} else if (lineType == 1) { // GPMRC line
+					if (uartChar == '\n') {
+						// Process Data
+						process_GPRMC();
+					} else if (s_data_array.length() < 60) { // limit uart line length (only occurs if uart is corrupted)
+						s_data_array += uartChar;
 					}
 				}
+			
+				fflush(stdout);	// Flush buffer
+				ioctl(fd, FIONREAD, &nb); // read number of bytes in buffer
 			}
-			fflush(stdout);	// Flush buffer
-			} else {
-				// Do not publish message on startup before data has been received
-				if((latitude==0)&&(longitude==0)) {
-					data_is_valid = 0;
-				}
-				break;	// No data available; end loop to free CPU
-			}
-			// Publish readings
-			if(data_is_valid && print_coords) {
-				msg.latitude = latitude;
-				msg.longitude = longitude;
-				//	ROS_INFO("Latitude: %f, Longitude: %f", latitude, longitude);
-				sensor_pub.publish(msg);
-			}
-		}
-		/*
-		else {// Use fake gps coordinate
+		} else { // faking data
+			sensor_msgs::NavSatFix msg;
+			
 			msg.latitude = fake_lat;
 			msg.longitude = fake_long;
-			ROS_INFO("Latitude: %f, Longitude: %f", fake_lat, fake_long);
-			sensor_pub.publish(msg);
-		}*/
+			
+			ROS_INFO("(Fake) Latitude: %f, Longitude: %f", fake_lat, fake_long);
+			lat_long_pub.publish(msg);
+		}
+				
 		ros::spinOnce();
 		loop_rate.sleep();
 	}
