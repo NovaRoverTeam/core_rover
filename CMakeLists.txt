@@ -74,20 +74,4 @@ add_executable(gps_node src/gps_node.cpp)
 add_dependencies(gps_node core_rover_generate_messages_cpp)
 target_link_libraries(gps_node ${catkin_LIBRARIES})
 
-add_executable(nonlinearanalyticconditionalgaussianodo src/nonlinearanalyticconditionalgaussianodo.cpp)
-add_dependencies(nonlinearanalyticconditionalgaussianodo core_rover_generate_messages_cpp)
-target_link_libraries(nonlinearanalyticconditionalgaussianodo ${catkin_LIBRARIES})
-
-add_executable(odom_estimation src/odom_estimation.cpp)
-add_dependencies(odom_estimation core_rover_generate_messages_cpp)
-target_link_libraries(odom_estimation ${catkin_LIBRARIES})
-
-add_executable(odom_estimation_node src/odom_estimation_node.cpp)
-add_dependencies(odom_estimation_node core_rover_generate_messages_cpp)
-target_link_libraries(odom_estimation_node ${catkin_LIBRARIES})
-
-add_executable(utm_odometry_node src/utm_odometry_node.cpp)
-add_dependencies(utm_odometry_node core_rover_generate_messages_cpp)
-target_link_libraries(utm_odometry_node ${catkin_LIBRARIES})
-
 target_link_libraries(driver Threads::Threads)
