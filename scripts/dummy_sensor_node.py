@@ -1,13 +1,24 @@
 import rospy
 from std_msgs.msg import Header
 from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vectors
 from sensor_msgs.msg import Imu
+from sensor_msgs.msg import NavSatFix
 
 def generate_header(frame_id):
     header = Header()
     header.stamp = rospy.Time.now()
     header.frame_id = frame_id
     return header
+
+def generate_navsatfix():
+    nsf = NavSatFix()
+    nsf.header = generate_header("base_footprint")
+    nsf.latitude = 35.0
+    nsf.longitude = 35.0
+    nsf.altitude = 1.0
+    nsf.position_covariance = [1,1,1,1,1,1,1,1,1]
+    return nsf
 
 def generate_odometry():
     odom = Odometry()
@@ -31,28 +42,34 @@ def generate_imu_data():
     imu.orientation.x = 1
     imu.orientation.y = 1
     imu.orientation.z = 2
-#   imu.orientation.w = 0
 
     return imu
 
 def dummy_sensor():
     """
+    utm_odometry subscribes to:
+        * "gps", type: sensor_msgs/NavSatFix
+    utm_odometry publishes to:
+        * "vo",  type: nav_msgs/Odometry (yes, we are using VO to publish GPS)
+
     robotic_pose_ekf subscribes to:
-        * "odom", 2D pose: nav_msgs/Odometry
-        * "imu_data", 3D orientation: sensor_msgs/Imu
-        * "vo", 3D pose: nav_msgs/Odometry
+        * "odom", type: nav_msgs/Odometry
+        * "imu_data", type: sensor_msgs/Imu
+        * "vo", type: nav_msgs/Odometry
     """
 
-    odom_pub = rospy.Publisher("odom", Odometry, queue_size=10)
-    imu_pub = rospy.Publisher("imu_data", Imu, queue_size=10)
+    odom_pub = rospy.Publisher("odom", Odometry, queue_size=1000)
+    imu_pub = rospy.Publisher("imu_data", Imu, queue_size=1000)
+    gps_pub = rospy.Publisher("gps", NavSatFix, queue_size=1000)
 
     rospy.init_node("dummy_sensor")
-    rate = rospy.Rate(100)
+    rate = rospy.Rate(3)
 
     while not rospy.is_shutdown():
         rospy.loginfo("dummy_sensor: publishing dummy sensor data")
         odom_pub.publish(generate_odometry())
         imu_pub.publish(generate_imu_data())
+        gps_pub.publish(generate_navsatfix())
         rate.sleep()
 
 if __name__ == "__main__":
