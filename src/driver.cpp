@@ -1,3 +1,4 @@
+
 //--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 // File: driver.cpp
 // Author: Ben Steer
@@ -52,6 +53,7 @@ using namespace std;
 
 int speed;
 int steer;
+int num;
 
 ros::NodeHandle *n; // Create node handle to talk to ROS
 
@@ -62,6 +64,9 @@ TalonSRX talon3(3);
 TalonSRX talon4(4);
 TalonSRX talon5(5);
 TalonSRX talon0(0);
+
+//Forward Declare functions
+void ConfigTalon(TalonSRX* talon);
 
 //--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 // DriveCmdCb():
@@ -88,10 +93,28 @@ int main(int argc, char **argv)
   std::string interface;
   interface = "can0";
   ctre::phoenix::platform::can::SetCANInterface(interface.c_str());
+  talon3.ConfigFactoryDefault();
+
   talon0.SetInverted(true);
   talon1.SetInverted(true);
   talon2.SetInverted(true);
   talon2.SetNeutralMode(Brake);
+  talon3.SetNeutralMode(Brake);
+  //talon5.ConfigFactoryDefault();
+  
+  talon5.SetNeutralMode(Brake); 
+  //talon5.Set(ControlMode::Velocity, 500);
+ //printf("test");
+
+  //Configure talons for pid control
+  ConfigTalon(&talon5);
+  ConfigTalon(&talon4);
+  ConfigTalon(&talon3);
+  ConfigTalon(&talon2);
+  ConfigTalon(&talon1);
+  ConfigTalon(&talon0);
+  //printf("test!");
+
   ros::init(argc, argv, "driver", ros::init_options::AnonymousName); // Initialise node
   n = new ros::NodeHandle;
 
@@ -116,7 +139,7 @@ int main(int argc, char **argv)
   ros::ServiceClient set_velocity_client;
   core_rover::set_float set_velocity_srv;
   
-
+  int loopCount = 0;
   while (ros::ok()) // Main loop
   {
     if (simulator) //add condition if auto mode
@@ -145,7 +168,7 @@ int main(int argc, char **argv)
     {
       //-50 to 50 for RPM | -100 to 100 for steer
       float talon_speed = speed / 50.0;
-      float talon_steer = steer / 100.0;
+      float talon_steer = steer *0.75;
       //float talon2_speed = talon_speed - talon_steer; 
       //float talon4_speed = talon_speed + talon_steer;
       talon_speed = 0.0;
@@ -156,27 +179,58 @@ int main(int argc, char **argv)
          talon_speed = -0.3;
 }*/
 
-      talon_speed = speed/50.0;
+      talon_speed = speed*1.5;
       float right = talon_speed - talon_steer;   //Positive turn decreases right motors speeds to turn right.
       float left = talon_speed + talon_steer;
       
-      //printf("%f",talon_speed);
-
+      //printf("%d",speed);
+   
       //LEFT SIDE
-      talon1.Set(ControlMode::PercentOutput, left);
-      talon2.Set(ControlMode::PercentOutput, left);
-      talon0.Set(ControlMode::PercentOutput, left);
+      talon1.Set(ControlMode::Velocity, left);
+      talon2.Set(ControlMode::Velocity, left);
+      talon0.Set(ControlMode::Velocity, left);
       //RIGHT SIDE
-      talon4.Set(ControlMode::PercentOutput, right);
-      talon5.Set(ControlMode::PercentOutput, right);
-      talon3.Set(ControlMode::PercentOutput, right);
+      talon4.Set(ControlMode::Velocity, right);
+      talon5.Set(ControlMode::Velocity, right);
+      talon3.Set(ControlMode::Velocity, right);
+
+      //Output debug information
+      if (loopCount >= 10) {
+        loopCount = 0;
+        //std::cout << "talon5 motor output: " << talon5.GetMotorOutputPercent() << std::endl;
+        std::cout << "talon3 velocity: " << talon3.GetSelectedSensorVelocity() << std::endl;
+      }
 
       //Enable rover with a timeout of 100ms
       ctre::phoenix::unmanaged::FeedEnable(100);
-    }
-
+    }                     
+    loopCount++;
     ros::spinOnce();   // Messages are received and callbacks called
   }
 
   return 0;
+}
+
+void ConfigTalon(TalonSRX* talon) {
+
+	const int kTimeoutMs = 0;
+	const int kPIDLoopIdx = 0;
+
+        /* first choose the sensor */
+	talon->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0, kTimeoutMs);
+	talon->SetSensorPhase(false);
+
+	/* set the peak and nominal outputs */
+	talon->ConfigNominalOutputForward(0, kTimeoutMs);
+	talon->ConfigNominalOutputReverse(0, kTimeoutMs);
+	talon->ConfigPeakOutputForward(0.4, kTimeoutMs);
+	talon->ConfigPeakOutputReverse(-0.4, kTimeoutMs);
+
+	/* set closed loop gains in slot0 */
+	talon->Config_kF(kPIDLoopIdx, 0.1097, kTimeoutMs); //0.1097
+	talon->Config_kP(kPIDLoopIdx, 0.8, kTimeoutMs); //0.22
+	talon->Config_kI(kPIDLoopIdx, 0.02, kTimeoutMs);
+	talon->Config_kD(kPIDLoopIdx, 0.0, kTimeoutMs);
+
+	talon->SetSelectedSensorPosition(0);
 }

@@ -1,5 +1,5 @@
+
 /* www.chrisheydrick.com
-     
    June 23 2012
    CanonicalArduinoRead write a byte to an Arduino, and then
    receives a serially transmitted string in response.
@@ -22,6 +22,9 @@
 #define DEBUG 0
 ros::NodeHandle *nh;
 std::string inputString;
+
+// Forward declare functions
+bool isNumber(std::string str);
 
 int main(int argc, char *argv[])
 {
@@ -59,7 +62,8 @@ int main(int argc, char *argv[])
 
   /* Send byte to trigger Arduino to send string back */
   ROS_INFO("cat");
-  write(fd, "0", 1);
+//  write(fd, "0", 1);
+//  write(fd, "1", 1);
   /* Receive string from Arduino */
   //n = read(fd, buf, 64);
   /* insert terminating zero in the string */
@@ -79,12 +83,47 @@ int main(int argc, char *argv[])
 
   while(true){
 
-  std::cout << "Give input";
+  std::cout << "Give input: ";
   std::getline(std::cin, inputString);
-	ROS_INFO("dog");
-	write(fd, "0", 1);
 
+  int inputInt;
+  if (isNumber(inputString)) {
+    inputInt = std::stoi(inputString);
+  }
+  else {
+    inputInt = 0;
   }
 
+  //std::cin >> inputString;
+  std::cout << inputString;
+  ROS_INFO("Test");
+
+	ROS_INFO("dog");
+	write(fd, &inputInt, 1);
+
+  
+  if(inputString == "exit"){
+     break;
+  }
+  }
+  printf("end");
+  close(fd);
   return 0;
+}
+
+
+bool isNumber(std::string str) {
+  // Make sure string isnt empty
+  if (str.empty()) {
+    return false;
+  }
+
+  // Make sure string doesnt have non digits
+  for (char character : str) {
+    if (!std::isdigit(character)) {
+      return false;
+    }
+  }
+
+  return true;
 }
