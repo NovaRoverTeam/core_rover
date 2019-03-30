@@ -28,29 +28,28 @@ class WaypointClass(object):
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 class RoveyPosClass(object):
 
-    def __init__(self, lat, lng, x, z):
+    def __init__(self, lat, lng, x, y):
         self.latitude = lat
         self.longitude = lng  
         self.x = x
-        self.z = z
+        self.y = y
           
     def setCoords(self, lat, lng):
         self.latitude = lat
         self.longitude = lng 
 
-    def setOrientation(self, x, z):
+    def setOrientation(self, x, y):
         self.x = x
-        self.z = z  
+        self.y = y  
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # bearingInDegrees():
 #    Calculates the direction an object is pointing in relation to the
 #    north vector    
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
-def bearingInDegrees(x, z):
-    rad = math.atan2(x,z)
-    radnorth = math.atan2(1,0) # north vector 1,0,0
-    bearing = (rad-radnorth)/math.pi*180 
+def bearingInDegrees(x, y):
+    rad = math.atan2(y,x)
+    bearing = (rad)/math.pi*180 -180
 
     if bearing < 0:
         bearing = bearing + 360.0
@@ -61,12 +60,23 @@ def bearingInDegrees(x, z):
 #    Calculates the bearing between the location of two objects, similar
 #    to a Cartesian plane
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
-def angleBetween(lat1, lng1, lat2, lng2):
-    beta = math.atan2(lng2-lng1, lat2-lat1)
+def angleBetween(lat1, lng1, lat2, lng2):    
+    #dLon = (lng2 - lng1)
+
+    #y = math.sin(dLon) * math.cos(lat2)
+    #x = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(dLon
+    
+    #beta = math.atan2(y,x)
+    
+    beta = math.atan2(lat2-lat1, lng2-lng1)
     beta = (beta*180)/math.pi
-    beta = beta +90
     if beta < 0:
             beta = beta + 360
+    elif beta > 360:
+            beta = beta - 360
+            
+    #beta = 360 - beta
+    
     return beta
         
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -166,15 +176,9 @@ def auto():
     rate = rospy.Rate(2) # Loop rate in Hz
  
     #how to get north direction from world info? or gps ref point?
-    
-    simulator = False;
-    
-    if simulator == True:
-        gps_sub     = rospy.Subscriber("/pioneer3at/gps/values", NavSatFix, gpsCallback)
-        compass_sub = rospy.Subscriber("/pioneer3at/compass/values", MagneticField, compassCallback)
-    else: 
-        gps_sub     = rospy.Subscriber("/nova_common/gps_data", NavSatFix, gpsCallback)
-        compass_sub = rospy.Subscriber("/nova_common/MagnetometerFiltered", MagneticField, compassCallback)
+
+    gps_sub     = rospy.Subscriber("/nova_common/gps_data", NavSatFix, gpsCallback)
+    compass_sub = rospy.Subscriber("/nova_common/MagnetometerFiltered", MagneticField, compassCallback)
         
     waypoint_sub = rospy.Subscriber("/core_rover/navigation/waypoint_coords", NavSatFix, waypointCallback)
     drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
