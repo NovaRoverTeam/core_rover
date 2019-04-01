@@ -1,7 +1,7 @@
 import rospy
 from std_msgs.msg import Header
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vectors
+from geometry_msgs.msg import Point, Pose, Quaternion, Twist
 from sensor_msgs.msg import Imu
 from sensor_msgs.msg import NavSatFix
 
@@ -31,24 +31,24 @@ def generate_imu_data():
     imu = Imu()
     imu.header = generate_header("dummy_header_imu")
 
-    imu.linear_acceleration.x = 1
-    imu.linear_acceleration.y = 1
-    imu.linear_acceleration.z = 1
+    imu.linear_acceleration.x = 0
+    imu.linear_acceleration.y = 0
+    imu.linear_acceleration.z = 9.8 
 
-    imu.angular_velocity.x = 2
-    imu.angular_velocity.y = 1
-    imu.angular_velocity.z = 3
+    imu.angular_velocity.x = 0
+    imu.angular_velocity.y = 0
+    imu.angular_velocity.z = 0
 
-    imu.orientation.x = 1
-    imu.orientation.y = 1
-    imu.orientation.z = 2
+    imu.orientation.x = 0.3
+    imu.orientation.y = 0.1
+    imu.orientation.z = 0.5
 
     return imu
 
 def dummy_sensor():
     """
     utm_odometry subscribes to:
-        * "gps", type: sensor_msgs/NavSatFix
+        * "/nova_common/gps_data", type: sensor_msgs/NavSatFix
     utm_odometry publishes to:
         * "vo",  type: nav_msgs/Odometry (yes, we are using VO to publish GPS)
 
@@ -58,18 +58,18 @@ def dummy_sensor():
         * "vo", type: nav_msgs/Odometry
     """
 
-    odom_pub = rospy.Publisher("odom", Odometry, queue_size=1000)
+#    odom_pub = rospy.Publisher("odom", Odometry, queue_size=1000)
     imu_pub = rospy.Publisher("imu_data", Imu, queue_size=1000)
-    gps_pub = rospy.Publisher("gps", NavSatFix, queue_size=1000)
+    #gps_pub = rospy.Publisher("/nova_common/gps_data", NavSatFix, queue_size=1000)
 
     rospy.init_node("dummy_sensor")
     rate = rospy.Rate(3)
 
     while not rospy.is_shutdown():
         rospy.loginfo("dummy_sensor: publishing dummy sensor data")
-        odom_pub.publish(generate_odometry())
+ #       odom_pub.publish(generate_odometry())
         imu_pub.publish(generate_imu_data())
-        gps_pub.publish(generate_navsatfix())
+        #gps_pub.publish(generate_navsatfix())
         rate.sleep()
 
 if __name__ == "__main__":

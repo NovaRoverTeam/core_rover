@@ -11,7 +11,7 @@
     </node>
 
     <node pkg="gps_common" type="utm_odometry_node" name="gps_conv">
-        <remap from="fix" to="gps"/>
+        <remap from="fix" to="/nova_common/gps_data"/>
         <remap from="odom" to="vo"/>
         <param name="rot_covariance" value="99999"/>
         <param name="frame_id" value="base_footprint"/>
