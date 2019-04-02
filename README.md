@@ -11,6 +11,7 @@ MUST HAVE Linux version 16.04 with ROS kinetic installed.
 http://wiki.ros.org/ROS/Tutorials
 
 sudo apt-get install libsdl2-dev
+sudo apt-get install ros-kinetic-robot-localization
 
 Replace the core_rover/lib/x86-64 binaries with the Phoenix-Linux-SocketCAN-Example/lib/x86-64 binaries from this link (they have the same name but are actually different. The ones in github are for Jetson only):
 ```
