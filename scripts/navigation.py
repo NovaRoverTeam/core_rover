@@ -99,7 +99,8 @@ def handleStartAuto(req):
         return StartAutoResponse(False,
             "Unable to start mission, must be in Auto mode.")
 
- #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # Global variables
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 rovey_pos = RoveyPosClass(0,0) #Object for GPS coords of current rover position.
