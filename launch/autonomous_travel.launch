@@ -17,7 +17,7 @@
         <param name="world_frame" value="odom"/>
 
         <!-- subscription to IMU topic -->
-        <param name="imu0" value="/imu_data"/>
+        <param name="imu0" value="/pioneer3at/imu/values"/>
         <rosparam param="imu0_config">[false,false,false,
                                        false,true,false,
                                        false,false,false,
@@ -25,20 +25,20 @@
                                        false,false,false]</rosparam>
 
         <!-- publish to filtered odometry -->
-        <remap from="odometry/filtered" to="/odom_filtered"/>
+        <remap from="odometry/filtered" to="/filter/odom_filtered"/>
 
     </node>
 
     <node pkg="robot_localization" type="navsat_transform_node" name="navsat_transform_node">
        
         <!-- read raw imu, raw gps, and filtered odometry -->
-        <remap from="imu/data" to="/imu_data"/>
-        <remap from="gps/fix" to="/gps_data"/>
-        <remap from="odometry/filtered" to="/odom_filtered"/>
+        <remap from="imu/data" to="/pioneer3at/imu/values"/>
+        <remap from="gps/fix" to="/pioneer3at/gps/values"/>
+        <remap from="odometry/filtered" to="/filter/odom_filtered"/>
 
         <!-- publish to filtered gps -->
         <param name="publish_filtered_gps" value="true"/>
-        <remap from="gps/filtered" to="/gps_filtered"/>
+        <remap from="gps/filtered" to="/filter/gps_filtered"/>
 
     </node>
 
