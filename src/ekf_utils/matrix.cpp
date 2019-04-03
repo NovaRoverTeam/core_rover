@@ -186,6 +186,7 @@ void Matrix::CopyInto(uint8_t row_start, uint8_t column_start,
 void Matrix::Identity() {
     if (!IsSquare()) {
         throw std::invalid_argument("Matrix is not square");
+    }
     Fill(0);
 
     for (uint8_t i = 0; i < nrows; i++) {
