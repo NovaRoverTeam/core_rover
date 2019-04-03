@@ -30,7 +30,7 @@ bool use_fake = false; // Use fake coords?
 bool test_data = false;
 double fake_lat, fake_long; // Fake GPS coords
 bool print_coords = true;
-bool print_ground_speed = false;
+bool print_ground_speed = true;
 int gps_fix_aquired = -1;
 ros::Publisher lat_long_pub;
 

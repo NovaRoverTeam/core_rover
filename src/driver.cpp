@@ -182,7 +182,6 @@ int main(int argc, char **argv)
       else if (speed<0){
          talon_speed = -0.3;
 }*/
-
       talon_speed = speed*1.5;
       float right = talon_speed - talon_steer;   //Positive turn decreases right motors speeds to turn right.
       float left = talon_speed + talon_steer;
@@ -202,7 +201,7 @@ int main(int argc, char **argv)
       if (loopCount >= 10) {
         loopCount = 0;
         //std::cout << "talon5 motor output: " << talon5.GetMotorOutputPercent() << std::endl;
-        std::cout << "talon3 velocity: " << talon3.GetSelectedSensorVelocity() << std::endl;
+       // std::cout << "talon2 velocity: " << talon2.GetSelectedSensorVelocity() << std::endl;
       }
 
       //Enable rover with a timeout of 100ms
@@ -227,14 +226,14 @@ void ConfigTalon(TalonSRX* talon) {
 	/* set the peak and nominal outputs */
 	talon->ConfigNominalOutputForward(0, kTimeoutMs);
 	talon->ConfigNominalOutputReverse(0, kTimeoutMs);
-	talon->ConfigPeakOutputForward(0.4, kTimeoutMs);
-	talon->ConfigPeakOutputReverse(-0.4, kTimeoutMs);
+	talon->ConfigPeakOutputForward(0.7, kTimeoutMs);
+	talon->ConfigPeakOutputReverse(-0.7, kTimeoutMs);
 
 	/* set closed loop gains in slot0 */
 	talon->Config_kF(kPIDLoopIdx, 0.1097, kTimeoutMs); //0.1097
-	talon->Config_kP(kPIDLoopIdx, 0.8, kTimeoutMs); //0.22
-	talon->Config_kI(kPIDLoopIdx, 0.02, kTimeoutMs);
-	talon->Config_kD(kPIDLoopIdx, 0.0, kTimeoutMs);
+	talon->Config_kP(kPIDLoopIdx, 6, kTimeoutMs); //0.22
+	talon->Config_kI(kPIDLoopIdx, 0.02, kTimeoutMs); //0.02
+	talon->Config_kD(kPIDLoopIdx, 0.03, kTimeoutMs);
 
 	talon->SetSelectedSensorPosition(0);
 }
