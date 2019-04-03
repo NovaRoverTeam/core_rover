@@ -1,8 +1,7 @@
 #ifndef SRC_UTIL_MATRIX_H_
 #define SRC_UTIL_MATRIX_H_
 
-#include <src/util/data_types.h>
-#include <src/util/msp_exception.h>
+#include "./data_types.h"
 
 #define NewStackMatrixMacro(name, n_rows, n_cols) \
     double name##_data[n_rows][n_cols];           \

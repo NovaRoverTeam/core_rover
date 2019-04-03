@@ -1,6 +1,5 @@
 #include <math.h>
-#include <src/util/matrix.h>
-#include <src/util/msp_exception.h>
+#include "matrix.h"
 
 // TODO(dingbenjamin): Split up exception throws into row/column mismatches to
 // return failed arguments
@@ -12,8 +11,7 @@ void Matrix::CopySlice(uint8_t row_start, uint8_t row_end, uint8_t column_start,
         column_end >= A.GetNColumns() || column_end < column_start ||
         nrows != row_end - row_start + 1 ||
         ncolumns != column_end - column_start + 1) {
-        throw MspException("Matrix::Slice arguments outside bounds",
-                           kMatrixSliceArgumentFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Wrong number of rows or columns");
     }
     nrows = row_end - row_start + 1;
     ncolumns = column_end - column_start + 1;
@@ -32,16 +30,14 @@ bool Matrix::IsSquare() const { return nrows == ncolumns; }
 
 double Matrix::Get(uint8_t row, uint8_t column) const {
     if (row >= nrows || column >= ncolumns) {  // uint8_t always > 0
-        throw MspException("Matrix::Get indices out of bounds",
-                           kMatrixGetOutOfBoundsFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Wrong number of rows or columns");
     }
     return data[(row * ncolumns) + column];
 }
 
 void Matrix::Set(uint8_t row, uint8_t column, double value) {
     if (row >= nrows || column >= ncolumns) {  // uint8_t always > 0
-        throw MspException("Matrix::Set indices out of bounds",
-                           kMatrixIndexOutOfBoundsFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Wrong number of rows or columns");
     }
     data[(row * ncolumns) + column] = value;
 }
@@ -50,12 +46,10 @@ void Matrix::Set(uint8_t row, uint8_t column, double value) {
 //  comparison with zero, but it's set arbitrarily.
 bool Matrix::DoubleIsEqual(double a, double b) {
     if (isinf(a) || isinf(b)) {
-        throw MspException("Matrix::DoubleIsEqual argument isinf",
-                           kMatrixDoubleIsEqualInfFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Input args a or b or both are inf");
     }
     if (isnan(a) || isnan(b)) {
-        throw MspException("Matrix::DoubleIsEqual argument is nan",
-                           kMatrixDoubleIsEqualNanFail, __FILE__, __LINE__);
+        std::invalid_argument("NAN ERROR");
     }
     if (a > b) {
         return fabs(a - b) <= fabs(a * EPSILON_MULT + EPSILON_ADD);
@@ -65,8 +59,7 @@ bool Matrix::DoubleIsEqual(double a, double b) {
 
 bool Matrix::IsEqual(const Matrix &A) const {
     if (!SameSize(A)) {
-        throw MspException("Matrix::IsEqual arguments' sizes don't match",
-                           kMatrixIsEqualArgumentFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Wrong number of rows or columns");
     }
     for (uint8_t i = 0; i < nrows; i++) {
         for (uint8_t j = 0; j < ncolumns; j++) {
@@ -90,8 +83,7 @@ bool Matrix::SameNColumns(const Matrix &A) const {
 
 void Matrix::Transpose(const Matrix &A) {
     if (nrows != A.GetNColumns() || ncolumns != A.GetNRows()) {
-        throw MspException("Matrix::Transpose arguments' sizes don't match",
-                           kMatrixTransposeSizeFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Wrong number of rows or columns");
     }
     for (uint8_t i = 0; i < nrows; i++) {
         for (uint8_t j = 0; j < ncolumns; j++) {
@@ -102,8 +94,7 @@ void Matrix::Transpose(const Matrix &A) {
 
 double Matrix::VectorNorm(const Matrix &A) {
     if (A.GetNColumns() != 1) {
-        throw MspException("Matrix::VectorNorm must be a column vector",
-                           kMatrixVectorNormNotColumnFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Must be a column vector");
     }
     double sum_of_squares = 0;
     for (uint8_t i = 0; i < A.GetNRows(); i++) {
@@ -114,8 +105,7 @@ double Matrix::VectorNorm(const Matrix &A) {
 
 void Matrix::Add(const Matrix &A, const Matrix &B) {
     if (!SameSize(A) || !SameSize(B)) {
-        MspException("Matrix::Add arguments' sizes don't match",
-                     kMatrixAddInvalidSizeFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Matrix A and B are not the same size");
     }
     for (uint8_t i = 0; i < nrows; i++) {
         for (uint8_t j = 0; j < ncolumns; j++) {
@@ -126,8 +116,7 @@ void Matrix::Add(const Matrix &A, const Matrix &B) {
 
 void Matrix::Subtract(const Matrix &A, const Matrix &B) {
     if (!SameSize(A) || !SameSize(B)) {
-        throw MspException("Matrix::Subtract arguments' sizes don't match",
-                           kMatrixSubtractInvalidSizeFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Matrix A and B are not the same size");
     }
     for (uint8_t i = 0; i < nrows; i++) {
         for (uint8_t j = 0; j < ncolumns; j++) {
@@ -138,9 +127,7 @@ void Matrix::Subtract(const Matrix &A, const Matrix &B) {
 
 void Matrix::Multiply(const Matrix &A, const Matrix &B) {
     if (A.GetNColumns() != B.GetNRows() || !SameNRows(A) || !SameNColumns(B)) {
-        throw MspException("Matrix::Multiply dimensions don't match",
-                           kMatrixMultiplyInvalidDimensionFail, __FILE__,
-                           __LINE__);
+        throw std::invalid_argument("Matrix A and B are the wrong sizes");
     }
     for (uint8_t i = 0; i < nrows; i++) {
         for (uint8_t j = 0; j < ncolumns; j++) {
@@ -155,9 +142,7 @@ void Matrix::Multiply(const Matrix &A, const Matrix &B) {
 
 void Matrix::MultiplyScalar(const Matrix &A, double scale) {
     if (!SameSize(A)) {
-        throw MspException(
-            "Matrix::MultiplyScalar arguments' sizes don't match",
-            kMatrixMultiplyScalarSizeFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Matrix::Multiply scalar arguments don't match");
     }
     for (uint8_t i = 0; i < nrows; i++) {
         for (uint8_t j = 0; j < ncolumns; j++) {
@@ -170,9 +155,7 @@ void Matrix::MultiplyScalar(const Matrix &A, double scale) {
 void Matrix::CrossProduct(const Matrix &A, const Matrix &B) {
     if (A.GetNRows() != 3 || A.GetNColumns() != 1 || !B.SameSize(A) ||
         !SameSize(A)) {
-        throw MspException(
-            "Matrix::CrossProduct arguments or 'this' aren't column vectors",
-            kMatrixCrossProductArgumentsFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Matrix::CrossProduct arguments or this arent column vectors");
     }
     Set(0, 0, A.Get(1, 0) * B.Get(2, 0) - A.Get(2, 0) * B.Get(1, 0));
     Set(1, 0, A.Get(2, 0) * B.Get(0, 0) - A.Get(0, 0) * B.Get(2, 0));
@@ -191,9 +174,7 @@ void Matrix::CopyInto(uint8_t row_start, uint8_t column_start,
                       const Matrix &A) {
     if (nrows < A.GetNRows() + row_start ||
         ncolumns < A.GetNColumns() + column_start) {
-        throw MspException(
-            "Matrix::CopyInto arguments exceed the bounds of 'this'",
-            kMatrixCopyIntoArgumentsFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Matrix indicies are out of bounds");
     }
     for (uint8_t i = 0; i < A.GetNRows(); i++) {
         for (uint8_t j = 0; j < A.GetNColumns(); j++) {
@@ -204,9 +185,7 @@ void Matrix::CopyInto(uint8_t row_start, uint8_t column_start,
 
 void Matrix::Identity() {
     if (!IsSquare()) {
-        throw MspException("Matrix::Identity argument not square",
-                           kMatrixIdentityNotSquareFail, __FILE__, __LINE__);
-    }
+        throw std::invalid_argument("Matrix is not square");
     Fill(0);
 
     for (uint8_t i = 0; i < nrows; i++) {
@@ -219,9 +198,7 @@ void Matrix::QuaternionNormalise(const Matrix &q) {
     // TODO(rskew) break this out into a standalone quaternion library
     if (nrows != 4 || ncolumns != 1 || q.GetNRows() != 4 ||
         q.GetNColumns() != 1) {
-        throw MspException("Matrix::QuaternionNormalise not a 4x1 matrix",
-                           kMatrixQuaternionNormaliseArgumentFail, __FILE__,
-                           __LINE__);
+        throw std::invalid_argument("Quaternion must be a 4x1 Matrix");
     }
     MultiplyScalar(q, 1 / VectorNorm(q));
 }
@@ -229,9 +206,7 @@ void Matrix::QuaternionNormalise(const Matrix &q) {
 // Only valid for quaternions represented as 4x1 matrices
 void Matrix::RotationMatrixFromQuaternion(const Matrix &q) {
     if (nrows != 3 || ncolumns != 3 || q.nrows != 4 || q.ncolumns != 1) {
-        throw MspException(
-            "Matrix::RotationMatrixFromQuaternion incorrect dimensions",
-            kMatrixRotateQuaternionArgumentFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Matrix A and B are not the same size");
     }
     NewStackMatrixMacro(q_normed, 4, 1);
 
@@ -257,9 +232,7 @@ void Matrix::RotationMatrixFromQuaternion(const Matrix &q) {
 void Matrix::SkewSymmetricFill(const Matrix &A) {
     if (A.GetNColumns() != 1 || A.GetNRows() != 3 || nrows != 3 ||
         ncolumns != 3) {
-        throw MspException("Matrix::SkewSymmetricFill incorrect dimensions",
-                           kMatrixSkewSymmetricFillArgumentFail, __FILE__,
-                           __LINE__);
+        throw std::invalid_argument("Matrix must be 3x1");
     }
     Set(0, 0, 0);
     Set(0, 1, -A.Get(2, 0));
@@ -275,9 +248,7 @@ void Matrix::SkewSymmetricFill(const Matrix &A) {
 void Matrix::ConcatenateHorizontally(const Matrix &A, const Matrix &B) {
     if (!SameNRows(A) || !SameNRows(B) ||
         ncolumns != A.GetNColumns() + B.GetNColumns()) {
-        throw MspException(
-            "Matrix::ConcatenateHorizontally arguments' dimensions don't match",
-            kMatrixConcatenateHorizontalArgumentFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Error on input size arguments");
     }
     for (uint8_t i = 0; i < A.GetNRows(); i++) {
         for (uint8_t j = 0; j < A.GetNColumns(); j++) {
@@ -294,9 +265,7 @@ void Matrix::ConcatenateHorizontally(const Matrix &A, const Matrix &B) {
 void Matrix::ConcatenateVertically(const Matrix &A, const Matrix &B) {
     if (!SameNColumns(A) || !SameNColumns(B) ||
         nrows != A.GetNRows() + B.GetNRows()) {
-        throw MspException(
-            "Matrix::ConcatenateVertically arguments' dimensions don't match",
-            kMatrixConcatenateVerticalArgumentFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Error on input size arguments");
     }
     for (uint8_t i = 0; i < A.GetNRows(); i++) {
         for (uint8_t j = 0; j < A.GetNColumns(); j++) {
@@ -312,9 +281,7 @@ void Matrix::ConcatenateVertically(const Matrix &A, const Matrix &B) {
 
 void Matrix::AddRows(uint8_t row_to, uint8_t row_from, double scale) {
     if (row_to >= nrows || row_from >= nrows) {
-        throw MspException(
-            "Matrix::AddRows arguments are outside matrix dimensions",
-            kMatrixAddRowsArgumentFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Outside Matrix dimensions");
     }
     for (uint8_t i = 0; i < ncolumns; i++) {
         Set(row_to, i, Get(row_to, i) + (Get(row_from, i) * scale));
@@ -323,9 +290,7 @@ void Matrix::AddRows(uint8_t row_to, uint8_t row_from, double scale) {
 
 void Matrix::MultiplyRow(uint8_t row, double scale) {
     if (row >= nrows) {
-        throw MspException(
-            "Matrix::MultiplyRow arguments are outside matrix dimensions",
-            kMatrixMultiplyRowArgumentFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Dimensions are incorrect");
     }
     for (uint8_t i = 0; i < ncolumns; i++) {
         Set(row, i, Get(row, i) * scale);
@@ -334,9 +299,7 @@ void Matrix::MultiplyRow(uint8_t row, double scale) {
 
 void Matrix::SwitchRows(uint8_t row_a, uint8_t row_b) {
     if (row_a >= nrows || row_b >= nrows) {
-        throw MspException(
-            "Matrix::SwitchRows arguments are outside matrix dimensions",
-            kMatrixSwitchRowsArgumentFail, __FILE__, __LINE__);
+        throw std::invalid_argument("Matrix A and B are not the same size");
     }
     for (uint8_t i = 0; i < ncolumns; i++) {
         double temp = Get(row_a, i);
@@ -364,9 +327,7 @@ void Matrix::RowReduce() {
             }
         }
         if (DoubleIsEqual(max_element, 0)) {
-            throw MspException(
-                "Matrix::RowReduce linear system has no solution",
-                kMatrixRowReduceNoSolutionFail, __FILE__, __LINE__);
+            throw std::invalid_argument("Matrix A and B are not the same size");
         }
 
         SwitchRows(i, max_row);
