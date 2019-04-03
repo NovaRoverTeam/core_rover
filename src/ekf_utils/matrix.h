@@ -3,6 +3,8 @@
 
 #include "./data_types.h"
 
+#include <stdexcept>
+
 #define NewStackMatrixMacro(name, n_rows, n_cols) \
     double name##_data[n_rows][n_cols];           \
     Matrix name(name##_data);
@@ -30,10 +32,7 @@ class Matrix {
     template <uint8_t rows, uint8_t columns>
     Matrix(const Matrix &A, double (&init_data)[rows][columns] = NULL) {
         if (rows != A.GetNRows() || columns != A.GetNColumns()) {
-            throw MspException(
-                "Matrix::Matrix(const Matrix &A ...) arguments sizes don't "
-                "match",
-                kMatrixConstructSizeMismatchFail, __FILE__, __LINE__);
+            throw std::invalid_argument("Wrong number of rows or columns");
         }
         nrows = A.GetNRows();
         ncolumns = A.GetNColumns();
