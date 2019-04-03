@@ -1,5 +1,5 @@
 #include <math.h>
-#include <src/adcs/kalman_filter.h>
+#include "kalman_filter.h"
 
 KalmanFilter::KalmanFilter(uint16_t sample_time_millis, Matrix &r1, Matrix &r2,
                            Matrix &Q0, Matrix &R0, Matrix &P0, Matrix &q0)
