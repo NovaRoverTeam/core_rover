@@ -43,6 +43,8 @@ def DriverMsg(data,steer_limit,rpm_limit):
     return cmd
 
 def tennis_loc():
+    rospy.set_param('steer_limit', 20)
+    rospy.set_param('rpm_limit', 10)
     server_address = '/home/nvidia/Documents/YOLO3-4-Py/mysocket'
 	    # Make sure the socket does not already exist
     try:
@@ -53,19 +55,19 @@ def tennis_loc():
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     sock.bind(server_address)
     sock.listen(1)
-    ball_pub  = rospy.Publisher("/core_rover/navigation/tennis_loc", DriveCmd, queue_size=10)
+    ball_pub  = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
     rospy.init_node('tennis_loc', anonymous=True)
     rate = rospy.Rate(30) # Loop rate in Hz
     rospy.loginfo("tennis ball location node started")
 
     while not rospy.is_shutdown():
-    	connection, client_address = sock.accept()
-    	while True:
-        	steer_limit = rospy.get_param('steer_limit')
-        	rpm_limit   = rospy.get_param('rpm_limit')
+        connection, client_address = sock.accept()
+        while True:
+            steer_limit = rospy.get_param('steer_limit')
+            rpm_limit   = rospy.get_param('rpm_limit')
             data = connection.recv(100) # 1 Byte per character
             if data:
-                #rospy.loginfo(data)
+                rospy.loginfo(data)
                 data_parsed = ast.literal_eval(data)
                 #print(data_parsed)
                 #array = Float32MultiArray(4,data_parsed)

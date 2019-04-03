@@ -14,19 +14,19 @@
           default:  False
           
         cam_1:  
-          id:      '192.168.1.52'
+          id:      '192.168.1.53'
           usb:      False
           name:    'GimbalCam1'
           default:  False
           
         cam_2:  
-          id:      'UVC Camera (046d:09a1)'
+          id:      'Stereo Vision 2'
           usb:      True
           name:    'Webcam Sphere Legs'
           default:  False
           
         cam_3:  
-          id:      'UVC Camera (046d:09a1)'
+          id:      'Stereo Vision 1'
           usb:      True
           name:    'Webcam Sphere Legs'
           default:  False

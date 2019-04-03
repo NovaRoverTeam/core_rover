@@ -23,13 +23,16 @@ def bearing():
     rate = rospy.Rate(2) # Loop rate in Hz
     compass_sub = rospy.Subscriber("/nova_common/MagnetometerFiltered", MagneticField, compassCallback)
     while not rospy.is_shutdown():
-				rad = math.atan2(z,x)
+				bearing = math.atan2(z,x)*180/math.pi
 				#radnorth = math.atan2(-0.8370561,-0.40941954) # north vector 1,0,0
-				bearing = (rad)/math.pi*180 - 180
+				#bearing = (rad)*(180/math.pi)
 
 				if bearing < 0:
 						bearing = bearing + 360.0
+				elif bearing > 360:
+						bearing = bearing - 360.0
 
+				#bearing = bearing - 180
 				rospy.loginfo("bearing: %s", bearing)
 
 				rate.sleep()
