@@ -1,0 +1,6 @@
+devel_space: /home/nvidia/catkin_ws/src/core_rover/devel
+install: false
+install_space: /home/nvidia/catkin_ws/src/core_rover/install
+profile: default
+source_space: /home/nvidia/catkin_ws/src/core_rover/src
+workspace: /home/nvidia/catkin_ws/src/core_rover

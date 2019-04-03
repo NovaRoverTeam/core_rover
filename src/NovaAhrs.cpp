@@ -1,13 +1,11 @@
-// compile & linking command:
-// gcc NovaAhrs.c ../../Fusion/Fusion/FusionBias.c ../../Fusion/Fusion/FusionAhrs.c -lm
-
 //--**-- ROS includes
 #include "ros/ros.h"
 #include <ros/console.h>
 
-#include "../include/Fusion/Fusion/Fusion.h"
-#include "../include/Fusion/Fusion/FusionAhrs.c"
-#include "../include/Fusion/Fusion/FusionBias.c"
+#include "../include/Fusion/Fusion.h"
+#include "../include/Fusion/FusionAhrs.c"
+#include "../include/Fusion/FusionBias.c"
+#include "../include/Fusion/FusionCompass.c"
 #include "../include/utils/lowpassfilter.cpp"
 #include <unistd.h>
 #include <fcntl.h>
@@ -16,7 +14,9 @@
 #include <stdio.h>
 #include <cmath>
 #include <sys/time.h>
-#include <sensor_msgs/MagneticField.h>
+#include <std_msgs/Float32.h>
+#include <geometry_msgs/Vector3.h>
+#include <sensor_msgs/Imu.h>
 
 FusionBias fusionBias;
 FusionAhrs fusionAhrs;
@@ -47,8 +47,10 @@ int main(int argc, char **argv) {
 	
 	ros::init(argc, argv, "NovaAhrs", ros::init_options::AnonymousName); // Initialise node
         ros::NodeHandle n;
-	ros::Publisher magRaw_pub = n.advertise<sensor_msgs::MagneticField>("/nova_common/MagnetometerRaw", 1);
- 	ros::Publisher magFiltered_pub = n.advertise<sensor_msgs::MagneticField>("/nova_common/MagnetometerFiltered", 1);
+	ros::Publisher imu_pub = n.advertise<sensor_msgs::Imu>("/nova_common/IMU", 1);
+	ros::Publisher mag_pub = n.advertise<geometry_msgs::Vector3>("/nova_common/magnetometer", 1);
+	ros::Publisher heading_pub = n.advertise<std_msgs::Float32>("/nova_common/heading", 1);
+ 	//ros::Publisher magFiltered_pub = n.advertise<sensor_msgs::MagneticField>("/nova_common/MagnetometerFiltered", 1);
 
 	// initialise gyroscope bias correction with stationary threshold of 0.5 degrees/s
 	FusionBiasInitialise(&fusionBias, 0.5f, samplePeriod);
@@ -68,6 +70,10 @@ int main(int argc, char **argv) {
 	FusionVector3 acc_cal; // accelerometer
 	FusionVector3 gyro_cal; // gyroscope
 	FusionVector3 mag_cal; // magnetometer
+	// filtered data
+	FusionVector3 acc_fil; // accelerometer
+	FusionVector3 gyro_fil; // gyroscope
+	FusionVector3 mag_fil; // magnetometer
 	
 	FusionEulerAngles eulerAngles;
 	
@@ -113,11 +119,11 @@ int main(int argc, char **argv) {
 	
 	// Initialise low pass filter for the magnetometer
 
-	int timeConstant = 1000; //1 second time constant for now
+	int timeConstant = 750; // *1/1000 sec
 	int milliSamplePeriod =floor(1000*samplePeriod);
-	FirstOrderLowPass smoothed_mag_x(timeConstant, milliSamplePeriod); 
-	FirstOrderLowPass smoothed_mag_y(timeConstant, milliSamplePeriod);
-	FirstOrderLowPass smoothed_mag_z(timeConstant, milliSamplePeriod);
+	FirstOrderLowPass smoothed_gyro(timeConstant, milliSamplePeriod); 
+	FirstOrderLowPass smoothed_acc(timeConstant, milliSamplePeriod);
+	FirstOrderLowPass smoothed_mag(timeConstant, milliSamplePeriod);
 
 	//main loop
 	do {	
@@ -180,52 +186,60 @@ int main(int argc, char **argv) {
 		length = 6;
 		bytes_read = (int)read(mag_i2c, buffer, length);
 		//printf("%i - ", bytes_read);
-		
-		signed short mag_x_raw = (buffer[0] << 8) + buffer[1];
-		signed short mag_y_raw = (buffer[2] << 8) + buffer[3];
-		signed short mag_z_raw = (buffer[4] << 8) + buffer[5];
+		//Different pattern with the gyro and acc!!
+		signed short mag_x_raw = (buffer[1] << 8) + buffer[0];
+		signed short mag_y_raw = (buffer[3] << 8) + buffer[2];
+		signed short mag_z_raw = (buffer[5] << 8) + buffer[4];
 		FusionVector3 mag_raw = {
 			(float)mag_x_raw,
 			(float)mag_y_raw,
 			(float)mag_z_raw,
 		};
 		
-		//printf("X: %1.6f, Y: %1.6f, Z: %1.6f\n", (float)mag_x_raw/32768, (float)mag_y_raw/32768, (float)mag_z_raw/32768);
+		
 		
 		// Sensor Fusion
 		// Calibrate sensors
-		//gyro_cal = FusionCalibrationInertial(gyro_raw, FUSION_ROTATION_MATRIX_IDENTITY, gyro_sensitivity, FUSION_VECTOR3_ZERO);
-		//acc_cal = FusionCalibrationInertial(acc_raw, FUSION_ROTATION_MATRIX_IDENTITY, gyro_sensitivity, FUSION_VECTOR3_ZERO);
-		//mag_cal = FusionCalibrationMagnetic(mag_raw, FUSION_ROTATION_MATRIX_IDENTITY, hardIronBias);
+		gyro_cal = FusionCalibrationInertial(gyro_raw, FUSION_ROTATION_MATRIX_IDENTITY, gyro_sensitivity, FUSION_VECTOR3_ZERO);
+		acc_cal = FusionCalibrationInertial(acc_raw, FUSION_ROTATION_MATRIX_IDENTITY, acc_sensitivity, FUSION_VECTOR3_ZERO);
+		mag_cal = FusionCalibrationMagnetic(mag_raw, FUSION_ROTATION_MATRIX_IDENTITY, hardIronBias);
+
+		// Filter sensor value
+		gyro_fil = smoothed_gyro.FusionVector3LPFilter(gyro_cal);
+		acc_fil = smoothed_acc.FusionVector3LPFilter(acc_cal);
+		mag_fil = smoothed_mag.FusionVector3LPFilter(mag_cal);
+
+		std_msgs::Float32 heading_msg;
+		heading_msg.data = FusionCompassCalculateHeading(acc_fil, mag_fil);
+		heading_pub.publish(heading_msg);
 		
 		// Update AHRS
-		//gyro_cal = FusionBiasUpdate(&fusionBias, gyro_cal); // gyroscope bias correction
-		//FusionAhrsUpdate(&fusionAhrs, gyro_cal, acc_cal, mag_cal, samplePeriod);
-		
-		// Get Euler Angles
-		//eulerAngles = FusionQuaternionToEulerAngles(FusionAhrsGetQuaternion(&fusionAhrs));
-		//printf("Roll = %0.1f, Pitch = %0.1f, Yaw = %0.1f\n", eulerAngles.angle.roll, eulerAngles.angle.pitch, eulerAngles.angle.yaw);
+		gyro_cal = FusionBiasUpdate(&fusionBias, gyro_cal); // gyroscope bias correction
+		FusionAhrsUpdate(&fusionAhrs, gyro_fil, acc_fil, mag_fil, samplePeriod);	
+		FusionQuaternion quaternion = FusionAhrsGetQuaternion(&fusionAhrs);
+		FusionVector3 linear_acceleration = FusionAhrsGetLinearAcceleration(&fusionAhrs);
 
-		//nova_common::IMU imu_msg;
-		//imu_msg.pitch = eulerAngles.angle.pitch;
-		//imu_msg.roll = eulerAngles.angle.roll;
-		//imu_msg.yaw = eulerAngles.angle.yaw;
 
 		//then match xyz values to 8 compass directions (flat AND 4 tilt directions)
 		//look into wireshielding / differential i2c bus 
 		//imu_pub.publish(imu_msg);
-		sensor_msgs::MagneticField mag_msg;
-		mag_msg.magnetic_field.x = (float)mag_x_raw/32768;
-		mag_msg.magnetic_field.y = (float)mag_y_raw/32768;
-		mag_msg.magnetic_field.z = (float)mag_z_raw/32768;
-		magRaw_pub.publish(mag_msg);
 		
-		sensor_msgs::MagneticField magSmooth;
-		magSmooth.magnetic_field.x = smoothed_mag_x.ProcessSample(mag_msg.magnetic_field.x);
-		magSmooth.magnetic_field.y = smoothed_mag_y.ProcessSample(mag_msg.magnetic_field.y);
-		magSmooth.magnetic_field.z = smoothed_mag_z.ProcessSample(mag_msg.magnetic_field.z);
-		
-		magFiltered_pub.publish(mag_msg);
+		sensor_msgs::Imu imu_msg;
+		imu_msg.orientation.w = quaternion.element.w;
+		imu_msg.orientation.x = quaternion.element.x;
+		imu_msg.orientation.y = quaternion.element.y;
+		imu_msg.orientation.z = quaternion.element.z;
+
+		imu_msg.linear_acceleration.x = linear_acceleration.axis.x/32768;
+		imu_msg.linear_acceleration.y = linear_acceleration.axis.y/32768;
+		imu_msg.linear_acceleration.z = linear_acceleration.axis.z/32768;
+		imu_pub.publish(imu_msg);
+
+		geometry_msgs::Vector3 mag_msg;
+		mag_msg.x = mag_fil.axis.x/32768;
+		mag_msg.y = mag_fil.axis.y/32768;
+		mag_msg.z = mag_fil.axis.z/32768;
+		mag_pub.publish(mag_msg);
 
 	} while(ros::ok());
 	
