@@ -1,0 +1,1 @@
+/home/nvidia/catkin_ws/src/core_rover/devel/.private/catkin_tools_prebuild/setup.sh

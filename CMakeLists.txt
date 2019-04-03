@@ -14,9 +14,9 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   nova_common
-	sensor_msgs
-	message_generation
-	tf
+  sensor_msgs
+  message_generation
+  tf
   webots_ros
 )
 
@@ -38,7 +38,7 @@ find_package(SDL2 REQUIRED)
   )
 
 catkin_package(
-	CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+	CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs message_runtime
 )
 
 include_directories(

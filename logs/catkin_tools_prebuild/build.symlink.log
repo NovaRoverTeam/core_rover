@@ -1,0 +1,32 @@
+Symlinking /home/nvidia/catkin_ws/src/core_rover/devel/./setup.zsh
+Symlinking /home/nvidia/catkin_ws/src/core_rover/devel/./_setup_util.py
+Symlinking /home/nvidia/catkin_ws/src/core_rover/devel/./setup.bash
+Symlinking /home/nvidia/catkin_ws/src/core_rover/devel/./setup.sh
+Symlinking /home/nvidia/catkin_ws/src/core_rover/devel/./env.sh
+Symlinking /home/nvidia/catkin_ws/src/core_rover/devel/share/catkin_tools_prebuild/cmake/catkin_tools_prebuildConfig.cmake
+Symlinking /home/nvidia/catkin_ws/src/core_rover/devel/share/catkin_tools_prebuild/cmake/catkin_tools_prebuildConfig-version.cmake
+Symlinking /home/nvidia/catkin_ws/src/core_rover/devel/lib/pkgconfig/catkin_tools_prebuild.pc
+Cleaning: (/home/benjamin/rover_ws/src/core_rover/devel/.private/catkin_tools_prebuild/setup.zsh, /home/benjamin/rover_ws/src/core_rover/devel/./setup.zsh)
+Cleaning: (/home/benjamin/rover_ws/src/core_rover/devel/.private/catkin_tools_prebuild/setup.sh, /home/benjamin/rover_ws/src/core_rover/devel/./setup.sh)
+Cleaning: (/home/benjamin/rover_ws/src/core_rover/devel/.private/catkin_tools_prebuild/setup.bash, /home/benjamin/rover_ws/src/core_rover/devel/./setup.bash)
+Cleaning: (/home/benjamin/rover_ws/src/core_rover/devel/.private/catkin_tools_prebuild/_setup_util.py, /home/benjamin/rover_ws/src/core_rover/devel/./_setup_util.py)
+Cleaning: (/home/benjamin/rover_ws/src/core_rover/devel/.private/catkin_tools_prebuild/env.sh, /home/benjamin/rover_ws/src/core_rover/devel/./env.sh)
+Cleaning: (/home/benjamin/rover_ws/src/core_rover/devel/.private/catkin_tools_prebuild/lib/pkgconfig/catkin_tools_prebuild.pc, /home/benjamin/rover_ws/src/core_rover/devel/lib/pkgconfig/catkin_tools_prebuild.pc)
+Cleaning: (/home/benjamin/rover_ws/src/core_rover/devel/.private/catkin_tools_prebuild/share/catkin_tools_prebuild/cmake/catkin_tools_prebuildConfig-version.cmake, /home/benjamin/rover_ws/src/core_rover/devel/share/catkin_tools_prebuild/cmake/catkin_tools_prebuildConfig-version.cmake)
+Cleaning: (/home/benjamin/rover_ws/src/core_rover/devel/.private/catkin_tools_prebuild/share/catkin_tools_prebuild/cmake/catkin_tools_prebuildConfig.cmake, /home/benjamin/rover_ws/src/core_rover/devel/share/catkin_tools_prebuild/cmake/catkin_tools_prebuildConfig.cmake)
+Unlinking: /home/benjamin/rover_ws/src/core_rover/devel/./setup.zsh
+Already unlinked: {}
+Unlinking: /home/benjamin/rover_ws/src/core_rover/devel/./setup.sh
+Already unlinked: {}
+Unlinking: /home/benjamin/rover_ws/src/core_rover/devel/./setup.bash
+Already unlinked: {}
+Unlinking: /home/benjamin/rover_ws/src/core_rover/devel/./_setup_util.py
+Already unlinked: {}
+Unlinking: /home/benjamin/rover_ws/src/core_rover/devel/./env.sh
+Already unlinked: {}
+Unlinking: /home/benjamin/rover_ws/src/core_rover/devel/lib/pkgconfig/catkin_tools_prebuild.pc
+Already unlinked: {}
+Unlinking: /home/benjamin/rover_ws/src/core_rover/devel/share/catkin_tools_prebuild/cmake/catkin_tools_prebuildConfig-version.cmake
+Already unlinked: {}
+Unlinking: /home/benjamin/rover_ws/src/core_rover/devel/share/catkin_tools_prebuild/cmake/catkin_tools_prebuildConfig.cmake
+Already unlinked: {}

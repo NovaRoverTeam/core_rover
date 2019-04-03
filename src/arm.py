@@ -6,13 +6,13 @@ from nova_common.msg import * #motor_arm
 from base_station.msg import *
 import time
 bustype = 'socketcan_native'
-channel = 'can0' #cantx is set virtual can, can set up by running the run_can.batch file in sim
+channel = 'can1' #cantx is set virtual can, can set up by running the run_can.batch file in sim
 bus = can.interface.Bus(channel=channel, bustype=bustype)  #Define the can bus interface to transmit on. 
 
 values = [0.0,0.0,0.0, 0.0, 0.0, 0.0,0.0] #[Ly, Lx, Ltw, Ry, Rx, Rtw,RClaw]
-ids = [0x02, 0x03, 0x01, 0x04, 0x05, 0x06, 0x07]
+ids = [0x03, 0x01, 0x05, 0x04, 0x02, 0x06, 0x07]
 def RightCallback(data):
-    data_array = [data.axis_ly_val,data.axis_lx_val,data.trig_l_val,data.trig_r_val]
+    data_array = [-data.axis_ly_val,data.axis_lx_val,data.trig_l_val,data.trig_r_val]
     for i in range(0,len(data_array)):
 		values[i+3] = data_array[i]
 		if(i == 2 or i==3):
@@ -26,7 +26,7 @@ def RightCallback(data):
 #    can_bus_send(msg)
 
 def LeftCallback(data):
-    data_array = [data.axis_ly_val,data.axis_lx_val,data.trig_l_val]
+    data_array = [-data.axis_ly_val,data.axis_lx_val,data.trig_l_val]
     for i in range(0,len(data_array)):
 		values[i] = data_array[i]
 		if(i == 2):
