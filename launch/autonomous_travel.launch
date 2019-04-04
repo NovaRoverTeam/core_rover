@@ -22,7 +22,7 @@
         <param name="world_frame" value="odom"/>
 
         <!-- subscription to IMU topic -->
-        <param name="imu0" value="/pioneer3at/imu/values"/>
+        <param name="imu0" value="/nova_common/ImuRaw"/>
         <param name="imu0_differential" value="false"/> <!-- set false if with navsat transform -->
         <rosparam param="imu0_config">[true,true,true,
                                        true,true,true,
@@ -31,7 +31,7 @@
                                        true,true,true]</rosparam>
 
         <!-- publish to filtered odometry -->
-        <remap from="odometry/filtered" to="/filter/odom_filtered"/>
+        <remap from="odometry/filtered" to="/nova_common/OdometryFiltered"/>
 
     </node>
 
@@ -41,13 +41,13 @@
         
        
         <!-- read raw imu, raw gps, and filtered odometry -->
-        <remap from="imu/data" to="/pioneer3at/imu/values"/>
-        <remap from="gps/fix" to="/pioneer3at/gps/values"/>
-        <remap from="odometry/filtered" to="/filter/odom_filtered"/>
+        <remap from="imu/data" to="/nova_common/ImuRaw"/>
+        <remap from="gps/fix" to="/nova_common/MagnetometerRawSmoothed"/>
+        <remap from="odometry/filtered" to="/nova_common/OdometryFiltered"/>
 
         <!-- publish to filtered gps -->
         <param name="publish_filtered_gps" value="true"/>
-        <remap from="gps/filtered" to="/filter/gps_filtered"/>
+        <remap from="gps/filtered" to="/nova_common/GpsFiltered"/>
 
     </node>
 
