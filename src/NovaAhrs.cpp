@@ -16,6 +16,7 @@
 #include <sys/time.h>
 #include <std_msgs/Float32.h>
 #include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Wrench.h>
 #include <sensor_msgs/Imu.h>
 
 FusionBias fusionBias;
@@ -48,9 +49,9 @@ int main(int argc, char **argv) {
 	ros::init(argc, argv, "NovaAhrs", ros::init_options::AnonymousName); // Initialise node
         ros::NodeHandle n;
 	ros::Publisher imu_pub = n.advertise<sensor_msgs::Imu>("/nova_common/IMU", 1);
-	ros::Publisher mag_pub = n.advertise<geometry_msgs::Vector3>("/nova_common/magnetometer", 1);
+	//ros::Publisher mag_pub = n.advertise<geometry_msgs::Vector3>("/nova_common/magnetometer", 1);
+	ros::Publisher mag_pub = n.advertise<geometry_msgs::Wrench>("/nova_common/magnetometer_compare", 1);
 	ros::Publisher heading_pub = n.advertise<std_msgs::Float32>("/nova_common/heading", 1);
- 	//ros::Publisher magFiltered_pub = n.advertise<sensor_msgs::MagneticField>("/nova_common/MagnetometerFiltered", 1);
 
 	// initialise gyroscope bias correction with stationary threshold of 0.5 degrees/s
 	FusionBiasInitialise(&fusionBias, 0.5f, samplePeriod);
@@ -235,10 +236,20 @@ int main(int argc, char **argv) {
 		imu_msg.linear_acceleration.z = linear_acceleration.axis.z/32768;
 		imu_pub.publish(imu_msg);
 
-		geometry_msgs::Vector3 mag_msg;
-		mag_msg.x = mag_fil.axis.x/32768;
-		mag_msg.y = mag_fil.axis.y/32768;
-		mag_msg.z = mag_fil.axis.z/32768;
+		//geometry_msgs::Vector3 mag_msg;
+		//mag_msg.x = mag_fil.axis.x/32768;
+		//mag_msg.y = mag_fil.axis.y/32768;
+		//mag_msg.z = mag_fil.axis.z/32768;
+		//mag_pub.publish(mag_msg);
+
+		//Test filter on the magnetometer values
+		geometry_msgs::Wrench mag_msg;
+		mag_msg.force.x = mag_cal.axis.x;
+		mag_msg.force.y = mag_cal.axis.y;
+		mag_msg.force.z = mag_cal.axis.z;
+		mag_msg.torque.x = mag_fil.axis.x;
+		mag_msg.torque.y = mag_fil.axis.y;
+		mag_msg.torque.z = mag_fil.axis.z;
 		mag_pub.publish(mag_msg);
 
 	} while(ros::ok());
