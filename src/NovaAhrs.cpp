@@ -342,8 +342,13 @@ int main(int argc, char **argv) {
         imu_msg.orientation.y = oriCalculated[1][0];
         imu_msg.orientation.z = oriCalculated[2][0];
 
-        //imu_msg.angular_velocity = //Vector3;
-        //imu_msg.linear_acceleration = //Vector3;
+        imu_msg.angular_velocity.x = gyroSmooth[0][0];
+        imu_msg.angular_velocity.y = gyroSmooth[1][0];
+        imu_msg.angular_velocity.z = gyroSmooth[2][0];
+
+        imu_msg.linear_acceleration.x = accSmooth[0][0];
+        imu_msg.linear_acceleration.y = accSmooth[1][0];
+        imu_msg.linear_acceleration.z = accSmooth[2][0];
 
         imu_pub.publish(imu_msg);
 
