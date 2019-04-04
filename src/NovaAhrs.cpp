@@ -73,22 +73,28 @@ int main(int argc, char **argv) {
 	ros::Publisher mag_pub = n.advertise<geometry_msgs::Wrench>("/nova_common/magnetometer_compare", 1);
 	ros::Publisher heading_pub = n.advertise<std_msgs::Float32>("/nova_common/heading", 1);
 
-    // build acceleration reference
+
+    // construct Kalman filter used to calcualte orientation field for IMU messages ...
+    // ... accelerometer reference 
     double acc_data[3][1] = { {0.0}, {0.0}, {-9.8} };
     Matrix r1(acc_data);
 
-    // build magnetic field reference
+    // ... magnetic field reference (todo: subscribe to raw GPS stream to populate)
     r_vector mag_field_reference;
     mag_field_reference = MagModel(2019.4, 0.0, 0.0, 0.0);
     double mag_data[3][1] = { {mag_field_reference.x}, {mag_field_reference.y}, {mag_field_reference.z} };
     Matrix r2(mag_data);
 
+    // ... prepare <OTHER DATA> for KAlman filter
     Matrix kKFProcessNoise(kKFProcessNoise_data);
     Matrix kKFSensorNoise(kKFSensorNoise_data);
     Matrix kKFInitialCovariance(kKFInitialCovariance_data);
     Matrix kKFInitialEstimate(kKFInitialEstimate_data);
 
-    KalmanFilter kalman_filter(uint16_t(50), r1, r2, kKFProcessNoise, kKFSensorNoise, kKFInitialCovariance, kKFInitialEstimate);
+    // ... and finally instantiate the Kalman filter
+    // todo: get rid of uint16_t magic number; constructor requires reference type
+    KalmanFilter kalmanFilter(uint16_t(50), r1, r2, kKFProcessNoise, kKFSensorNoise, kKFInitialCovariance, kKFInitialEstimate);
+
 
 	// initialise gyroscope bias correction with stationary threshold of 0.5 degrees/s
 	FusionBiasInitialise(&fusionBias, 0.5f, samplePeriod);
@@ -173,9 +179,13 @@ int main(int argc, char **argv) {
 	FirstOrderLowPass smoothed_gyro_y(timeConstant, milliSamplePeriod);
 	FirstOrderLowPass smoothed_gyro_z(timeConstant, milliSamplePeriod);
 
+    double oriCalculated[3][1];
+
 	float acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z;
 	double gyroSmooth[3][1];
-	
+
+    
+
 	//main loop
 	do {	
 		// request single magnetometer read
