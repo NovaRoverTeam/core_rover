@@ -70,6 +70,8 @@ int main(int argc, char **argv) {
 
     r_vector mag_field_reference;
     mag_field_reference = MagModel(2019.4, 0.0, 0.0, 0.0);
+    double mag_data[3][1] = { {mag_field_reference.x}, {mag_field_reference.y}, {mag_field_reference.z} };
+    Matrix r1(mag_data);
 
     Matrix kKFProcessNoise(kKFProcessNoise_data);
     Matrix kKFSensorNoise(kKFSensorNoise_data);
@@ -148,18 +150,18 @@ int main(int argc, char **argv) {
 	FirstOrderLowPass smoothed_mag_y(timeConstant, milliSamplePeriod);
 	FirstOrderLowPass smoothed_mag_z(timeConstant, milliSamplePeriod);
 
-	double magSmoothed[3][1];
+	double magSmooth[3][1];
 	FirstOrderLowPass smoothed_acc_x(timeConstant, milliSamplePeriod); 
 	FirstOrderLowPass smoothed_acc_y(timeConstant, milliSamplePeriod);
 	FirstOrderLowPass smoothed_acc_z(timeConstant, milliSamplePeriod);
 
-	double accSmoothed[3][1];
+	double accSmooth[3][1];
 	FirstOrderLowPass smoothed_gyro_x(timeConstant, milliSamplePeriod); 
 	FirstOrderLowPass smoothed_gyro_y(timeConstant, milliSamplePeriod);
 	FirstOrderLowPass smoothed_gyro_z(timeConstant, milliSamplePeriod);
 
 	float acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z;
-	double gyroSmoothed[3][1];
+	double gyroSmooth[3][1];
 	
 	//main loop
 	do {	
@@ -285,14 +287,12 @@ int main(int argc, char **argv) {
 		
 		Matrix gyro(gyroSmooth);
 		Matrix acc(accSmooth); 
-		Matrix mag(magSmooth)
+		Matrix mag(magSmooth);
 
-		sensor_msgs::MagneticField magSmooth;
-		magSmooth.magnetic_field.x = magSmooth[0][0];
-		magSmooth.magnetic_field.y = magSmooth[1][0];
-		magSmooth.magnetic_field.z = magSmooth[2][0];
-		
-
+		sensor_msgs::MagneticField mag_msg_smooth;
+		mag_msg_smooth.magnetic_field.x = magSmooth[0][0];
+		mag_msg_smooth.magnetic_field.y = magSmooth[1][0];
+		mag_msg_smooth.magnetic_field.z = magSmooth[2][0];
 
 		magFiltered_pub.publish(mag_msg);
 
