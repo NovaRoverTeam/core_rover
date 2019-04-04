@@ -5,6 +5,7 @@
 #include "ros/ros.h"
 #include <ros/console.h>
 #include "../include/utils/ekf_utils/kalman_filter.h"
+#include "../include/utils/ekf_utils/kalman_filter.cpp"
 #include "../include/utils/ekf_utils/matrix.h"
 #include "../include/Fusion/Fusion/Fusion.h"
 #include "../include/Fusion/Fusion/FusionAhrs.c"
@@ -22,7 +23,6 @@
 
 FusionBias fusionBias;
 FusionAhrs fusionAhrs;
-
 
 //Kalman filter configs
 // missing r1 - generated using WMM
@@ -68,17 +68,22 @@ int main(int argc, char **argv) {
 	ros::Publisher magRaw_pub = n.advertise<sensor_msgs::MagneticField>("/nova_common/MagnetometerRaw", 1);
  	ros::Publisher magFiltered_pub = n.advertise<sensor_msgs::MagneticField>("/nova_common/MagnetometerFiltered", 1);
 
+    // build acceleration reference
+    double acc_data[3][1] = { {0.0}, {0.0}, {-9.8} };
+    Matrix r1(acc_data);
+
+    // build magnetic field reference
     r_vector mag_field_reference;
     mag_field_reference = MagModel(2019.4, 0.0, 0.0, 0.0);
     double mag_data[3][1] = { {mag_field_reference.x}, {mag_field_reference.y}, {mag_field_reference.z} };
-    Matrix r1(mag_data);
+    Matrix r2(mag_data);
 
     Matrix kKFProcessNoise(kKFProcessNoise_data);
     Matrix kKFSensorNoise(kKFSensorNoise_data);
     Matrix kKFInitialCovariance(kKFInitialCovariance_data);
     Matrix kKFInitialEstimate(kKFInitialEstimate_data);
 
-    //KalmanFilter kalman_filter(uint16_t(50), kKFProcessNoise, kKFSensorNoise, kKFInitialCovariance, kKFInitialEstimate);
+    KalmanFilter kalman_filter(uint16_t(50), r1, r2, kKFProcessNoise, kKFSensorNoise, kKFInitialCovariance, kKFInitialEstimate);
 
 	// initialise gyroscope bias correction with stationary threshold of 0.5 degrees/s
 	FusionBiasInitialise(&fusionBias, 0.5f, samplePeriod);
