@@ -11,6 +11,7 @@
 #include "../include/Fusion/FusionBias.c"
 #include "../include/Fusion/FusionCompass.c"
 #include "../include/utils/lowpassfilter.cpp"
+#include "../include/utils/wmm/worldMagneticModel.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
