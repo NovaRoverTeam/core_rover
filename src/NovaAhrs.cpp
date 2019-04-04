@@ -4,7 +4,7 @@
 //--**-- ROS includes
 #include "ros/ros.h"
 #include <ros/console.h>
-#include "../include/utils/ekf_utils/kalman_filter.h"
+#include "../include/utils/ekf_utils/kalman_filter.cpp"
 #include "../include/utils/ekf_utils/matrix.h"
 #include "../include/Fusion/Fusion/Fusion.h"
 #include "../include/Fusion/Fusion/FusionAhrs.c"
@@ -19,10 +19,10 @@
 #include <cmath>
 #include <sys/time.h>
 #include <sensor_msgs/MagneticField.h>
+#include <sensor_msgs/Imu.h>
 
 FusionBias fusionBias;
 FusionAhrs fusionAhrs;
-
 
 //Kalman filter configs
 // missing r1 - generated using WMM
@@ -67,18 +67,30 @@ int main(int argc, char **argv) {
         ros::NodeHandle n;
 	ros::Publisher magRaw_pub = n.advertise<sensor_msgs::MagneticField>("/nova_common/MagnetometerRaw", 1);
  	ros::Publisher magFiltered_pub = n.advertise<sensor_msgs::MagneticField>("/nova_common/MagnetometerFiltered", 1);
+    ros::Publisher imu_pub = n.advertise<sensor_msgs::Imu>("/nova_common/IMU", 1);
 
+
+    // construct Kalman filter used to calcualte orientation field for IMU messages ...
+    // ... accelerometer reference 
+    double acc_data[3][1] = { {0.0}, {0.0}, {-9.8} };
+    Matrix r1(acc_data);
+
+    // ... magnetic field reference (todo: subscribe to raw GPS stream to populate)
     r_vector mag_field_reference;
     mag_field_reference = MagModel(2019.4, 0.0, 0.0, 0.0);
     double mag_data[3][1] = { {mag_field_reference.x}, {mag_field_reference.y}, {mag_field_reference.z} };
-    Matrix r1(mag_data);
+    Matrix r2(mag_data);
 
+    // ... prepare <OTHER DATA> for KAlman filter
     Matrix kKFProcessNoise(kKFProcessNoise_data);
     Matrix kKFSensorNoise(kKFSensorNoise_data);
     Matrix kKFInitialCovariance(kKFInitialCovariance_data);
     Matrix kKFInitialEstimate(kKFInitialEstimate_data);
 
-    //KalmanFilter kalman_filter(uint16_t(50), kKFProcessNoise, kKFSensorNoise, kKFInitialCovariance, kKFInitialEstimate);
+    // ... and finally instantiate the Kalman filter
+    // todo: get rid of uint16_t magic number; constructor requires reference type
+    KalmanFilter kalmanFilter(uint16_t(50), r1, r2, kKFProcessNoise, kKFSensorNoise, kKFInitialCovariance, kKFInitialEstimate);
+
 
 	// initialise gyroscope bias correction with stationary threshold of 0.5 degrees/s
 	FusionBiasInitialise(&fusionBias, 0.5f, samplePeriod);
@@ -160,9 +172,13 @@ int main(int argc, char **argv) {
 	FirstOrderLowPass smoothed_gyro_y(timeConstant, milliSamplePeriod);
 	FirstOrderLowPass smoothed_gyro_z(timeConstant, milliSamplePeriod);
 
+    double oriCalculated[3][1];
+
 	float acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z;
 	double gyroSmooth[3][1];
-	
+
+    
+
 	//main loop
 	do {	
 		// request single magnetometer read
@@ -258,6 +274,9 @@ int main(int argc, char **argv) {
 		//then match xyz values to 8 compass directions (flat AND 4 tilt directions)
 		//look into wireshielding / differential i2c bus 
 		//imu_pub.publish(imu_msg);
+
+
+        // collect mag sensor readings
 		sensor_msgs::MagneticField mag_msg;
 		mag_msg.magnetic_field.x = (float)mag_x_raw/32768;
 		mag_msg.magnetic_field.y = (float)mag_y_raw/32768;
@@ -268,15 +287,23 @@ int main(int argc, char **argv) {
 		magSmooth[1][0] = smoothed_mag_y.Float3LPFilter(mag_msg.magnetic_field.y);
 		magSmooth[2][0] = smoothed_mag_z.Float3LPFilter(mag_msg.magnetic_field.z);
 
+		sensor_msgs::MagneticField mag_msg_smooth;
+		mag_msg_smooth.magnetic_field.x = magSmooth[0][0];
+		mag_msg_smooth.magnetic_field.y = magSmooth[1][0];
+		mag_msg_smooth.magnetic_field.z = magSmooth[2][0];
+
+		magFiltered_pub.publish(mag_msg);
+
+        // collect acc sensor readings
 		acc_x = (float)acc_x_raw/32768;
 		acc_y = (float)acc_y_raw/32768;
 		acc_z = (float)acc_z_raw/32768;
-		 
 
 		accSmooth[0][0] = smoothed_acc_x.Float3LPFilter(acc_x);
 		accSmooth[1][0] = smoothed_acc_y.Float3LPFilter(acc_y);
 		accSmooth[2][0] = smoothed_acc_z.Float3LPFilter(acc_z);
 		
+        // collect gyro sensor readings
 		gyro_x = (float)gyro_x_raw/32768;
 		gyro_y = (float)gyro_y_raw/32768;
 		gyro_z = (float)gyro_z_raw/32768;
@@ -285,16 +312,49 @@ int main(int argc, char **argv) {
 		gyroSmooth[1][0] = smoothed_gyro_y.Float3LPFilter(gyro_y);
 		gyroSmooth[2][0] = smoothed_gyro_z.Float3LPFilter(gyro_z);
 		
+        // compute orientation
 		Matrix gyro(gyroSmooth);
 		Matrix acc(accSmooth); 
 		Matrix mag(magSmooth);
 
-		sensor_msgs::MagneticField mag_msg_smooth;
-		mag_msg_smooth.magnetic_field.x = magSmooth[0][0];
-		mag_msg_smooth.magnetic_field.y = magSmooth[1][0];
-		mag_msg_smooth.magnetic_field.z = magSmooth[2][0];
+        // construct input matrix for ori calculation
+        double ori_calc_data[6][1] = {
+            accSmooth[0][0],
+            accSmooth[1][0],
+            accSmooth[2][0],
+            magSmooth[0][0],
+            magSmooth[1][0],
+            magSmooth[2][0]
+        };
+        Matrix ori_calc_mat(ori_calc_data);
 
-		magFiltered_pub.publish(mag_msg);
+        // update kalman filter
+        kalmanFilter.Update(ori_calc_mat);
+		kalmanFilter.Predict(gyro);
+
+        // pull out the ori values from the filter's q_estimate
+        oriCalculated[0][0] = kalmanFilter.q_estimate.Get(0, 0);
+        oriCalculated[1][0] = kalmanFilter.q_estimate.Get(1, 0);
+        oriCalculated[2][0] = kalmanFilter.q_estimate.Get(2, 0);
+		oriCalculated[3][0] = kalmanFilter.q_estimate.Get(3, 0);
+
+        // now construct the iuUBAzcozdING IMU message
+        sensor_msgs::Imu imu_msg;
+        imu_msg.orientation.x = oriCalculated[0][0];
+        imu_msg.orientation.y = oriCalculated[1][0];
+        imu_msg.orientation.z = oriCalculated[2][0];
+        imu_msg.orientation.w = oriCalculated[3][0];
+
+        imu_msg.angular_velocity.x = gyroSmooth[0][0];
+        imu_msg.angular_velocity.y = gyroSmooth[1][0];
+        imu_msg.angular_velocity.z = gyroSmooth[2][0];
+
+        imu_msg.linear_acceleration.x = accSmooth[0][0];
+        imu_msg.linear_acceleration.y = accSmooth[1][0];
+        imu_msg.linear_acceleration.z = accSmooth[2][0];
+
+        imu_pub.publish(imu_msg);
+
 
 	} while(ros::ok());
 	
