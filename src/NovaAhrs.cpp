@@ -335,12 +335,14 @@ int main(int argc, char **argv) {
         oriCalculated[0][0] = kalmanFilter.q_estimate.Get(0, 0);
         oriCalculated[1][0] = kalmanFilter.q_estimate.Get(1, 0);
         oriCalculated[2][0] = kalmanFilter.q_estimate.Get(2, 0);
+		oriCalculated[3][0] = KalmanFilter.q_estimate.Get(3, 0);
 
         // now construct the iuUBAzcozdING IMU message
         sensor_msgs::Imu imu_msg;
         imu_msg.orientation.x = oriCalculated[0][0];
         imu_msg.orientation.y = oriCalculated[1][0];
         imu_msg.orientation.z = oriCalculated[2][0];
+        imu_msg.orientation.w = oriCalculated[3][0];
 
         imu_msg.angular_velocity.x = gyroSmooth[0][0];
         imu_msg.angular_velocity.y = gyroSmooth[1][0];
