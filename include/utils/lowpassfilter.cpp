@@ -1,4 +1,4 @@
-#include "lowpassfilter.h" 
+#include "lowpassfilter.h"
 #include <math.h>
 FirstOrderLowPass::FirstOrderLowPass(int time_constant_millis,
                                            int sample_period_millis)
