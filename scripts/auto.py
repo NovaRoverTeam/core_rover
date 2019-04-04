@@ -68,6 +68,7 @@ def angleBetween(lat1, lng1, lat2, lng2):
     y = math.sin(longDiff) * math.cos(lat2)
     x = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(longDiff)
     bearing = math.atan2(y, x)
+    bearing = math.degrees(bearing)
     bearing = (bearing+360) % 360
     return bearing
 
