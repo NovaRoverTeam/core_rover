@@ -330,6 +330,7 @@ int main(int argc, char **argv) {
 
         // update kalman filter
         kalmanFilter.Update(ori_calc_mat);
+		KalmanFilter.Predict(gyroSmooth);
 
         // pull out the ori values from the filter's q_estimate
         oriCalculated[0][0] = kalmanFilter.q_estimate.Get(0, 0);
