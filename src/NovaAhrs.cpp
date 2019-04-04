@@ -145,6 +145,19 @@ int main(int argc, char **argv) {
 	FirstOrderLowPass smoothed_acc(timeConstant, milliSamplePeriod);
 	FirstOrderLowPass smoothed_mag(timeConstant, milliSamplePeriod);
 
+	double magSmoothed[3][1];
+	FirstOrderLowPass smoothed_acc_x(timeConstant, milliSamplePeriod); 
+	FirstOrderLowPass smoothed_acc_y(timeConstant, milliSamplePeriod);
+	FirstOrderLowPass smoothed_acc_z(timeConstant, milliSamplePeriod);
+
+	double accSmoothed[3][1];
+	FirstOrderLowPass smoothed_gyro_x(timeConstant, milliSamplePeriod); 
+	FirstOrderLowPass smoothed_gyro_y(timeConstant, milliSamplePeriod);
+	FirstOrderLowPass smoothed_gyro_z(timeConstant, milliSamplePeriod);
+
+	float acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z;
+	double gyroSmoothed[3][1];
+	
 	//main loop
 	do {	
 		// request single magnetometer read
