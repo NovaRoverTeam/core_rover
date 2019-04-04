@@ -5,6 +5,7 @@ import time
 from sensor_msgs.msg import NavSatFix, MagneticField, Imu
 from std_msgs.msg import Float32
 from webots_ros.srv import set_float
+from nav_msgs.msg import Odometry
 from nova_common.msg import *
 from nova_common.srv import *
 
@@ -132,10 +133,10 @@ def gpsCallback(gpsData):
     #rospy.logdebug("lat: %s, long: %s", lat, lng)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-# imuCallback():
+# odometryCallback():
 #    Callback for the orientation of the rover
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--      
-def imuCallback(imuData):
+def odometryCallback(odometryData):
     global rovey_pos
     x = imuData.orientation.x
     y = imuData.orientation.y
