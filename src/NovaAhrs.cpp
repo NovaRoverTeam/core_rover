@@ -10,6 +10,7 @@
 #include "../include/Fusion/Fusion/FusionAhrs.c"
 #include "../include/Fusion/Fusion/FusionBias.c"
 #include "../include/utils/lowpassfilter.cpp"
+#include "../include/utils/wmm/worldMagneticModel.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
