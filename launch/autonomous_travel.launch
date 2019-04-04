@@ -1,9 +1,9 @@
 <launch>
 
     <!-- params required by navigation.py and auto.py -->
-    <rosparam param="/core_rover/Mode">"Auto"</rosparam>
-    <rosparam param="rpm_limit">1000</rosparam>
-    <rosparam param="steer_limit">1000</rosparam>
+    <!-- rosparam param="/core_rover/Mode">"Auto"</rosparam -->
+    <!-- rosparam param="rpm_limit">1000</rosparam -->
+    <!-- rosparam param="steer_limit">1000</rosparam -->
 
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization_node">
 
