@@ -37,11 +37,13 @@
 #include <string>
 
 //--*-- Talon SRX includes
+/*
 #define Phoenix_No_WPI // remove WPI dependencies
 #include "ctre/Phoenix.h"
 #include "ctre/phoenix/platform/Platform.h"
 #include "ctre/phoenix/unmanaged/Unmanaged.h"
 #include "ctre/phoenix/MotorControl/CAN/WPI_TalonSRX.h"
+*/
 #include <string>
 #include <iostream>
 #include <chrono>
@@ -58,15 +60,17 @@ int num;
 ros::NodeHandle *n; // Create node handle to talk to ROS
 
 //Declaring and creating talonSRX objects to control the 6 motors. 
+/*
 TalonSRX talon1(1); 
 TalonSRX talon2(2);
 TalonSRX talon3(3);
 TalonSRX talon4(4);
 TalonSRX talon5(5);
 TalonSRX talon0(0);
+*/
 
 //Forward Declare functions
-void ConfigTalon(TalonSRX* talon);
+//void ConfigTalon(TalonSRX* talon);
 
 //--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 // DriveCmdCb():
@@ -92,6 +96,8 @@ int main(int argc, char **argv)
   //Talon SRX Setup
   std::string interface;
   interface = "can0";
+
+  /*
   ctre::phoenix::platform::can::SetCANInterface(interface.c_str());
   talon3.ConfigFactoryDefault();
 
@@ -114,6 +120,7 @@ int main(int argc, char **argv)
   ConfigTalon(&talon1);
   ConfigTalon(&talon0);
   //printf("test!");
+  */
 
   ros::init(argc, argv, "driver", ros::init_options::AnonymousName); // Initialise node
   n = new ros::NodeHandle;
@@ -184,6 +191,7 @@ int main(int argc, char **argv)
       
       //printf("%d",speed);
    
+      /*
       //LEFT SIDE
       talon1.Set(ControlMode::Velocity, left);
       talon2.Set(ControlMode::Velocity, left);
@@ -192,6 +200,7 @@ int main(int argc, char **argv)
       talon4.Set(ControlMode::Velocity, right);
       talon5.Set(ControlMode::Velocity, right);
       talon3.Set(ControlMode::Velocity, right);
+      */
 
       //Output debug information
       if (loopCount >= 10) {
@@ -201,7 +210,9 @@ int main(int argc, char **argv)
       }
 
       //Enable rover with a timeout of 100ms
+        /*
       ctre::phoenix::unmanaged::FeedEnable(100);
+      */
     }                     
     loopCount++;
     ros::spinOnce();   // Messages are received and callbacks called
@@ -210,22 +221,23 @@ int main(int argc, char **argv)
   return 0;
 }
 
+/*
 void ConfigTalon(TalonSRX* talon) {
 
 	const int kTimeoutMs = 0;
 	const int kPIDLoopIdx = 0;
 
-        /* first choose the sensor */
+    // first choose the sensor
 	talon->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0, kTimeoutMs);
 	talon->SetSensorPhase(false);
 
-	/* set the peak and nominal outputs */
+	// set the peak and nominal outputs
 	talon->ConfigNominalOutputForward(0, kTimeoutMs);
 	talon->ConfigNominalOutputReverse(0, kTimeoutMs);
 	talon->ConfigPeakOutputForward(0.7, kTimeoutMs);
 	talon->ConfigPeakOutputReverse(-0.7, kTimeoutMs);
 
-	/* set closed loop gains in slot0 */
+	// set closed loop gains in slot0
 	talon->Config_kF(kPIDLoopIdx, 0.1097, kTimeoutMs); //0.1097
 	talon->Config_kP(kPIDLoopIdx, 6, kTimeoutMs); //0.22
 	talon->Config_kI(kPIDLoopIdx, 0.02, kTimeoutMs); //0.02
@@ -233,3 +245,4 @@ void ConfigTalon(TalonSRX* talon) {
 
 	talon->SetSelectedSensorPosition(0);
 }
+*/
