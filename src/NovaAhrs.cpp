@@ -264,26 +264,26 @@ int main(int argc, char **argv) {
 		mag_msg.magnetic_field.z = (float)mag_z_raw/32768;
 		magRaw_pub.publish(mag_msg);
 		
-		magSmooth[0][0] = smoothed_mag_x.ProcessSample(mag_msg.magnetic_field.x);
-		magSmooth[1][0] = smoothed_mag_y.ProcessSample(mag_msg.magnetic_field.y);
-		magSmooth[2][0] = smoothed_mag_z.ProcessSample(mag_msg.magnetic_field.z);
+		magSmooth[0][0] = smoothed_mag_x.Float3LPFilter(mag_msg.magnetic_field.x);
+		magSmooth[1][0] = smoothed_mag_y.Float3LPFilter(mag_msg.magnetic_field.y);
+		magSmooth[2][0] = smoothed_mag_z.Float3LPFilter(mag_msg.magnetic_field.z);
 
 		acc_x = (float)acc_x_raw/32768;
 		acc_y = (float)acc_y_raw/32768;
 		acc_z = (float)acc_z_raw/32768;
 		 
 
-		accSmooth[0][0] = smoothed_acc_x.ProcessSample(acc_x);
-		accSmooth[1][0] = smoothed_acc_y.ProcessSample(acc_y);
-		accSmooth[2][0] = smoothed_acc_z.ProcessSample(acc_z);
+		accSmooth[0][0] = smoothed_acc_x.Float3LPFilter(acc_x);
+		accSmooth[1][0] = smoothed_acc_y.Float3LPFilter(acc_y);
+		accSmooth[2][0] = smoothed_acc_z.Float3LPFilter(acc_z);
 		
 		gyro_x = (float)gyro_x_raw/32768;
 		gyro_y = (float)gyro_y_raw/32768;
 		gyro_z = (float)gyro_z_raw/32768;
 
-		gyroSmooth[0][0] = smoothed_gyro_x.ProcessSample(gyro_x);
-		gyroSmooth[1][0] = smoothed_gyro_y.ProcessSample(gyro_y);
-		gyroSmooth[2][0] = smoothed_gyro_z.ProcessSample(gyro_z);
+		gyroSmooth[0][0] = smoothed_gyro_x.Float3LPFilter(gyro_x);
+		gyroSmooth[1][0] = smoothed_gyro_y.Float3LPFilter(gyro_y);
+		gyroSmooth[2][0] = smoothed_gyro_z.Float3LPFilter(gyro_z);
 		
 		Matrix gyro(gyroSmooth);
 		Matrix acc(accSmooth); 

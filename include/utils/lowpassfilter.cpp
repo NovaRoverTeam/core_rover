@@ -1,4 +1,4 @@
-#include "lowpassfilter.h" 
+#include "lowpassfilter.h"
 #include <math.h>
 FirstOrderLowPass::FirstOrderLowPass(int time_constant_millis,
                                            int sample_period_millis)
@@ -6,7 +6,7 @@ FirstOrderLowPass::FirstOrderLowPass(int time_constant_millis,
       alpha(exp(-(static_cast<double>(sample_period_millis)) /
                 (static_cast<double>(time_constant_millis)))) {}
 
-double FirstOrderLowPass::ProcessSample(float new_sample) {
+double FirstOrderLowPass::Float3LPFIlter(float new_sample) {
     state = alpha * state + (1 - alpha) * new_sample;
     return state;
 }

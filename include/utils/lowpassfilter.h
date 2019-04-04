@@ -4,7 +4,7 @@
 class FirstOrderLowPass{
     public: 
     FirstOrderLowPass(int timeConstantMil, int samplePeriodMil); 
-    double ProcessSample(float sample);
+    double Float3LPFilter(float sample);
     private:
     float state; 
     float alpha;  
