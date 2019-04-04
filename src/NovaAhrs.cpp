@@ -330,13 +330,13 @@ int main(int argc, char **argv) {
 
         // update kalman filter
         kalmanFilter.Update(ori_calc_mat);
-		KalmanFilter.Predict(gyroSmooth);
+		kalmanFilter.Predict(gyroSmooth);
 
         // pull out the ori values from the filter's q_estimate
         oriCalculated[0][0] = kalmanFilter.q_estimate.Get(0, 0);
         oriCalculated[1][0] = kalmanFilter.q_estimate.Get(1, 0);
         oriCalculated[2][0] = kalmanFilter.q_estimate.Get(2, 0);
-		oriCalculated[3][0] = KalmanFilter.q_estimate.Get(3, 0);
+		oriCalculated[3][0] = kalmanFilter.q_estimate.Get(3, 0);
 
         // now construct the iuUBAzcozdING IMU message
         sensor_msgs::Imu imu_msg;
