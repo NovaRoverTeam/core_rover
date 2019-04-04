@@ -62,13 +62,15 @@ def bearingInDegrees(x, z):
 #    to a Cartesian plane
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 def angleBetween(lat1, lng1, lat2, lng2):
-    beta = math.atan2(lng2-lng1, lat2-lat1)
-    beta = (beta*180)/math.pi
-    beta = beta +90
-    if beta < 0:
-            beta = beta + 360
-    return beta
-        
+    lat1 = math.radians(lat1)
+    lat2 = math.radians(lat2)
+    longDiff = math.radians(lng2 - lng1)
+    y = math.sin(longDiff) * math.cos(lat2)
+    x = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(longDiff)
+    bearing = math.atan2(y, x)
+    bearing = (bearing+360) % 360
+    return bearing
+
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # distanceBetween():
 #    Calculates the direct distance between two objects
