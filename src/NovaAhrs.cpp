@@ -4,8 +4,8 @@
 //--**-- ROS includes
 #include "ros/ros.h"
 #include <ros/console.h>
-#include "./ekf_utils/kalman_filter.h"
-#include "./ekf_utils/matrix.h"
+#include "../include/utils/ekf_utils/kalman_filter.h"
+#include "../include/utils/ekf_utils/matrix.h"
 #include "../include/Fusion/Fusion/Fusion.h"
 #include "../include/Fusion/Fusion/FusionAhrs.c"
 #include "../include/Fusion/Fusion/FusionBias.c"
