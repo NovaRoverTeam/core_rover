@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 
     // ... magnetic field reference (todo: subscribe to raw GPS stream to populate)
     r_vector mag_field_reference;
-    mag_field_reference = MagModel(2019.4, 0.0, 0.0, 0.0);
+    mag_field_reference = MagModel(2019.4, 0.031, 37.8136, 144.9631);
     double mag_data[3][1] = { {mag_field_reference.x}, {mag_field_reference.y}, {mag_field_reference.z} };
     Matrix r2(mag_data);
 
