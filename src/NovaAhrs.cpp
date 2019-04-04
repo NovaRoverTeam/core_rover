@@ -23,6 +23,20 @@
 FusionBias fusionBias;
 FusionAhrs fusionAhrs;
 
+//Kalman filter configs
+
+constexpr double kKFProcessNoise_data[3][3] = {
+    {0.1, 0, 0}, {0, 0.1, 0}, {0, 0, 0.1}};
+
+constexpr double kKFSensorNoise_data[6][6] = {
+    {0.1, 0, 0, 0, 0, 0}, {0, 0.1, 0, 0, 0, 0}, {0, 0, 0.1, 0, 0, 0},
+    {0, 0, 0, 0.1, 0, 0}, {0, 0, 0, 0, 0.1, 0}, {0, 0, 0, 0, 0, 0.1}};
+
+constexpr double kKFInitialCovariance_data[3][3] = {
+    {0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+
+constexpr double kKFInitialEstimate_data[4][1] = {{1}, {0}, {0}, {0}};
+
 float samplePeriod = 0.05f;
 
 ros::NodeHandle *n; // Create node handle to talk to ROS
