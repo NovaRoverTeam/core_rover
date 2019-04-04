@@ -45,10 +45,10 @@ void Matrix::Set(uint8_t row, uint8_t column, double value) {
 //  Test equality using relative difference. Additive tolerance allows
 //  comparison with zero, but it's set arbitrarily.
 bool Matrix::DoubleIsEqual(double a, double b) {
-    if (isinf(a) || isinf(b)) {
+    if (std::isinf(a) || std::isinf(b)) {
         throw std::invalid_argument("Input args a or b or both are inf");
     }
-    if (isnan(a) || isnan(b)) {
+    if (std::isnan(a) || std::isnan(b)) {
         std::invalid_argument("NAN ERROR");
     }
     if (a > b) {
