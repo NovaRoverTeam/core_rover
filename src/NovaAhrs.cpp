@@ -11,7 +11,7 @@
 #include "../include/Fusion/FusionBias.c"
 #include "../include/Fusion/FusionCompass.c"
 #include "../include/utils/lowpassfilter.cpp"
-#include "../include/utils/wmm/worldMagneticModel.h"
+#include "../include/utils/wmm/worldMagneticModel.cpp"
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -27,19 +27,21 @@
 FusionBias fusionBias;
 FusionAhrs fusionAhrs;
 
+
 //Kalman filter configs
+// missing r1 - generated using WMM
+// missing r2 - generated using 0.98
 
-constexpr double kKFProcessNoise_data[3][3] = {
-    {0.1, 0, 0}, {0, 0.1, 0}, {0, 0, 0.1}};
-
-constexpr double kKFSensorNoise_data[6][6] = {
+double kKFProcessNoise_data[3][3] = {
+    {0.1, 0, 0}, {0, 0.1, 0}, {0, 0, 0.1} };
+double kKFSensorNoise_data[6][6] = {
     {0.1, 0, 0, 0, 0, 0}, {0, 0.1, 0, 0, 0, 0}, {0, 0, 0.1, 0, 0, 0},
-    {0, 0, 0, 0.1, 0, 0}, {0, 0, 0, 0, 0.1, 0}, {0, 0, 0, 0, 0, 0.1}};
+    {0, 0, 0, 0.1, 0, 0}, {0, 0, 0, 0, 0.1, 0}, {0, 0, 0, 0, 0, 0.1} };
+double kKFInitialCovariance_data[3][3] = {
+    {0, 0, 0}, {0, 0, 0}, {0, 0, 0} };
+double kKFInitialEstimate_data[4][1] = {
+    {1}, {0}, {0}, {0} };
 
-constexpr double kKFInitialCovariance_data[3][3] = {
-    {0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
-
-constexpr double kKFInitialEstimate_data[4][1] = {{1}, {0}, {0}, {0}};
 
 float samplePeriod = 0.05f;
 
@@ -71,6 +73,16 @@ int main(int argc, char **argv) {
 	ros::Publisher mag2_pub = n.advertise<geometry_msgs::Vector3>("/nova_common/magnetometer", 1);
 	ros::Publisher mag_pub = n.advertise<geometry_msgs::Wrench>("/nova_common/magnetometer_compare", 1);
 	ros::Publisher heading_pub = n.advertise<std_msgs::Float32>("/nova_common/heading", 1);
+
+    r_vector mag_field_reference;
+    mag_field_reference = MagModel(2019.4, 0.0, 0.0, 0.0);
+
+    Matrix kKFProcessNoise(kKFProcessNoise_data);
+    Matrix kKFSensorNoise(kKFSensorNoise_data);
+    Matrix kKFInitialCovariance(kKFInitialCovariance_data);
+    Matrix kKFInitialEstimate(kKFInitialEstimate_data);
+
+    //KalmanFilter kalman_filter(uint16_t(50), kKFProcessNoise, kKFSensorNoise, kKFInitialCovariance, kKFInitialEstimate);
 
 	// initialise gyroscope bias correction with stationary threshold of 0.5 degrees/s
 	FusionBiasInitialise(&fusionBias, 0.5f, samplePeriod);
