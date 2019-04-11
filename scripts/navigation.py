@@ -5,6 +5,7 @@ from webots_ros.srv import set_float
 from nova_common.msg import *
 from nova_common.srv import *
 import time
+from auto_sm import AutonomousStateMachine
 
 simulator = True
 
@@ -23,7 +24,16 @@ class RoveyPosClass(object):
         return 'latitude: ' + str(self.latitude) + ' longitude: ' + str(self.longitude)
     def __repr__(self):
         return 'latitude: ' + str(self.latitude) + ' longitude: ' + str(self.longitude)
-
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# tennisCallback():
+#    Callback for detection of tennis ball
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
+def tennisCallback(req):
+    global ASM
+    if req.data == 'Found'
+        ASM.Found_TB()
+    else:
+        ASM.Lost_TB()
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # gpsCallback():
 #    Callback for the location of the rover
@@ -36,10 +46,16 @@ def gpsCallback(gpsData):
     #rospy.logdebug("lat: %s, long: %s", lat, lng)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-# getMode(): Retrieve Mode from parameter server.
+# getRoverMode(): Retrieve Mode from parameter server.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
-def getMode():
+def getRoverMode():
     return rospy.get_param('/core_rover/Mode')
+
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# getAutoMode(): Retrieve Mode from parameter server.
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
+def getAutoMode():
+    return rospy.get_param('/core_rover/autonomous_mode')
 
  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # wayPoint(lng_current_pos,lat_current_pos,lng_destination,lat_destination,no_of_waypoints):
@@ -74,31 +90,48 @@ def spiralSearch(current_pos,no_of_waypoints,rang_min,rang_max):
 #  Service server handler for starting autonomous mission.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def handleStartAuto(req):
+    if getRoverMode() == 'Auto':
+        # Set the desired latitude and longitude from the service request
+        initNavigation()
+        return StartAutoResponse(True,
+            "Successfully started Auto mission.")
+    else:
+        return StartAutoResponse(False,
+            "Unable to start mission, must be in Auto mode.")
+ #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# initNavigation():
+#  Intitialise Navigation to Tennis Ball GPS location
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
+def initNavigation():
+    global ASM
     global des_pos
     global auto_engaged
     global new_destination
     global waypoint_list
     global waypoint_iter
     global spiral_engaged
-    if getMode() == 'Auto':
-        # Set the desired latitude and longitude from the service request
-        des_pos.setCoords(req.latitude, req.longitude)
-        auto_engaged = True
-        waypoint_list = wayPoint(rovey_pos.longitude,rovey_pos.latitude,des_pos.longitude,des_pos.latitude,4)
-        waypoint_iter = iter(waypoint_list)
-        new_destination = True
-        spiral_engaged = False
-        rospy.loginfo('DESTINATION:' + str(des_pos))
-        rospy.loginfo('WaypointList: ' + str(waypoint_list))
-        # TODO Create and use state machine for autonomous mission
-        # Reset state machine here
+    ASM.Navigate() #Put state machine in navigation mode
+    des_pos.setCoords(req.latitude, req.longitude)
+    auto_engaged = True
+    waypoint_list = wayPoint(rovey_pos.longitude,rovey_pos.latitude,des_pos.longitude,des_pos.latitude,4)
+    waypoint_iter = iter(waypoint_list)
+    new_destination = True
+    # spiral_engaged = False
+    rospy.loginfo('DESTINATION:' + str(des_pos))
+    rospy.loginfo('WaypointList: ' + str(waypoint_list))
 
-        return StartAutoResponse(True,
-            "Successfully started Auto mission.")
-    else:
-        return StartAutoResponse(False,
-            "Unable to start mission, must be in Auto mode.")
-
+ #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# initSearch():
+#  Intitialise Searching for Tennis Ball (Spiral)
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
+def initSearch():
+    searchpath = spiralSearch(rovey_pos,25,0,10)
+    global waypoint_list = searchpath
+    global waypoint_iter = iter(searchpath)
+    global new_destination = True
+    # spiral_engaged = True
+    rospy.loginfo('Spiral Search Engaged!')
+    rospy.loginfo('Spiral WaypointList: ' + str(searchpath))
  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # Global variables
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
@@ -110,7 +143,7 @@ waypoint_iter = iter(waypoint_list) #Iterable object for way points to be sent.
 auto_engaged = False   # Flag variable for enabling autonomous mode
 new_destination = False # Flag variable for sending the first way point, when a new destination is set.
 spiral_engaged = False # Flag variable for spiral search.
-
+ASM = AutonomousStateMachine() # Autonomous State Machine Object
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # navigation():
 #    Main function
@@ -125,6 +158,7 @@ def navigation():
     global way_pos
     global new_destination
     global simulator
+    global ASM
 
     dist_to_dest_thres = 3 #Distance to destination point threshold (metres)
     dist_to_way_thres = 4 #Distance to way point threshold (metres)
@@ -137,6 +171,7 @@ def navigation():
 
     server = rospy.Service('/core_rover/start_auto', StartAuto, handleStartAuto)
     gps_sub = rospy.Subscriber("/pioneer3at/gps/values", NavSatFix, gpsCallback)
+    tennis_loc = rospy.Subscriber("/core_rover/navigation/tennis_loc",DriveCmd,tennisCallback)
     waypoint_pub  = rospy.Publisher("/core_rover/navigation/waypoint_coords", NavSatFix, queue_size=10)
     rospy.init_node('navigation', anonymous=True)
     rate = rospy.Rate(2) # Loop rate in Hz
@@ -147,33 +182,43 @@ def navigation():
     # spiral_engaged = False
     #### DEBUG ONLY END ***************************
     while not rospy.is_shutdown():
-        if auto_engaged is True:
-            #Waypoint Publisher
-            #The following implements distance of line formula. However, it converts this from degrees to metres.
-            distance_to_dest = math.sqrt((rovey_pos.latitude - des_pos.latitude)**2 + (rovey_pos.longitude - des_pos.longitude)**2)*111000
-            distance_to_waypt = math.sqrt((rovey_pos.latitude - way_pos.latitude)**2 + (rovey_pos.longitude - way_pos.longitude)**2)*111000
-            if ((distance_to_waypt<dist_to_dest_thres) and spiral_engaged is not True):
-                searchpath = spiralSearch(rovey_pos,25,0,10)
-                waypoint_list = searchpath
-                waypoint_iter = iter(searchpath)
-                new_destination = True
-                spiral_engaged = True
-                rospy.loginfo('Spiral Search Engaged!')
-                rospy.loginfo('Spiral WaypointList: ' + str(searchpath))
-            # Rover proximity to current waypoint determines if next waypoint should be sent.
-            if ((distance_to_waypt<dist_to_way_thres) or new_destination is True): #only send the next point once the robot is close enough to is current target
-                new_destination = False
-                try:
-                    way_pos = next(waypoint_iter)
-                    rospy.loginfo(way_pos)
-                    waypoint_msg = NavSatFix() #Initialize waypoint data structure.
-                    waypoint_msg.latitude = way_pos.latitude # Populate structure with lat and long
-                    waypoint_msg.longitude = way_pos.longitude
-                    waypoint_pub.publish(waypoint_msg) # Insert datastructure into waypoint publisher.
-                except StopIteration:
-                    rospy.loginfo("End of navigation")
-                    auto_engaged = False
-                    spiral_engaged = False
+        if getRoverMode() == 'Auto':
+            if auto_engaged is True or ASM.state is not 'Off':
+                #Waypoint Publisher
+                #The following implements distance of line formula. However, it converts this from degrees to metres.
+                distance_to_dest = math.sqrt((rovey_pos.latitude - des_pos.latitude)**2 + (rovey_pos.longitude - des_pos.longitude)**2)*111000
+                distance_to_waypt = math.sqrt((rovey_pos.latitude - way_pos.latitude)**2 + (rovey_pos.longitude - way_pos.longitude)**2)*111000
+
+                # if ((distance_to_dest<dist_to_dest_thres) and spiral_engaged is not True and ASM.state == 'Navigating'):
+                if ((distance_to_dest<dist_to_dest_thres) and ASM.state == 'Navigating'):
+                    # Switch to search state
+                    # If close to GPS destination populate spiral search in waypoint iterator queue.
+                    ASM.search()
+                    initSearch()
+
+                if ASM.state in ('Navigating','Searching'):
+                    # Rover proximity to current waypoint determines if next waypoint should be sent.
+                    if ((distance_to_waypt<dist_to_way_thres) or new_destination is True): #only send the next point once the robot is close enough to is current target
+                        new_destination = False
+                        try:
+                            way_pos = next(waypoint_iter)
+                            rospy.loginfo(way_pos)
+                            waypoint_msg = NavSatFix() #Initialize waypoint data structure.
+                            waypoint_msg.latitude = way_pos.latitude # Populate structure with lat and long
+                            waypoint_msg.longitude = way_pos.longitude
+                            waypoint_pub.publish(waypoint_msg) # Insert datastructure into waypoint publisher.
+                        except StopIteration:
+                            rospy.loginfo("End of navigation")
+
+                            if ASM.state == 'Navigating':
+                                initNavigation()
+                            else if ASM.state =='Searching':
+                                ASM.cancel()
+                                initSearch()
+                            # auto_engaged = False
+                            # spiral_engaged = False
+            else:
+                ASM.Cancel()
         rate.sleep()
 
 if __name__ == '__main__':
