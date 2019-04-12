@@ -2,7 +2,7 @@
 import rospy
 import math
 import time
-from sensor_msgs.msg import NavSatFix, MagneticField
+from sensor_msgs.msg import NavSatFix, MagneticField, Imu
 from std_msgs.msg import Float32
 from webots_ros.srv import set_float
 from nova_common.msg import *
@@ -124,15 +124,15 @@ def gpsCallback(gpsData):
     #rospy.logdebug("lat: %s, long: %s", lat, lng)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-# odometryCallback():
+# imuCallback():
 #    Callback for the orientation of the rover
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--      
-def odometryCallback(odometryData):
+def imuCallback(imuData):
     global rovey_pos
-    x = odometryData.orientation.x
-    y = odometryData.orientation.y
-    z = odometryData.orientation.z
-    w = odometryData.orientation.w       # previously, this was z; need to check if a bug
+    x = imuData.orientation.x
+    y = imuData.orientation.y
+    z = imuData.orientation.z
+    w = imuData.orientation.w       # previously, this was z; need to check if a bug
     roll, pitch,yaw =  quaternion_to_euler(x,y,z,w)
     rovey_pos.setOrientation(roll,pitch,yaw)
 
@@ -186,8 +186,8 @@ def waypointCallback(waypointData):
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # getMode(): Retrieve Mode from parameter server.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
-def getMode():
-    return rospy.get_param('/core_rover/Mode')
+#def getMode():
+ #   return rospy.get_param('/core_rover/Mode')
 
  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # Global variables
@@ -210,15 +210,10 @@ def auto():
     rate = rospy.Rate(2) # Loop rate in Hz
  
     #how to get north direction from world info? or gps ref point?
-    
-    simulator = False;
-    
-    if simulator == True:
-        gps_sub     = rospy.Subscriber("/pioneer3at/gps/values", NavSatFix, gpsCallback)
-        compass_sub = rospy.Subscriber("/pioneer3at/compass/values", MagneticField, compassCallback)
-    else: 
-        gps_sub     = rospy.Subscriber("/nova_common/gps_data", NavSatFix, gpsCallback)
-        compass_sub = rospy.Subscriber("/nova_common/MagnetometerFiltered", MagneticField, compassCallback)
+
+    gps_sub     = rospy.Subscriber("/nova_common/gps_data", NavSatFix, gpsCallback)
+    imu_sub     = rospy.Subscriber("/rtimulib_node/imu", Imu, imuCallback)
+    compass_sub = rospy.Subscriber("/nova_common/MagnetometerFiltered", MagneticField, compassCallback)
         
     waypoint_sub = rospy.Subscriber("/core_rover/navigation/waypoint_coords", NavSatFix, waypointCallback)
     heading_sub = rospy.Subscriber("/nova_common/heading", Float32, headingCallback)
@@ -228,7 +223,7 @@ def auto():
     while not rospy.is_shutdown():
 
         orientation = rovey_pos.z
-        if getMode() == 'Auto':
+        if True:
         
             beta =0  #angleBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
             distance = distanceBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
@@ -239,12 +234,12 @@ def auto():
             rospy.loginfo("distance: %s", distance)
             rospy.loginfo("orientation: %s", orientation)
             
-            rpm_limit   = rospy.get_param('rpm_limit')
-            steer_limit = rospy.get_param('steer_limit')
+            #rpm_limit   = rospy.get_param('rpm_limit')
+           # steer_limit = rospy.get_param('steer_limit')
             
             drive_msg = DriveCmd()
             drive_msg.rpm       = 0
-            drive_msg.steer_pct = turn * 0.1
+            drive_msg.steer_pct = turn * 0.3
             drive_pub.publish(drive_msg)
             
             #if distance < :
