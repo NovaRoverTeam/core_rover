@@ -16,7 +16,7 @@
         cam_1:  
           id:      '192.168.1.53'
           usb:      False
-          name:    'GimbalCam1'
+          name:    'FI9826PV3'
           default:  False
           
         cam_2:  

@@ -3,6 +3,7 @@ import rospy
 import math
 import time
 from sensor_msgs.msg import NavSatFix, MagneticField
+from std_msgs.msg import Float32
 from webots_ros.srv import set_float
 from nova_common.msg import *
 from nova_common.srv import *
@@ -114,7 +115,7 @@ def turnDirection(beta, orientation):
             rospy.logdebug("turn left")
             turn = ((360-beta)+orientation) * -1
             
-    rospy.logdebug("turn: %s", turn)        
+    rospy.loginfo("turn: %s", turn)        
     return turn
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -140,6 +141,15 @@ def compassCallback(compassData):
     #rospy.logdebug("x: %s, z: %s", x, z)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# headingCallback():
+#    Callback for the orientation of the rover
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--  
+def headingCallback(headingData):
+    global orientation
+    orientation = headingData.data 
+    #rospy.logdebug("x: %s, z: %s", x, z)
+
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # waypointCallback():
 #    Callback for the waypoint coords passed from navigation node
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--  
@@ -161,7 +171,7 @@ def getMode():
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 rovey_pos = RoveyPosClass(0,0,0,0)
 waypoint = WaypointClass(0, 0)
-
+orientation = 0
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # auto():
 #    Main function
@@ -171,6 +181,7 @@ def auto():
     global rovey_pos
     global des_pos
     global auto_engaged
+    global orientation
     
     rospy.init_node('auto', anonymous=True)
     rate = rospy.Rate(2) # Loop rate in Hz
@@ -181,16 +192,17 @@ def auto():
     compass_sub = rospy.Subscriber("/nova_common/MagnetometerFiltered", MagneticField, compassCallback)
         
     waypoint_sub = rospy.Subscriber("/core_rover/navigation/waypoint_coords", NavSatFix, waypointCallback)
+    heading_sub = rospy.Subscriber("/nova_common/heading", Float32, headingCallback)
     drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
     status_pub  = rospy.Publisher("/core_rover/auto_status", AutoStatus, queue_size=10)
     
     while not rospy.is_shutdown():
 
-        orientation = bearingInDegrees(rovey_pos.x, rovey_pos.z)
+        #orientation = bearingInDegrees(rovey_pos.x, rovey_pos.z)
 
-        if getMode() == 'Auto':
+        if (1):
         
-            beta = angleBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
+            beta =0  #angleBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
             distance = distanceBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
             turn = turnDirection(beta, orientation)
             
@@ -203,8 +215,8 @@ def auto():
             steer_limit = rospy.get_param('steer_limit')
             
             drive_msg = DriveCmd()
-            drive_msg.rpm       = rpm_limit*10
-            drive_msg.steer_pct = steer_limit*10*turn/180
+            drive_msg.rpm       = 0
+            drive_msg.steer_pct = turn * 0.1
             drive_pub.publish(drive_msg)
             
             #if distance < :
@@ -214,7 +226,7 @@ def auto():
         status_msg = AutoStatus()
         status_msg.latitude  = rovey_pos.latitude
         status_msg.longitude = rovey_pos.longitude
-        status_msg.bearing   = orientation
+        #status_msg.bearing   = orientation
         status_pub.publish(status_msg)   
 
         rate.sleep()
