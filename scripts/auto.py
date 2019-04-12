@@ -29,18 +29,20 @@ class WaypointClass(object):
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 class RoveyPosClass(object):
 
-    def __init__(self, lat, lng, x, z):
+    def __init__(self, lat, lng, x, y, z):
         self.latitude = lat
         self.longitude = lng  
         self.x = x
+        self.y = y
         self.z = z
           
     def setCoords(self, lat, lng):
         self.latitude = lat
         self.longitude = lng 
 
-    def setOrientation(self, x, z):
+    def setOrientation(self, x, y, z):
         self.x = x
+        self.y = y
         self.z = z  
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -48,10 +50,9 @@ class RoveyPosClass(object):
 #    Calculates the direction an object is pointing in relation to the
 #    north vector    
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
-def bearingInDegrees(x, z):
-    rad = math.atan2(x,z)
-    radnorth = math.atan2(1,0) # north vector 1,0,0
-    bearing = (rad-radnorth)/math.pi*180 
+def bearingInDegrees(x, y):
+    rad = math.atan2(y,x)
+    bearing = (rad)/math.pi*180 -180
 
     if bearing < 0:
         bearing = bearing + 360.0
@@ -72,7 +73,7 @@ def angleBetween(lat1, lng1, lat2, lng2):
     bearing = math.degrees(bearing)
     bearing = (bearing+360) % 360
     return bearing
-
+        
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # distanceBetween():
 #    Calculates the direct distance between two objects
@@ -123,6 +124,35 @@ def gpsCallback(gpsData):
     #rospy.logdebug("lat: %s, long: %s", lat, lng)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# odometryCallback():
+#    Callback for the orientation of the rover
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--      
+def odometryCallback(odometryData):
+    global rovey_pos
+    x = odometryData.orientation.x
+    y = odometryData.orientation.y
+    z = odometryData.orientation.z
+    w = odometryData.orientation.w       # previously, this was z; need to check if a bug
+    roll, pitch,yaw =  quaternion_to_euler(x,y,z,w)
+    rovey_pos.setOrientation(roll,pitch,yaw)
+
+def quaternion_to_euler(x, y, z, w):
+    t0 = +2.0 * (w * x + y * z)
+    t1 = +1.0 - 2.0 * (x * x + y * y)
+    X = math.degrees(math.atan2(t0, t1))
+
+    t2 = +2.0 * (w * y - z * x)
+    t2 = +1.0 if t2 > +1.0 else t2
+    t2 = -1.0 if t2 < -1.0 else t2
+    Y = math.degrees(math.asin(t2))
+
+    t3 = +2.0 * (w * z + x * y)
+    t4 = +1.0 - 2.0 * (y * y + z * z)
+    Z = math.degrees(math.atan2(t3, t4))
+
+    return X, Y, Z
+
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # compassCallback():
 #    Callback for the orientation of the rover
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--  
@@ -162,7 +192,7 @@ def getMode():
  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # Global variables
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
-rovey_pos = RoveyPosClass(0,0,0,0)
+rovey_pos = RoveyPosClass(0,0,0,0,0)
 waypoint = WaypointClass(0, 0)
 orientation = 0
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -197,9 +227,8 @@ def auto():
     
     while not rospy.is_shutdown():
 
-        #orientation = bearingInDegrees(rovey_pos.x, rovey_pos.z)
-
-        if (1):
+        orientation = rovey_pos.z
+        if getMode() == 'Auto':
         
             beta =0  #angleBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
             distance = distanceBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
