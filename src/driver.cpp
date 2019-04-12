@@ -167,31 +167,32 @@ int main(int argc, char **argv)
     else
     {
       //-50 to 50 for RPM | -100 to 100 for steer
-      float talon_speed = speed / 50.0;
-      float talon_steer = steer *0.75;
+      float talon_speed = speed / 100.0;
+     // float talon_steer = steer *0.75;
+	float talon_steer = steer / 100.0;
       //float talon2_speed = talon_speed - talon_steer; 
       //float talon4_speed = talon_speed + talon_steer;
-      talon_speed = 0.0;
+     // talon_speed = 0.0;
      /* if(speed>0){
          talon_speed = 0.3;
 }
       else if (speed<0){
          talon_speed = -0.3;
 }*/
-      talon_speed = speed; //1.5
+      //talon_speed = speed/100; //1.5
       float right = talon_speed - talon_steer;   //Positive turn decreases right motors speeds to turn right.
       float left = talon_speed + talon_steer;
-      
+
       //printf("%d",speed);
    
       //LEFT SIDE
-      talon1.Set(ControlMode::PercentOutput, left);
+//      talon1.Set(ControlMode::PercentOutput, left);
       talon2.Set(ControlMode::PercentOutput, left);
 //      talon0.Set(ControlMode::PercentOutput, left);
       //RIGHT SIDE
       talon4.Set(ControlMode::PercentOutput, right);
       talon5.Set(ControlMode::PercentOutput, right);
-//     talon3.Set(ControlMode::PercentOutput, right);
+     talon3.Set(ControlMode::PercentOutput, left);
 
       //Output debug information
       if (loopCount >= 10) {
