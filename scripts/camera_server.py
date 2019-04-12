@@ -155,13 +155,35 @@ class CameraServer:
   #    found at IP address for camera i.
   #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
   def createIPCamStream(self, i):
-    
+	
     description = ("rtspsrc location=rtsp://nova:rovanova@" + self.ids[i] 
       + ":88/videoMain ! decodebin ! jpegenc"
       + " ! rtpjpegpay ! udpsink host=" + self.dests[i] 
       + " port=" + str(self.port + i) + " sync=false")
 
-    return Gst.parse_launch(description)    
+    return Gst.parse_launch(description) 
+
+  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+  # createStereoCamStream():
+  #
+  #    Creates a new stream to the given host and port, using the stereo 
+  #    cameras found at device path "dev".
+  #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
+  def createStereoCamStream(self, i):
+	
+	# Check if both stereo cameras exist
+	if self.dev_list[i+1] is not None:
+	    description = ("v4l2src device=" + self.dev_list[i]
+	      + " ! videoscale ! video/x-raw, width=720, height=500, framerate=30/1,"
+	      + " format=I420 ! compositor name=comp sink_1::xpos=720 ! jpegenc ! "
+	      + " rtpjpegpay" + " ! udpsink host=" + self.dests[i] + " port=" + str(self.port + i))
+	      + " v4l2src device=" + self.dev_list[i+1] + " ! videoscale ! video/x-raw, width=720,"
+	      + " height=500, framerate=30/1, format=I420 ! comp."
+	    
+    		return Gst.parse_launch(description)
+	# If only one works, use standard webcam stream
+	else:
+		return createWebcamStream(i)
     
   #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
   # getCamParam():
@@ -186,7 +208,7 @@ class CameraServer:
 
       self.updateDevList() # Recompute device list
       if self.dev_list[i] is not None:
-        self.streams[i] = self.createWebcamStream(i)
+        self.streams[i] = self.createStereoCamStream(i)
 
     else: # If IP device
       self.streams[i] = self.createIPCamStream(i)

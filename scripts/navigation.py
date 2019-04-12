@@ -82,7 +82,7 @@ def handleStartAuto(req):
     global spiral_engaged
     if getMode() == 'Auto':
         # Set the desired latitude and longitude from the service request
-        des_pos.setCoords(req.latitude, req.longitude)
+        des_pos.setCoords(-37.91008843314037 ,145.1362295348945)
         auto_engaged = True
         waypoint_list = wayPoint(rovey_pos.longitude,rovey_pos.latitude,des_pos.longitude,des_pos.latitude,4)
         waypoint_iter = iter(waypoint_list)

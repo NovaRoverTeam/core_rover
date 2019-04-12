@@ -99,7 +99,7 @@ int main(int argc, char **argv)
   talon1.SetInverted(true);
   talon2.SetInverted(true);
   talon2.SetNeutralMode(Brake);
-  talon3.SetNeutralMode(Brake);
+  talon3.SetNeutralMode(Coast);
   //talon5.ConfigFactoryDefault();
   
   talon5.SetNeutralMode(Brake); 
@@ -107,12 +107,12 @@ int main(int argc, char **argv)
  //printf("test");
 
   //Configure talons for pid control
-  ConfigTalon(&talon5);
-  ConfigTalon(&talon4);
-  ConfigTalon(&talon3);
-  ConfigTalon(&talon2);
-  ConfigTalon(&talon1);
-  ConfigTalon(&talon0);
+  //ConfigTalon(&talon5);
+  //ConfigTalon(&talon4);
+ // ConfigTalon(&talon3);
+ // ConfigTalon(&talon2);
+ // ConfigTalon(&talon1);
+  //ConfigTalon(&talon0);
   //printf("test!");
 
   ros::init(argc, argv, "driver", ros::init_options::AnonymousName); // Initialise node
@@ -182,20 +182,20 @@ int main(int argc, char **argv)
       else if (speed<0){
          talon_speed = -0.3;
 }*/
-      talon_speed = speed*1.5;
+      talon_speed = speed; //1.5
       float right = talon_speed - talon_steer;   //Positive turn decreases right motors speeds to turn right.
       float left = talon_speed + talon_steer;
       
       //printf("%d",speed);
    
       //LEFT SIDE
-      talon1.Set(ControlMode::Velocity, left);
-      talon2.Set(ControlMode::Velocity, left);
-      talon0.Set(ControlMode::Velocity, left);
+      talon1.Set(ControlMode::PercentOutput, left);
+      talon2.Set(ControlMode::PercentOutput, left);
+//      talon0.Set(ControlMode::PercentOutput, left);
       //RIGHT SIDE
-      talon4.Set(ControlMode::Velocity, right);
-      talon5.Set(ControlMode::Velocity, right);
-      talon3.Set(ControlMode::Velocity, right);
+      talon4.Set(ControlMode::PercentOutput, right);
+      talon5.Set(ControlMode::PercentOutput, right);
+//     talon3.Set(ControlMode::PercentOutput, right);
 
       //Output debug information
       if (loopCount >= 10) {
