@@ -31,6 +31,8 @@ class steeringPIDL:
         self.IntTerm = self.IntTerm + raw_value
         if self.IntTerm*self.IntTerm > self.kiMax:
             self.IntTerm = 1
+## Usage of a lpf here to reduce the likelihood of large spikes in the yaw estimate 
+# Causing hard turning of the motors, and possibly damaging them.
 class lpf:
     self.timeConstant
     self.self.freq
