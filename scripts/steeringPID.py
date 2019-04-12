@@ -1,6 +1,6 @@
 ## A class that applies a PID controller to the steering of the nova rover 
 # in order to keep motion smooth and 
-
+import math
 class steeringPIDL:
     self.kp = 0.1 
     self.kI = 0.3
@@ -9,16 +9,18 @@ class steeringPIDL:
     self.turn_est = 0 
     self.freq = 1
     self.derTerm = 0
-    self.propTerm = 0
-    self.IntTerm = 0 
+    self.propTerm = 0.1
+    self.IntTerm = 0.01
 
     def __init__(self, first_value,frequency):
         self.turn_est = first_value
         self.freq = frequency
+        self.filteredTurn = lpf(1,frequency,first_value)
     
     def ComputeTurn(self, raw_command):
         self.computeder(raw_command)
-        self.propTerm = raw_command
+        self.filteredTurn.stateUpdate(raw_command)
+        self.propTerm = self.filteredTurn.state
         self.computeInt(raw_command)
         self.turn_est = self.kd*self.derTerm + self.kp*self.propTerm + self.kI*self.IntTerm
     
@@ -29,5 +31,19 @@ class steeringPIDL:
         self.IntTerm = self.IntTerm + raw_value
         if self.IntTerm*self.IntTerm > self.kiMax:
             self.IntTerm = 1
+class lpf:
+    self.timeConstant
+    self.self.freq
+    self.state
+    self.a
+    def __init__(self, timeConstant, freq, initialValue):
+        self.timeConstant = timeConstant
+        self.freq = freq
+        self.state = initialValue
+        self.a = math.exp(-self.timeConstant*self.freq)
+
+
+    def stateUpdate(self,newValue):
+        self.state = a*newValue + (1-a)*self.state
 
     
