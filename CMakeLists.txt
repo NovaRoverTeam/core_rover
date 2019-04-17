@@ -38,6 +38,7 @@ find_package(SDL2 REQUIRED)
   )
 
 catkin_package(
+	LIBRARIES rtimulib_ros
 	CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs message_runtime
 )
 
@@ -61,6 +62,7 @@ target_link_libraries(driver ${PROJECT_SOURCE_DIR}/lib/x86-64/libCTRE_Phoenix.a)
 target_link_libraries(driver ${PROJECT_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixCCI.a)
 target_link_libraries(driver ${PROJECT_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixPlatformLinuxSocketCan.a)
 target_link_libraries(driver ${PROJECT_SOURCE_DIR}/lib/x86-64/libCTRE_PhoenixCanutils.a)
+target_link_libraries(driver Threads::Threads)
 
 add_executable(testUART src/testUART.cpp)
 add_dependencies(testUART core_rover_generate_messages_cpp)
@@ -74,6 +76,8 @@ add_executable(gps_node src/gps_node.cpp)
 add_dependencies(gps_node core_rover_generate_messages_cpp)
 target_link_libraries(gps_node ${catkin_LIBRARIES})
 
-target_link_libraries(driver Threads::Threads)
-
-
+add_executable(rtimulib_ros src/rtimulib_ros.cpp)
+target_link_libraries(rtimulib_ros
+  ${catkin_LIBRARIES}
+  RTIMULib
+)
