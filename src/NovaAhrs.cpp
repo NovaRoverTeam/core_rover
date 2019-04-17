@@ -19,6 +19,8 @@
 #include <geometry_msgs/Wrench.h>
 #include <sensor_msgs/Imu.h>
 
+
+
 FusionBias fusionBias;
 FusionAhrs fusionAhrs;
 
@@ -43,6 +45,11 @@ FusionVector3 hardIronBias = {
 	0.0f,
 	0.0f,
 };
+
+int microsecond = 1000000;
+
+FusionVector3 read_data(int address, unsigned char *buffer, int read_len);
+int open_bus(char *filename, int addr);
 
 int main(int argc, char **argv) {
 	
@@ -81,42 +88,33 @@ int main(int argc, char **argv) {
 	// setup i2c buses
 	int mpu_i2c;
 	int mag_i2c;
-	int length = 4;
 	unsigned char buffer[6] = {0};
-	
 	char *filename = (char*)"/dev/i2c-0";
 	
-	if ((mpu_i2c = open(filename, O_RDWR)) < 0) {
-		printf("Failed to open the i2c bus for mpu\n");
-		return 1;
-	}
-	
+	int length = 4;
 	int addr_mpu = 0x68; // i2c address of mpu (gyroscope and accelerometer)
-	if (ioctl(mpu_i2c, I2C_SLAVE, addr_mpu) < 0) {
-		printf("Failed to access bus and/or talk to slave\n");
-	}
-	
-	int addr_mag = 0x0c; // i2c address of magnetometer
+	mpu_i2c = open_bus(filename, addr_mpu);
+
+ 	if (mag_i2c < 0) { return 1; }	
+
 	buffer[0] = 0x37; // bypass mpu for direct i2c access to magnetometer
 	buffer[1] = 0x02;
 	length = 2;
+
 	if (write(mpu_i2c, buffer, length) != length) {
 		printf("Error sending on i2c bus - while bypassing mpu\n");
 	}
-	
-	if ((mag_i2c = open(filename, O_RDWR)) < 0) {
-		printf("Failed to open the i2c bus for magnetometer\n");
-	}
-	
-	if (ioctl(mag_i2c, I2C_SLAVE, addr_mag) < 0) {
-		printf("Failed to access bus and/or talk to slave\n");
-	}
-	
+
+	int addr_mag = 0x0c; // i2c address of magnetometer
+	mag_i2c = open_bus(filename, addr_mag);
+
+ 	if (mag_i2c < 0) { return 1; }	
+
 	// setup initial delay for periodic reading
 	struct timeval t_val;
 	gettimeofday(&t_val, NULL);
-	unsigned long time_now_us = (unsigned long)(t_val.tv_sec * 1000000) + (unsigned long)t_val.tv_usec;
-	unsigned long next_read_us = (unsigned long)time_now_us + (unsigned long)(samplePeriod * 1000000.0f);
+	unsigned long time_now_us = (unsigned long)(t_val.tv_sec * microsecond) + (unsigned long)t_val.tv_usec;
+	unsigned long next_read_us = (unsigned long)time_now_us + (unsigned long)(samplePeriod * float(microsecond));
 	
 	// Initialise low pass filter for the magnetometer
 
@@ -136,69 +134,29 @@ int main(int argc, char **argv) {
 		
 		// sleep until next read time
 		gettimeofday(&t_val, NULL);
-		time_now_us = (unsigned long)(t_val.tv_sec * 1000000) + (unsigned long)t_val.tv_usec;
+		time_now_us = (unsigned long)(t_val.tv_sec * microsecond) + (unsigned long)t_val.tv_usec;
 		//printf("Time now: %li\nSleeping for: %li us\n", time_now_us, next_read_us - time_now_us);
 		usleep(next_read_us - time_now_us);
 		
 		// set next read time
 		gettimeofday(&t_val, NULL);
-		next_read_us = (unsigned long)(t_val.tv_sec * 1000000) + (unsigned long)t_val.tv_usec + (unsigned long)(samplePeriod * 1000000.0f);
+		next_read_us = (unsigned long)(t_val.tv_sec * microsecond) + (unsigned long)t_val.tv_usec + (unsigned long)(samplePeriod * float(microsecond));
 		
 		buffer[0] = 59; // read accelerometer data
-		length = 1;
-		if (write(mpu_i2c, buffer, length) != length) {
-			printf("Error sending on i2c bus - while reading accelerometer\n");
-		}
-		
 		length = 6;
-		int bytes_read = (int)read(mpu_i2c, buffer, length);
-		//printf("%i - ", bytes_read);
-		
-		signed short acc_x_raw = (buffer[0] << 8) + buffer[1];
-		signed short acc_y_raw = (buffer[2] << 8) + buffer[3];
-		signed short acc_z_raw = (buffer[4] << 8) + buffer[5];
-		FusionVector3 acc_raw = {(float)acc_x_raw, (float)acc_y_raw, (float)acc_z_raw,};
+		FusionVector3 acc_raw = read_data(mpu_i2c, buffer, length);
 		
 		//printf("X: %1.6f, Y: %1.6f, Z: %1.6f\n", (float)acc_x_raw/32768, (float)acc_y_raw/32768, (float)acc_z_raw/32768);
 		
 		buffer[0] = 67; // read gyroscope data
-		length = 1;
-		if (write(mpu_i2c, buffer, length) != length) {
-			printf("Error sending on i2c bus - while reading gyroscope\n");
-		}
-		
-		length = 6;
-		bytes_read = (int)read(mpu_i2c, buffer, length);
-		//printf("%i - ", bytes_read);
-		
-		signed short gyro_x_raw = (buffer[0] << 8) + buffer[1];
-		signed short gyro_y_raw = (buffer[2] << 8) + buffer[3];
-		signed short gyro_z_raw = (buffer[4] << 8) + buffer[5];
-		FusionVector3 gyro_raw = {(float)gyro_x_raw, (float)gyro_y_raw, (float)gyro_z_raw,};
+		FusionVector3 gyro_raw = read_data(mpu_i2c, buffer, length);
 		
 		//printf("X: %1.6f, Y: %1.6f, Z: %1.6f\n", (float)gyro_x_raw/32768, (float)gyro_y_raw/32768, (float)gyro_z_raw/32768);
 		
 		buffer[0] = 0x03; // read magnetometer data
-		length = 1;
-		if (write(mag_i2c, buffer, length) != length) {
-			printf("Error sending on i2c bus - while reading magnetometer\n");
-		}
+		FusionVector3 mag_raw = read_data(mag_i2c, buffer, length);	
 		
-		length = 6;
-		bytes_read = (int)read(mag_i2c, buffer, length);
-		//printf("%i - ", bytes_read);
-		//Different pattern with the gyro and acc!!
-		signed short mag_x_raw = (buffer[1] << 8) + buffer[0];
-		signed short mag_y_raw = (buffer[3] << 8) + buffer[2];
-		signed short mag_z_raw = (buffer[5] << 8) + buffer[4];
-		FusionVector3 mag_raw = {
-			(float)mag_x_raw,
-			(float)mag_y_raw,
-			(float)mag_z_raw,
-		};
-		
-		
-		
+	
 		// Sensor Fusion
 		// Calibrate sensors
 		gyro_cal = FusionCalibrationInertial(gyro_raw, FUSION_ROTATION_MATRIX_IDENTITY, gyro_sensitivity, FUSION_VECTOR3_ZERO);
@@ -237,9 +195,9 @@ int main(int argc, char **argv) {
 		imu_pub.publish(imu_msg);
 
 		geometry_msgs::Vector3 mag2_msg;
-		mag2_msg.x = (float)mag_x_raw;
-		mag2_msg.y = (float)mag_y_raw;
-		mag2_msg.z = (float)mag_z_raw;
+		mag2_msg.x = (float)mag_raw.axis.x;
+		mag2_msg.y = (float)mag_raw.axis.y;
+		mag2_msg.z = (float)mag_raw.axis.z;
 		mag2_pub.publish(mag2_msg);
 
 		//Test filter on the magnetometer values
@@ -256,3 +214,39 @@ int main(int argc, char **argv) {
 	
 	return 0;
 };
+
+FusionVector3 read_data(int address, unsigned char *buffer, int read_len){
+  int length = 1;
+  if (write(address, buffer, length) != length) {
+    printf("Error sending on i2c bus. Address: %d\n", buffer[0]);
+  }
+
+  int bytes_read = (int)read(address, buffer, read_len);
+
+  signed short x_raw = (buffer[0] << 8) + buffer[1];
+  signed short y_raw = (buffer[2] << 8) + buffer[3];
+  signed short z_raw = (buffer[4] << 8) + buffer[5];
+
+  FusionVector3 vec_raw = {
+    (float)x_raw,
+    (float)y_raw,
+    (float)z_raw,
+  };
+
+  return vec_raw;
+}
+
+
+int open_bus(char *filename, int addr){
+  int i2c_bus;
+  if ((i2c_bus = open(filename, O_RDWR)) < 0) {
+    printf("Failed to open the i2c bus\n");
+    return -1;
+  }
+
+  if (ioctl(i2c_bus, I2C_SLAVE, addr) < 0) {
+    printf("Failed to access bus and/or talk to slave %d\n", addr);
+  }
+
+  return i2c_bus;
+}
