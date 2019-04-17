@@ -3,7 +3,6 @@ import rospy
 import math
 import time
 from sensor_msgs.msg import NavSatFix, MagneticField, Imu
-from std_msgs.msg import Float32
 from webots_ros.srv import set_float
 from nova_common.msg import *
 from nova_common.srv import *
@@ -29,50 +28,40 @@ class WaypointClass(object):
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 class RoveyPosClass(object):
 
-    def __init__(self, lat, lng, x, y, z):
+    def __init__(self, lat, lng, roll, pitch, yaw):
         self.latitude = lat
         self.longitude = lng  
-        self.x = x
-        self.y = y
-        self.z = z
+        self.roll = roll
+        self.pitch = pitch
+        self.yaw = yaw
           
     def setCoords(self, lat, lng):
         self.latitude = lat
         self.longitude = lng 
 
-    def setOrientation(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z  
-
-#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-# bearingInDegrees():
-#    Calculates the direction an object is pointing in relation to the
-#    north vector    
-#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
-def bearingInDegrees(x, y):
-    rad = math.atan2(y,x)
-    bearing = (rad)/math.pi*180 -180
-
-    if bearing < 0:
-        bearing = bearing + 360.0
-    return bearing
+    def setOrientation(self, roll, pitch, yaw):
+        self.roll = roll
+        self.pitch = pitch
+        self.yaw = yaw  
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # angleBetween():
-#    Calculates the bearing between the location of two objects, similar
+#    Calculates the bearing in degrees between the location of two objects, similar
 #    to a Cartesian plane
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
-def angleBetween(lat1, lng1, lat2, lng2):
+def angleBetween(lat1, lng1, lat2, lng2):    
     lat1 = math.radians(lat1)
     lat2 = math.radians(lat2)
+
     longDiff = math.radians(lng2 - lng1)
     y = math.sin(longDiff) * math.cos(lat2)
     x = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(longDiff)
-    bearing = math.atan2(y, x)
-    bearing = math.degrees(bearing)
-    bearing = (bearing+360) % 360
-    return bearing
+
+    beta = math.atan2(y, x)
+    beta = math.degrees(bearing)
+    beta = (bearing+360) % 360
+
+    return beta
         
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # distanceBetween():
@@ -124,53 +113,12 @@ def gpsCallback(gpsData):
     #rospy.logdebug("lat: %s, long: %s", lat, lng)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-# imuCallback():
-#    Callback for the orientation of the rover
-#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--      
-def imuCallback(imuData):
-    global rovey_pos
-    x = imuData.orientation.x
-    y = imuData.orientation.y
-    z = imuData.orientation.z
-    w = imuData.orientation.w       # previously, this was z; need to check if a bug
-    roll, pitch,yaw =  quaternion_to_euler(x,y,z,w)
-    rovey_pos.setOrientation(roll,pitch,yaw)
-
-def quaternion_to_euler(x, y, z, w):
-    t0 = +2.0 * (w * x + y * z)
-    t1 = +1.0 - 2.0 * (x * x + y * y)
-    X = math.degrees(math.atan2(t0, t1))
-
-    t2 = +2.0 * (w * y - z * x)
-    t2 = +1.0 if t2 > +1.0 else t2
-    t2 = -1.0 if t2 < -1.0 else t2
-    Y = math.degrees(math.asin(t2))
-
-    t3 = +2.0 * (w * z + x * y)
-    t4 = +1.0 - 2.0 * (y * y + z * z)
-    Z = math.degrees(math.atan2(t3, t4))
-
-    return X, Y, Z
-
-#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-# compassCallback():
-#    Callback for the orientation of the rover
+# rpyCallback():
+#    Callback for roll, pitch, yaw from IMU
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--  
-def compassCallback(compassData):
+def rpyCallback(rpyData):
     global rovey_pos
-    x = compassData.magnetic_field.x
-    z = compassData.magnetic_field.z
-    rovey_pos.setOrientation(x,z)
-    #rospy.logdebug("x: %s, z: %s", x, z)
-
-#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-# headingCallback():
-#    Callback for the orientation of the rover
-#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--  
-def headingCallback(headingData):
-    global orientation
-    orientation = headingData.data 
-    #rospy.logdebug("x: %s, z: %s", x, z)
+    rovey_pos.setOrientation(rpyData.roll, rpyData.pitch, rpyData.yaw)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # waypointCallback():
@@ -194,7 +142,7 @@ def waypointCallback(waypointData):
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 rovey_pos = RoveyPosClass(0,0,0,0,0)
 waypoint = WaypointClass(0, 0)
-orientation = 0
+
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # auto():
 #    Main function
@@ -204,7 +152,6 @@ def auto():
     global rovey_pos
     global des_pos
     global auto_engaged
-    global orientation
     
     rospy.init_node('auto', anonymous=True)
     rate = rospy.Rate(2) # Loop rate in Hz
@@ -212,17 +159,15 @@ def auto():
     #how to get north direction from world info? or gps ref point?
 
     gps_sub     = rospy.Subscriber("/nova_common/gps_data", NavSatFix, gpsCallback)
-    imu_sub     = rospy.Subscriber("/rtimulib_node/imu", Imu, imuCallback)
-    compass_sub = rospy.Subscriber("/nova_common/MagnetometerFiltered", MagneticField, compassCallback)
-        
+    rpy_sub     = rospy.Subscriber("/nova_common/RPY", RPY, rpyCallback)
     waypoint_sub = rospy.Subscriber("/core_rover/navigation/waypoint_coords", NavSatFix, waypointCallback)
-    heading_sub = rospy.Subscriber("/nova_common/heading", Float32, headingCallback)
     drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
     status_pub  = rospy.Publisher("/core_rover/auto_status", AutoStatus, queue_size=10)
     
     while not rospy.is_shutdown():
 
-        orientation = rovey_pos.z
+        orientation = rovey_pos.yaw
+
         if True:
         
             beta =0  #angleBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
@@ -249,7 +194,7 @@ def auto():
         status_msg = AutoStatus()
         status_msg.latitude  = rovey_pos.latitude
         status_msg.longitude = rovey_pos.longitude
-        #status_msg.bearing   = orientation
+        status_msg.bearing   = orientation
         status_pub.publish(status_msg)   
 
         rate.sleep()
