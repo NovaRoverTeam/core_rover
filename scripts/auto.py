@@ -4,6 +4,7 @@ import math
 import time
 from sensor_msgs.msg import NavSatFix, MagneticField, Imu
 from webots_ros.srv import set_float
+from nav_msgs.msg import Odometry
 from nova_common.msg import *
 from nova_common.srv import *
 
