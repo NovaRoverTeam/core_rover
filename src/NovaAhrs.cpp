@@ -2,10 +2,6 @@
 #include "ros/ros.h"
 #include <ros/console.h>
 
-#include "../include/Fusion/Fusion/Fusion.h"
-#include "../include/Fusion/Fusion/FusionAhrs.c"
-#include "../include/Fusion/Fusion/FusionBias.c"
-
 #include "../include/Fusion/Fusion.h"
 #include "../include/Fusion/FusionAhrs.c"
 #include "../include/Fusion/FusionBias.c"
