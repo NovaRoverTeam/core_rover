@@ -1,1 +1,3 @@
 include/lib/x86-64/*
+scripts/rover_sm.pyc
+
