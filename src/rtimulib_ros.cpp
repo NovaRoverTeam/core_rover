@@ -27,12 +27,35 @@
 #include <RTIMULib.h>
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
+#include <nova_common/RPY.h>
+#include <math.h> 
+#include <tuple>
 
 static const double G_TO_MPSS = 9.80665;
 
+std::tuple<float, float, float> quaternion_to_euler(float x, float y, float z, float w){
+        
+    float t0, t1, t2, t3, t4, X, Y, Z;
+
+    t0 = 2.0 * (w * x + y * z);
+    t1 = 1.0 - 2.0 * (x * x + y * y);
+    X = 180* (atan2(t0, t1)) / M_PI;
+
+    t2 = 2.0 * (w * y - z * x);
+    t2 = (t2 > +1.0) ? 1.0 : t2;
+    t2 = (t2 < -1.0) ? -1.0 : t2;
+    Y = 180 * (asin(t2))/ M_PI;
+
+    t3 = 2.0 * (w * z + x * y);
+    t4 = 1.0 - 2.0 * (y * y + z * z);
+    Z = 180 * (atan2(t3, t4))/M_PI;
+
+    return std::make_tuple(X, Y, Z);
+}
+
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "rtimulib_node");
+    ros::init(argc, argv, "rtimulib_node",ros::init_options::AnonymousName);
     ROS_INFO("Imu driver is now running");
     ros::NodeHandle nh("~");
 
@@ -57,7 +80,8 @@ int main(int argc, char **argv)
         ROS_WARN_STREAM("No frame_id provided - default: " << frame_id);
     }
 
-    ros::Publisher imu_pub = nh.advertise<sensor_msgs::Imu>("imu", 1);
+    ros::Publisher imu_pub = nh.advertise<sensor_msgs::Imu>("/nova_common/IMU", 1);
+    ros::Publisher RPY_pub = nh.advertise<nova_common::RPY>("/nova_common/RPY", 1);
 
     // Load the RTIMULib.ini config file
     RTIMUSettings *settings = new RTIMUSettings(calibration_file_path.c_str(),
@@ -82,6 +106,7 @@ int main(int argc, char **argv)
     imu->setCompassEnable(true);
 
     sensor_msgs::Imu imu_msg;
+    nova_common::RPY RPY_msg;
 
 
     while (ros::ok())
@@ -107,6 +132,15 @@ int main(int argc, char **argv)
             imu_msg.linear_acceleration.z = imu_data.accel.z() * G_TO_MPSS;
 
             imu_pub.publish(imu_msg);
+            
+            float roll, pitch, yaw;            
+            std::tie(roll, pitch, yaw) =  quaternion_to_euler(imu_msg.orientation.x,imu_msg.orientation.y,imu_msg.orientation.z,imu_msg.orientation.w);
+            RPY_msg.roll = roll;
+            RPY_msg.pitch = pitch;
+            RPY_msg.yaw = yaw;
+
+            RPY_pub.publish(RPY_msg);
+
         }
         ros::spinOnce();
         ros::Duration(imu->IMUGetPollInterval() / 1000.0).sleep();
