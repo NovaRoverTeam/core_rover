@@ -1,4 +1,4 @@
-
+//--**-- ROS includes
 #include "ros/ros.h"
 #include <ros/console.h>
 
@@ -7,7 +7,6 @@
 #include "../include/Fusion/FusionBias.c"
 #include "../include/Fusion/FusionCompass.c"
 #include "../include/utils/lowpassfilter.cpp"
-#include "../include/utils/wmm/worldMagneticModel.cpp"
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -22,21 +21,6 @@
 
 FusionBias fusionBias;
 FusionAhrs fusionAhrs;
-
-//Kalman filter configs
-// missing r1 - generated using WMM
-// missing r2 - generated using 0.98
-
-double kKFProcessNoise_data[3][3] = {
-    {0.1, 0, 0}, {0, 0.1, 0}, {0, 0, 0.1} };
-double kKFSensorNoise_data[6][6] = {
-    {0.1, 0, 0, 0, 0, 0}, {0, 0.1, 0, 0, 0, 0}, {0, 0, 0.1, 0, 0, 0},
-    {0, 0, 0, 0.1, 0, 0}, {0, 0, 0, 0, 0.1, 0}, {0, 0, 0, 0, 0, 0.1} };
-double kKFInitialCovariance_data[3][3] = {
-    {0, 0, 0}, {0, 0, 0}, {0, 0, 0} };
-double kKFInitialEstimate_data[4][1] = {
-    {1}, {0}, {0}, {0} };
-
 
 float samplePeriod = 0.05f;
 
@@ -68,29 +52,6 @@ int main(int argc, char **argv) {
 	ros::Publisher mag2_pub = n.advertise<geometry_msgs::Vector3>("/nova_common/magnetometer", 1);
 	ros::Publisher mag_pub = n.advertise<geometry_msgs::Wrench>("/nova_common/magnetometer_compare", 1);
 	ros::Publisher heading_pub = n.advertise<std_msgs::Float32>("/nova_common/heading", 1);
-
-
-    // construct Kalman filter used to calcualte orientation field for IMU messages ...
-    // ... accelerometer reference 
-    double acc_data[3][1] = { {0.0}, {0.0}, {-9.8} };
-    Matrix r1(acc_data);
-
-    // ... magnetic field reference (todo: subscribe to raw GPS stream to populate)
-    r_vector mag_field_reference;
-    mag_field_reference = MagModel(2019.4, 0.031, 37.8136, 144.9631);
-    double mag_data[3][1] = { {mag_field_reference.x}, {mag_field_reference.y}, {mag_field_reference.z} };
-    Matrix r2(mag_data);
-
-    // ... prepare <OTHER DATA> for KAlman filter
-    Matrix kKFProcessNoise(kKFProcessNoise_data);
-    Matrix kKFSensorNoise(kKFSensorNoise_data);
-    Matrix kKFInitialCovariance(kKFInitialCovariance_data);
-    Matrix kKFInitialEstimate(kKFInitialEstimate_data);
-
-    // ... and finally instantiate the Kalman filter
-    // todo: get rid of uint16_t magic number; constructor requires reference type
-    KalmanFilter kalmanFilter(uint16_t(50), r1, r2, kKFProcessNoise, kKFSensorNoise, kKFInitialCovariance, kKFInitialEstimate);
-
 
 	// initialise gyroscope bias correction with stationary threshold of 0.5 degrees/s
 	FusionBiasInitialise(&fusionBias, 0.5f, samplePeriod);
@@ -164,23 +125,6 @@ int main(int argc, char **argv) {
 	FirstOrderLowPass smoothed_gyro(timeConstant, milliSamplePeriod); 
 	FirstOrderLowPass smoothed_acc(timeConstant, milliSamplePeriod);
 	FirstOrderLowPass smoothed_mag(timeConstant, milliSamplePeriod);
-
-	double magSmoothed[3][1];
-	FirstOrderLowPass smoothed_acc_x(timeConstant, milliSamplePeriod); 
-	FirstOrderLowPass smoothed_acc_y(timeConstant, milliSamplePeriod);
-	FirstOrderLowPass smoothed_acc_z(timeConstant, milliSamplePeriod);
-
-	double accSmooth[3][1];
-	FirstOrderLowPass smoothed_gyro_x(timeConstant, milliSamplePeriod); 
-	FirstOrderLowPass smoothed_gyro_y(timeConstant, milliSamplePeriod);
-	FirstOrderLowPass smoothed_gyro_z(timeConstant, milliSamplePeriod);
-
-    double oriCalculated[3][1];
-
-	float acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z;
-	double gyroSmooth[3][1];
-
-    
 
 	//main loop
 	do {	
