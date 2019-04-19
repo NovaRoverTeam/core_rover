@@ -186,13 +186,13 @@ int main(int argc, char **argv)
       //printf("%d",speed);
    
       //LEFT SIDE
-//      talon1.Set(ControlMode::PercentOutput, left);
-      talon2.Set(ControlMode::PercentOutput, left);
-//      talon0.Set(ControlMode::PercentOutput, left);
+      talon3.Set(ControlMode::PercentOutput, left);
+      talon4.Set(ControlMode::PercentOutput, left);
+      talon5.Set(ControlMode::PercentOutput, left);
       //RIGHT SIDE
-      talon4.Set(ControlMode::PercentOutput, right);
-      talon5.Set(ControlMode::PercentOutput, right);
-     talon3.Set(ControlMode::PercentOutput, left);
+      talon0.Set(ControlMode::PercentOutput, right);
+      talon1.Set(ControlMode::PercentOutput, right);
+      talon2.Set(ControlMode::PercentOutput, right);
 
       //Output debug information
       if (loopCount >= 10) {
@@ -232,5 +232,6 @@ void ConfigTalon(TalonSRX* talon) {
 	talon->Config_kI(kPIDLoopIdx, 0.02, kTimeoutMs); //0.02
 	talon->Config_kD(kPIDLoopIdx, 0.03, kTimeoutMs);
 
+	talon->SetNeutralMode(NeutralMode::Brake);
 	talon->SetSelectedSensorPosition(0);
 }
