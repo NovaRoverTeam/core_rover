@@ -128,10 +128,11 @@ int main(int argc, char **argv)
   simulator = false;
 
 	//It's supposed to detect the vehicle but this don't work yet :'(
-  //n->getParam("~Vehicle", vehicle);
-  //if (vehicle.compare("Simulator")){
-  //  simulator = true;
-  //}
+  string paramKey = "Vehicle";
+  n->getParam(paramKey, vehicle);
+  if (vehicle == "Simulator"){
+    simulator = true;
+  }
 
   double wheel[6]; //array to update motor values
 
@@ -144,6 +145,8 @@ int main(int argc, char **argv)
   {
     if (simulator) //add condition if auto mode
     {
+      ROS_INFO("Running Simulator");
+
       // Use the received drive commands to direct the virtual
       // rover via service calls.
 
@@ -166,6 +169,7 @@ int main(int argc, char **argv)
     }
     else
     {
+      ROS_INFO("Running JDB");
       //-50 to 50 for RPM | -100 to 100 for steer
       float talon_speed = speed / 100.0;
      // float talon_steer = steer *0.75;
