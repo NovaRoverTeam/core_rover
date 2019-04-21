@@ -139,6 +139,8 @@ int main(int argc, char **argv) {
 				if (uartChar == '\n') {
 					float lat, lon;
 					sensor_msgs::NavSatFix msg;
+					msg.header.stamp = ros::Time::now();
+					msg.header.frame_id = "base_link";
 					getLocation(s_data_array,&lat,&lon);
 					msg.latitude = lat;
 					msg.longitude = lon;
