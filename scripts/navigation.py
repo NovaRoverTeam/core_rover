@@ -137,8 +137,7 @@ def navigation():
     #### SIMULATOR ONLY START **************************
 
     server = rospy.Service('/core_rover/start_auto', StartAuto, handleStartAuto)
-    #gps_sub = rospy.Subscriber("/pioneer3at/gps/values", NavSatFix, gpsCallback)
-    gps_sub = rospy.Subscriber("/nova_commono/gps_data", NavSatFix, gpsCallback)
+    gps_sub = rospy.Subscriber("/ekf/gps_data", NavSatFix, gpsCallback)
     waypoint_pub  = rospy.Publisher("/core_rover/navigation/waypoint_coords", NavSatFix, queue_size=10)
     rospy.init_node('navigation', anonymous=True)
     rate = rospy.Rate(2) # Loop rate in Hz
