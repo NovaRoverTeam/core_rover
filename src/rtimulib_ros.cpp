@@ -75,12 +75,6 @@ int main(int argc, char **argv)
                         << calibration_file_name);
     }
 
-    std::string frame_id = "imu_link";
-    if(!nh.getParam("frame_id", frame_id))
-    {
-        ROS_WARN_STREAM("No frame_id provided - default: " << frame_id);
-    }
-
     ros::Publisher imu_pub = nh.advertise<sensor_msgs::Imu>("/nova_common/IMU", 1);
     ros::Publisher RPY_pub = nh.advertise<nova_common::RPY>("/nova_common/RPY", 1);
     ros::Publisher compass_pub = nh.advertise<nova_common::ApproxCompass>("/nova_common/approx_compass", 1);
@@ -119,7 +113,7 @@ int main(int argc, char **argv)
             RTIMU_DATA imu_data = imu->getIMUData();
 
             imu_msg.header.stamp = ros::Time::now();
-            imu_msg.header.frame_id = frame_id;
+            imu_msg.header.frame_id = "base_link";
 
             imu_msg.orientation.x = imu_data.fusionQPose.x(); 
             imu_msg.orientation.y = imu_data.fusionQPose.y(); 
