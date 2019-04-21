@@ -158,7 +158,7 @@ def auto():
  
     #how to get north direction from world info? or gps ref point?
 
-    gps_sub     = rospy.Subscriber("/nova_common/gps_data", NavSatFix, gpsCallback)
+    gps_sub     = rospy.Subscriber("/ekf/gps_data", NavSatFix, gpsCallback)
     rpy_sub     = rospy.Subscriber("/nova_common/RPY", RPY, rpyCallback)
     waypoint_sub = rospy.Subscriber("/core_rover/navigation/waypoint_coords", NavSatFix, waypointCallback)
     drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
