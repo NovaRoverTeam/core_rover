@@ -1,0 +1,49 @@
+<launch>
+
+    <!-- params required by navigation.py and auto.py -->
+    <rosparam param="/core_rover/Mode">"Auto"</rosparam>
+    <rosparam param="rpm_limit">1000</rosparam>
+    <rosparam param="steer_limit">1000</rosparam>
+
+    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization_node">
+        <!-- switch on debug -->
+        <param name="debug" value="true"/>
+
+        <!-- node configuration -->
+        <param name="frequency" value="30"/>
+        <param name="sensor_timeout" value="0.1"/>
+        <param name="two_d_mode" value="false"/>
+
+        <!-- may need to change these depending on the frame_ids used by the playback data -->
+        <param name="map_frame" value="map"/>
+        <param name="odom_frame" value="odom"/>
+        <param name="base_link_frame" value="imu"/>
+        <param name="world_frame" value="odom"/>
+
+        <!-- SUBUSCRIBE to: IMU "/nova_common/IMU" -->
+        <param name="imu0" value="/nova_common/IMU"/>
+        <param name="imu0_differential" value="false"/> <!-- set false if with navsat transform -->
+        <rosparam param="imu0_config">[true,true,true,
+                                       true,true,true,
+                                       true,true,true,
+                                       true,true,true,
+                                       true,true,true]</rosparam>
+
+        <!-- PUBLISH to: "/ekf/Odometry" -->
+        <remap from="odometry/filtered" to="/ekf/Odometry"/>
+    </node>
+
+    <node pkg="robot_localization" type="navsat_transform_node" name="navsat_transform_node">
+        <param name="frequency" value="30"/>
+
+        <!-- SUBSCRIBE to: "/nova_common/IMU"; "/nova_common/gps_data"; "/ekf/Odometry" -->
+        <remap from="imu/data" to="/nova_common/IMU"/>
+        <remap from="gps/fix" to="/nova_common/gps_data"/>
+        <remap from="odometry/filtered" to="/ekf/Odometry"/>
+
+        <!-- PUBLISH to: "/ekf/gps_data"-->
+        <param name="publish_filtered_gps" value="true"/>
+        <remap from="gps/filtered" to="/ekf/gps_data"/>
+    </node>
+
+</launch>
