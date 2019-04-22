@@ -16,21 +16,24 @@ def RightCallback(data):
     data_array = [data.axis_ly_val,data.axis_lx_val,data.trig_l_val,data.trig_r_val]
     global trig_r_init
     for i in range(0,len(data_array)):
-		if(i==3):
-			if(trig_r_init==False and data_array[i] == 0.0):
-				data_array[i] = 0.435
-			else:
-				trig_r_init = True
-			
-		if(i == 2 or i==3):
-			sub_data = data_array[i]-0.435
-			if sub_data>0.0:
-				sub_data = sub_data/(1-0.435)
-			else:
-				sub_data = sub_data/(0.435)
-			data_array[i]=sub_data
-		values[i+3] = data_array[i]**1.8 if data_array[i]>0 else -(abs(data_array[i])**1.8)
-		rospy.loginfo(data_array[i])
+	if(i==3):
+		if(trig_r_init==False and data_array[i] == 0.0):
+			data_array[i] = 0.435
+		else:
+			trig_r_init = True
+		
+	if(i == 2 or i==3):
+		sub_data = data_array[i]-0.435
+		if sub_data>0.0:
+			sub_data = sub_data/(1-0.435)
+		else:
+			sub_data = sub_data/(0.435)
+		data_array[i]=sub_data
+	values[i+3] = data_array[i]**1.8 if data_array[i]>0 else -(abs(data_array[i])**1.8)
+	rospy.loginfo(data_array[i])
+        if data.but_b_trg == True:
+                rospy.loginfo("True")
+                rospy.set_param('base_station/drive_mode','XboxDrive')
 #    msg = can.Message(arbitration_id=0x32, data=[0x32, 0x32], extended_id = False) 
 #    can_bus_send(msg)
 
@@ -45,6 +48,9 @@ def LeftCallback(data):
 				sub_data = sub_data/(0.435)
 			data_array[i]=sub_data
 		values[i+3] = data_array[i]**1.8 if data_array[i]>0.0 else -(abs(data_array[i])**1.8)
+    if data.but_b_trg == True:
+	rospy.loginfo("True")
+	rospy.set_param('base_station/drive_mode','LeftDrive')
 		#rospy.loginfo(data_array[i])
    # rospy.loginfo(data_array[2])
 def listener():
@@ -56,11 +62,8 @@ def listener():
 
  #   rospy.spin()
     while(True):
+
  #	    sock.recv()
-#		rospy.loginfo("Forwards %.2f", values[3])
-#		rospy.loginfo("Right %.2f", values[4])
-#		rospy.loginfo("Twist %.2f", values[5])
-#		rospy.loginfo(values[2])
 		for i in range(0,len(values)):
 			field = 0x3
 			if values[i]<0:
@@ -77,7 +80,7 @@ def listener():
  			bus.send(msg)
 			#rospy.loginfo("Id %s", complete_id)
 			
-		time.sleep(1)
+		time.sleep(0.1)
 
 if __name__ == '__main__':
     listener()
