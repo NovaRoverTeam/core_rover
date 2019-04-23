@@ -214,12 +214,12 @@ int main(int argc, char **argv)
       //ROS_INFO("Running JDB");
       //-50 to 50 for RPM | -100 to 100 for steer
 
-      float talon_speed = 1;
-      float talon_steer = 1;
+      float talon_speed;
+      float talon_steer;
 
       if(hbeat){
-           talon_speed = 3; //speed / 100.0;
-           talon_steer = 3; //steer / 100.0;
+           talon_speed = speed / 100.0;
+           talon_steer = steer / 100.0;
       }
       else{
            talon_speed = 0;
@@ -241,7 +241,7 @@ int main(int argc, char **argv)
       float right = talon_speed - talon_steer;   //Positive turn decreases right motors speeds to turn right.
       float left = talon_speed + talon_steer;
 
-      printf("%lf",talon_speed);
+      //printf("%lf",talon_speed);
    
       //LEFT SIDE
       talon0.Set(ControlMode::PercentOutput, left);
