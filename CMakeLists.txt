@@ -64,9 +64,9 @@ target_link_libraries(driver ${PROJECT_SOURCE_DIR}/include/lib/x86-64/libCTRE_Ph
 target_link_libraries(driver ${PROJECT_SOURCE_DIR}/include/lib/x86-64/libCTRE_PhoenixCanutils.a)
 target_link_libraries(driver Threads::Threads)
 
-add_executable(testUART src/testUART.cpp)
-add_dependencies(testUART core_rover_generate_messages_cpp)
-target_link_libraries(testUART ${catkin_LIBRARIES})
+add_executable(drill src/testUART.cpp)
+add_dependencies(drill core_rover_generate_messages_cpp)
+target_link_libraries(drill ${catkin_LIBRARIES})
 
 add_executable(NovaAhrs src/NovaAhrs.cpp)
 add_dependencies(NovaAhrs core_rover_generate_messages_cpp)
