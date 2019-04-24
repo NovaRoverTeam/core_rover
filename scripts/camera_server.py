@@ -176,14 +176,14 @@ class CameraServer:
 	    description = ("v4l2src device=" + self.dev_list[i]
 	      + " ! videoscale ! video/x-raw, width=720, height=500, framerate=30/1,"
 	      + " format=I420 ! compositor name=comp sink_1::xpos=720 ! jpegenc ! "
-	      + " rtpjpegpay" + " ! udpsink host=" + self.dests[i] + " port=" + str(self.port + i))
+	      + " rtpjpegpay" + " ! udpsink host=" + self.dests[i] + " port=" + str(self.port + i)
 	      + " v4l2src device=" + self.dev_list[i+1] + " ! videoscale ! video/x-raw, width=720,"
-	      + " height=500, framerate=30/1, format=I420 ! comp."
+	      + " height=500, framerate=30/1, format=I420 ! comp.")
 	    
-    		return Gst.parse_launch(description)
+    	    return Gst.parse_launch(description)
 	# If only one works, use standard webcam stream
 	else:
-		return createWebcamStream(i)
+	    return createWebcamStream(i)
     
   #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
   # getCamParam():
