@@ -15,6 +15,8 @@ ids = [0x02, 0x03, 0x01, 0x04, 0x05, 0x06, 0x07]
 resets = [0,0,0,0]
 def RightCallback(data):
     data_array = [data.axis_ly_val,data.axis_lx_val,data.trig_l_val,data.trig_r_val]
+    #rospy.set_param('base_station/drive_mode','RightDrive')
+    #drive_mode = rospy.get_param('base_station/drive_mode')
     if rospy.get_param('base_station/drive_mode') == 'RightDrive':
          data_array = [0.0,0.0,0.435,0.435]
     for i in range(0,len(data_array)):
@@ -60,7 +62,7 @@ def LeftCallback(data):
 def listener():
 
     rospy.init_node('arm', anonymous=True)
-
+    rospy.set_param('base_station/drive_mode','XboxDrive')
     rospy.Subscriber("/base_station/rjs_raw_ctrl", RawCtrl, RightCallback)
     rospy.Subscriber("/base_station/ljs_raw_ctrl", RawCtrl, LeftCallback)
 
