@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 
 
 
-    puts(serial_buffer);
+    //puts(serial_buffer);
     fclose(fOut);
 }
 }
