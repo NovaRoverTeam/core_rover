@@ -99,10 +99,16 @@ int main(int argc, char **argv)
   talon1.SetInverted(true);
   talon2.SetInverted(true);
   talon2.SetNeutralMode(Brake);
-  talon3.SetNeutralMode(Coast);
+  talon3.SetNeutralMode(Brake);
   //talon5.ConfigFactoryDefault();
   
-  talon5.SetNeutralMode(Brake); 
+  talon5.SetNeutralMode(Brake);
+  double ramp_delay = 0.8; 
+  talon5.ConfigOpenloopRamp(ramp_delay,0);
+  talon0.ConfigOpenloopRamp(ramp_delay,0);
+  talon1.ConfigOpenloopRamp(ramp_delay,0);
+  talon3.ConfigOpenloopRamp(ramp_delay,0);  
+  talon4.ConfigOpenloopRamp(ramp_delay,0);
   //talon5.Set(ControlMode::Velocity, 500);
  //printf("test");
 
@@ -173,7 +179,7 @@ int main(int argc, char **argv)
       //-50 to 50 for RPM | -100 to 100 for steer
       float talon_speed = speed / 100.0;
      // float talon_steer = steer *0.75;
-	float talon_steer = steer / 100.0;
+	    float talon_steer = steer / 100.0;
       //float talon2_speed = talon_speed - talon_steer; 
       //float talon4_speed = talon_speed + talon_steer;
      // talon_speed = 0.0;
@@ -217,25 +223,25 @@ int main(int argc, char **argv)
 
 void ConfigTalon(TalonSRX* talon) {
 
-	const int kTimeoutMs = 0;
-	const int kPIDLoopIdx = 0;
+	  const int kTimeoutMs = 0;
+	  const int kPIDLoopIdx = 0;
 
-        /* first choose the sensor */
-	talon->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0, kTimeoutMs);
-	talon->SetSensorPhase(false);
+          /* first choose the sensor */
+	  talon->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0, kTimeoutMs);
+	  talon->SetSensorPhase(false);
 
-	/* set the peak and nominal outputs */
-	talon->ConfigNominalOutputForward(0, kTimeoutMs);
-	talon->ConfigNominalOutputReverse(0, kTimeoutMs);
-	talon->ConfigPeakOutputForward(0.7, kTimeoutMs);
-	talon->ConfigPeakOutputReverse(-0.7, kTimeoutMs);
+	  /* set the peak and nominal outputs */
+	  talon->ConfigNominalOutputForward(0, kTimeoutMs);
+	  talon->ConfigNominalOutputReverse(0, kTimeoutMs);
+	  talon->ConfigPeakOutputForward(0.7, kTimeoutMs);
+	  talon->ConfigPeakOutputReverse(-0.7, kTimeoutMs);
 
-	/* set closed loop gains in slot0 */
-	talon->Config_kF(kPIDLoopIdx, 0.1097, kTimeoutMs); //0.1097
-	talon->Config_kP(kPIDLoopIdx, 6, kTimeoutMs); //0.22
-	talon->Config_kI(kPIDLoopIdx, 0.02, kTimeoutMs); //0.02
-	talon->Config_kD(kPIDLoopIdx, 0.03, kTimeoutMs);
+	  /* set closed loop gains in slot0 */
+	  talon->Config_kF(kPIDLoopIdx, 0.1097, kTimeoutMs); //0.1097
+	  talon->Config_kP(kPIDLoopIdx, 6, kTimeoutMs); //0.22
+	  talon->Config_kI(kPIDLoopIdx, 0.02, kTimeoutMs); //0.02
+	  talon->Config_kD(kPIDLoopIdx, 0.03, kTimeoutMs);
 
-	talon->SetNeutralMode(NeutralMode::Brake);
-	talon->SetSelectedSensorPosition(0);
+	  talon->SetNeutralMode(NeutralMode::Brake);
+	  talon->SetSelectedSensorPosition(0);
 }
