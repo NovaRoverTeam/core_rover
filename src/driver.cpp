@@ -140,7 +140,7 @@ int main(int argc, char **argv)
   talon2.SetInverted(false);
   talon3.SetNeutralMode(Brake);
   
-  double delay = 1.0;
+  double delay = 3.0;
   talon0.ConfigOpenloopRamp(delay,0);
   talon1.ConfigOpenloopRamp(delay,0);
   talon2.ConfigOpenloopRamp(delay,0);
