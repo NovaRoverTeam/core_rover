@@ -27,7 +27,6 @@
   <build_depend>webots_ros</build_depend>
   <build_depend>message_generation</build_depend>
   <build_depend>gp_common</build_depend>
-  <nuild_depend>octomap</build_depend>
 
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
@@ -36,7 +35,6 @@
   <exec_depend>webots_ros</exec_depend>
   <exec_depend>nova_common</exec_depend>
   <exec_depend>message_runtime</exec_depend>
-  <run_depend>octomap<run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
