@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
   /* commit the serial port settings */
   tcsetattr(fd, TCSANOW, &toptions);
   while(true){
-  fOut = fopen("../battery_data.txt","a");
+  fOut = fopen("/home/nvidia/catkin_ws/src/core_rover/battery_data.txt","a");
 
   if(fOut!=0){
     int n = read(fd, &serial_buffer, sizeof(serial_buffer));
