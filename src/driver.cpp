@@ -24,6 +24,7 @@
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <std_msgs/String.h>
+#include <std_msgs/Empty.h>
 #include <tf/transform_broadcaster.h>
 
 #include <core_rover/set_float.h>
@@ -49,11 +50,15 @@
 #include <SDL2/SDL.h>
 #include <unistd.h>
 
+#define LOOP_HERTZ 50
+
 using namespace std;
 
 int speed;
 int steer;
 int num;
+bool hbeat = false;
+int hbeat_cnt = 0;
 
 ros::NodeHandle *n; // Create node handle to talk to ROS
 
@@ -83,6 +88,41 @@ void DriveCmdCb(const nova_common::DriveCmd::ConstPtr& msg)
 }
 
 //--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+// HbeatCb():
+//    Callback function for receiving a heartbeat from the
+//    base station if still connected.
+//--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-
+void HbeatCb(const std_msgs::Empty::ConstPtr& msg)
+{
+  hbeat = true;
+  hbeat_cnt = 0;
+}
+
+void ConfigTalon(TalonSRX* talon) {
+
+	const int kTimeoutMs = 0;
+	const int kPIDLoopIdx = 0;
+
+        /* first choose the sensor */
+	talon->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0, kTimeoutMs);
+	talon->SetSensorPhase(false);
+
+	/* set the peak and nominal outputs */
+	talon->ConfigNominalOutputForward(0, kTimeoutMs);
+	talon->ConfigNominalOutputReverse(0, kTimeoutMs);
+	talon->ConfigPeakOutputForward(0.7, kTimeoutMs);
+	talon->ConfigPeakOutputReverse(-0.7, kTimeoutMs);
+
+	/* set closed loop gains in slot0 */
+	talon->Config_kF(kPIDLoopIdx, 0.1097, kTimeoutMs); //0.1097
+	talon->Config_kP(kPIDLoopIdx, 6, kTimeoutMs); //0.22
+	talon->Config_kI(kPIDLoopIdx, 0.02, kTimeoutMs); //0.02
+	talon->Config_kD(kPIDLoopIdx, 0.03, kTimeoutMs);
+
+	talon->SetSelectedSensorPosition(0);
+}
+
+//--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 // main():
 //    Main function. This will run first.
 //--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
@@ -97,18 +137,9 @@ int main(int argc, char **argv)
 
   talon0.SetInverted(true);
   talon1.SetInverted(true);
-  talon2.SetInverted(true);
-  talon2.SetNeutralMode(Brake);
+  talon2.SetInverted(false);
   talon3.SetNeutralMode(Brake);
   //talon5.ConfigFactoryDefault();
-  
-  talon5.SetNeutralMode(Brake);
-  double ramp_delay = 0.8; 
-  talon5.ConfigOpenloopRamp(ramp_delay,0);
-  talon0.ConfigOpenloopRamp(ramp_delay,0);
-  talon1.ConfigOpenloopRamp(ramp_delay,0);
-  talon3.ConfigOpenloopRamp(ramp_delay,0);  
-  talon4.ConfigOpenloopRamp(ramp_delay,0);
   //talon5.Set(ControlMode::Velocity, 500);
  //printf("test");
 
@@ -123,15 +154,19 @@ int main(int argc, char **argv)
 
   ros::init(argc, argv, "driver", ros::init_options::AnonymousName); // Initialise node
   n = new ros::NodeHandle;
+  ros::Rate loop_rate(LOOP_HERTZ);
 
   // Declare subscriber to drive cmds
   ros::Subscriber drive_cmd_sub = n->subscribe("/core_rover/driver/drive_cmd", 1, DriveCmdCb);
+  ros::Subscriber hbeat_sub = n->subscribe("/heartbeat", 1, HbeatCb);
 
   // Boolean variable describing whether we are using the simulator
   // or a real rover. 
   string vehicle;
   bool simulator;
   simulator = false;
+
+  const int hbeat_timeout = 2*LOOP_HERTZ;
 
 	//It's supposed to detect the vehicle but this don't work yet :'(
   string paramKey = "Vehicle";
@@ -149,6 +184,7 @@ int main(int argc, char **argv)
   int loopCount = 0;
   while (ros::ok()) // Main loop
   {
+
     if (simulator) //add condition if auto mode
     {
       ROS_INFO("Running Simulator");
@@ -175,11 +211,23 @@ int main(int argc, char **argv)
     }
     else
     {
-      ROS_INFO("Running JDB");
+      //ROS_INFO("Running JDB");
       //-50 to 50 for RPM | -100 to 100 for steer
-      float talon_speed = speed / 100.0;
+
+      float talon_speed;
+      float talon_steer;
+
+      if(hbeat){
+           talon_speed = speed / 100.0;
+           talon_steer = steer / 100.0;
+      }
+      else{
+           talon_speed = 0;
+           talon_steer = 0;
+	   
+      }
+
      // float talon_steer = steer *0.75;
-	    float talon_steer = steer / 100.0;
       //float talon2_speed = talon_speed - talon_steer; 
       //float talon4_speed = talon_speed + talon_steer;
      // talon_speed = 0.0;
@@ -193,16 +241,17 @@ int main(int argc, char **argv)
       float right = talon_speed - talon_steer;   //Positive turn decreases right motors speeds to turn right.
       float left = talon_speed + talon_steer;
 
-      //printf("%d",speed);
+      //printf("%lf",talon_speed);
    
       //LEFT SIDE
-      talon3.Set(ControlMode::PercentOutput, left);
-      talon4.Set(ControlMode::PercentOutput, left);
-      talon5.Set(ControlMode::PercentOutput, left);
+      talon0.Set(ControlMode::PercentOutput, left);
+      talon1.Set(ControlMode::PercentOutput, left);
+      talon2.Set(ControlMode::PercentOutput, left);
       //RIGHT SIDE
-      talon0.Set(ControlMode::PercentOutput, right);
-      talon1.Set(ControlMode::PercentOutput, right);
-      talon2.Set(ControlMode::PercentOutput, right);
+      talon3.Set(ControlMode::PercentOutput, right);
+      talon4.Set(ControlMode::PercentOutput, right);
+      talon5.Set(ControlMode::PercentOutput, right);
+     
 
       //Output debug information
       if (loopCount >= 10) {
@@ -215,33 +264,16 @@ int main(int argc, char **argv)
       ctre::phoenix::unmanaged::FeedEnable(100);
     }                     
     loopCount++;
+
+    if(hbeat_cnt > hbeat_timeout){
+        hbeat = false;
+    }
+
+    hbeat_cnt++;
     ros::spinOnce();   // Messages are received and callbacks called
+    loop_rate.sleep();
   }
 
   return 0;
 }
 
-void ConfigTalon(TalonSRX* talon) {
-
-	  const int kTimeoutMs = 0;
-	  const int kPIDLoopIdx = 0;
-
-          /* first choose the sensor */
-	  talon->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0, kTimeoutMs);
-	  talon->SetSensorPhase(false);
-
-	  /* set the peak and nominal outputs */
-	  talon->ConfigNominalOutputForward(0, kTimeoutMs);
-	  talon->ConfigNominalOutputReverse(0, kTimeoutMs);
-	  talon->ConfigPeakOutputForward(0.7, kTimeoutMs);
-	  talon->ConfigPeakOutputReverse(-0.7, kTimeoutMs);
-
-	  /* set closed loop gains in slot0 */
-	  talon->Config_kF(kPIDLoopIdx, 0.1097, kTimeoutMs); //0.1097
-	  talon->Config_kP(kPIDLoopIdx, 6, kTimeoutMs); //0.22
-	  talon->Config_kI(kPIDLoopIdx, 0.02, kTimeoutMs); //0.02
-	  talon->Config_kD(kPIDLoopIdx, 0.03, kTimeoutMs);
-
-	  talon->SetNeutralMode(NeutralMode::Brake);
-	  talon->SetSelectedSensorPosition(0);
-}
