@@ -139,6 +139,14 @@ int main(int argc, char **argv)
   talon1.SetInverted(true);
   talon2.SetInverted(false);
   talon3.SetNeutralMode(Brake);
+  
+  double delay = 1.0;
+  talon0.ConfigOpenloopRamp(delay,0);
+  talon1.ConfigOpenloopRamp(delay,0);
+  talon2.ConfigOpenloopRamp(delay,0);
+  talon3.ConfigOpenloopRamp(delay,0);
+  talon4.ConfigOpenloopRamp(delay,0);
+  talon5.ConfigOpenloopRamp(delay,0);
   //talon5.ConfigFactoryDefault();
   //talon5.Set(ControlMode::Velocity, 500);
  //printf("test");
