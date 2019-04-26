@@ -59,8 +59,8 @@ def angleBetween(lat1, lng1, lat2, lng2):
     x = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(longDiff)
 
     beta = math.atan2(y, x)
-    beta = math.degrees(bearing)
-    beta = (bearing+360) % 360
+    beta = math.degrees(beta)
+    beta = (beta+360) % 360
 
     return beta
         
@@ -127,8 +127,8 @@ def rpyCallback(rpyData):
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--  
 def waypointCallback(waypointData):
     global waypoint
-    lat = waypointData.latitude
-    lng = waypointData.longitude
+    lat = waypointData.lat
+    lng = waypointData.lng
     waypoint.setCoords(lat,lng)
     print(lat)
 
@@ -142,7 +142,7 @@ def waypointCallback(waypointData):
 # Global variables
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 rovey_pos = RoveyPosClass(0,0,0,0,0)
-waypoint = WaypointClass(0, 0)
+waypoint = WaypointClass(-37.9104679, 145.1361607)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # auto():
@@ -171,8 +171,10 @@ def auto():
 
         if True:
         
-            beta =0  #angleBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
-            distance = distanceBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
+            beta =angleBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
+            distance = 110000 * distanceBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
+            rospy.loginfo("rovey pos: lat : %s lng: %s", rovey_pos.latitude, rovey_pos.longitude)
+            rospy.loginfo("dest pos: lat: %s lng:%s", waypoint.latitude, waypoint.longitude)
             turn = turnDirection(beta, orientation)
             
             rospy.loginfo("fish")

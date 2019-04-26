@@ -131,7 +131,12 @@ int main(int argc, char **argv)
             std::tie(roll, pitch, yaw) =  quaternion_to_euler(imu_msg.orientation.x,imu_msg.orientation.y,imu_msg.orientation.z,imu_msg.orientation.w);
             RPY_msg.roll = roll;
             RPY_msg.pitch = pitch;
-            RPY_msg.yaw = yaw;
+
+            yaw = yaw + 360;
+            if (yaw > 360){
+            yaw = yaw - 360;
+            }
+            RPY_msg.yaw = yaw ;
 
             RPY_pub.publish(RPY_msg);
 
