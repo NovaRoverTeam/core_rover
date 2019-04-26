@@ -69,7 +69,7 @@ def tennis_loc():
     autonomous_mode = 'Off'
     while not rospy.is_shutdown():
     	connection, client_address = sock.accept()
-    	while getAutoMode not 'Off':
+    	while getAutoMode() not 'Off':
         	steer_limit = rospy.get_param('steer_limit')
         	rpm_limit   = rospy.get_param('rpm_limit')
             data = connection.recv(100) # 1 Byte per character
