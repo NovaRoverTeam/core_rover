@@ -294,30 +294,3 @@ int main(int argc, char **argv)
 
   return 0;
 }
-
-<<<<<<< HEAD
-void ConfigTalon(TalonSRX* talon) {
-
-	const int kTimeoutMs = 0;
-	const int kPIDLoopIdx = 0;
-
-    // first choose the sensor
-	talon->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0, kTimeoutMs);
-	talon->SetSensorPhase(false);
-
-	// set the peak and nominal outputs
-	talon->ConfigNominalOutputForward(0, kTimeoutMs);
-	talon->ConfigNominalOutputReverse(0, kTimeoutMs);
-	talon->ConfigPeakOutputForward(0.7, kTimeoutMs);
-	talon->ConfigPeakOutputReverse(-0.7, kTimeoutMs);
-
-	// set closed loop gains in slot0
-	talon->Config_kF(kPIDLoopIdx, 0.1097, kTimeoutMs); //0.1097
-	talon->Config_kP(kPIDLoopIdx, 6, kTimeoutMs); //0.22
-	talon->Config_kI(kPIDLoopIdx, 0.02, kTimeoutMs); //0.02
-	talon->Config_kD(kPIDLoopIdx, 0.03, kTimeoutMs);
-
-	talon->SetSelectedSensorPosition(0);
-}
-=======
->>>>>>> f49d18ca0e8111d937dee480355fcc97ac80dc7d
