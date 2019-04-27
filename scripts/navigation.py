@@ -7,7 +7,7 @@ from nova_common.srv import *
 import time
 
 simulator = False
-
+testing = True
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # RoveyPosClass:
 #    Creates a class for the location of the rover
@@ -128,8 +128,10 @@ def initNavigation():
     global waypoint_iter
     global spiral_engaged
     spiral_engaged = False
-    des_pos.setCoords(-37.9105245 ,145.1360125)
-    #des_pos.setCoords(req.latitude, req.longitude)
+    if testing:
+        des_pos.setCoords(-37.91008843314037 ,145.1362295348945)
+    else:
+        des_pos.setCoords(req.latitude, req.longitude)
     auto_engaged = True
     waypoint_list = wayPoint(rovey_pos.longitude,rovey_pos.latitude,des_pos.longitude,des_pos.latitude,4)
     waypoint_iter = iter(waypoint_list)
@@ -200,14 +202,15 @@ def navigation():
     # auto_engaged = True #Override
     # new_destination = True
     # spiral_engaged = False
+    if testing:
+        time.sleep(2)
     #### DEBUG ONLY END ***************************
-    time.sleep(2)
     initNavigation()
     while not rospy.is_shutdown():
 	rospy.loginfo(rovey_pos)
         if True:
             if True:
-		rospy.loginfo("dog")
+                rospy.loginfo("dog") if testing
                 #Waypoint Publisher
                 #The following implements distance of line formula. However, it converts this from degrees to metres.
                 distance_to_dest = math.sqrt((rovey_pos.latitude - des_pos.latitude)**2 + (rovey_pos.longitude - des_pos.longitude)**2)*111000
@@ -223,7 +226,7 @@ def navigation():
                     try:
                         way_pos = next(waypoint_iter)
                         rospy.loginfo(way_pos)
-			rospy.loginfo("cat")
+                        rospy.loginfo("cat") if testing
                         waypoint_msg = NavSatFix() #Initialize waypoint data structure.
                         waypoint_msg.latitude = way_pos.latitude # Populate structure with lat and long
                         waypoint_msg.longitude = way_pos.longitude

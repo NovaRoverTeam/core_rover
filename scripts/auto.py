@@ -7,6 +7,7 @@ from webots_ros.srv import set_float
 from nova_common.msg import *
 from nova_common.srv import *
 
+testing = False
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # DesPosClass:
 #    Creates a class for the GPS coords given by the competition.
@@ -162,7 +163,7 @@ def auto():
     waypoint_sub = rospy.Subscriber("/core_rover/navigation/waypoint_coords", NavSatFix, waypointCallback)
     drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
     status_pub  = rospy.Publisher("/core_rover/auto_status", AutoStatus, queue_size=10)
-    time.sleep(5)
+    time.sleep(5) if testing
     while not rospy.is_shutdown():
 
         orientation = rovey_pos.yaw
