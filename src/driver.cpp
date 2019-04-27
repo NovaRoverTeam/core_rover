@@ -274,7 +274,7 @@ int main(int argc, char **argv)
     loopCount++;
 
     if(hbeat_cnt > hbeat_timeout){
-        hbeat = false;
+        hbeat = true;
     }
 
     hbeat_cnt++;

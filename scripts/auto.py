@@ -126,10 +126,9 @@ def rpyCallback(rpyData):
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--  
 def waypointCallback(waypointData):
     global waypoint
-    lat = waypointData.lat
-    lng = waypointData.lng
+    lat = waypointData.latitude
+    lng = waypointData.longitude
     waypoint.setCoords(lat,lng)
-    print(lat)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # getMode(): Retrieve Mode from parameter server.
@@ -141,7 +140,7 @@ def waypointCallback(waypointData):
 # Global variables
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 rovey_pos = RoveyPosClass(0,0,0,0,0)
-waypoint = WaypointClass(-37.9104679, 145.1361607)
+waypoint = WaypointClass(0,0)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # auto():
@@ -150,7 +149,7 @@ waypoint = WaypointClass(-37.9104679, 145.1361607)
 def auto():
 
     global rovey_pos
-    global des_pos
+    global waypoint
     global auto_engaged
     
     rospy.init_node('auto', anonymous=True)
@@ -163,12 +162,12 @@ def auto():
     waypoint_sub = rospy.Subscriber("/core_rover/navigation/waypoint_coords", NavSatFix, waypointCallback)
     drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
     status_pub  = rospy.Publisher("/core_rover/auto_status", AutoStatus, queue_size=10)
-    
+    time.sleep(5)
     while not rospy.is_shutdown():
 
         orientation = rovey_pos.yaw
 
-        if True:
+        if (True):
         
             beta =angleBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
             distance = 110000 * distanceBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
@@ -185,8 +184,8 @@ def auto():
            # steer_limit = rospy.get_param('steer_limit')
             
             drive_msg = DriveCmd()
-            drive_msg.rpm       = 0
-            drive_msg.steer_pct = turn * 0.3
+            drive_msg.rpm       = 10
+            drive_msg.steer_pct = turn * 0.5
             drive_pub.publish(drive_msg)
             
             #if distance < :

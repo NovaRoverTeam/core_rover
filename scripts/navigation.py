@@ -39,7 +39,7 @@ def gpsCallback(gpsData):
 # getRoverMode(): Retrieve Mode from parameter server.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def getRoverMode():
-    return rospy.get_param('/core_rover/Mode')
+    return rospy.get_param('/core_rover/Mode', "Auto")
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # getAutoMode(): Retrieve Mode from parameter server.
@@ -67,8 +67,8 @@ def wayPoint(lng_current_pos,lat_current_pos,lng_destination,lat_destination,no_
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def spiralSearch(current_pos,no_of_waypoints,rang_min,rang_max):
     theta = numpy.linspace(rang_min,rang_max,num=no_of_waypoints)
-    dd_const = 2 # No of degrees(lat long) the rover moves outward as it rotates theta degrees
-    r = 2*theta
+    dd_const = 0.0000001 # No of degrees(lat long) the rover moves outward as it rotates theta degrees
+    r = dd_const*theta
     lng=r*numpy.cos(theta) + current_pos.longitude
     lat=r*numpy.sin(theta) + current_pos.latitude
     searchPath=list()
@@ -100,7 +100,7 @@ def spiralSearch(current_pos,no_of_waypoints,rang_min,rang_max):
     lng=r*numpy.cos(theta) + current_pos.longitude
     lat=r*numpy.sin(theta) + current_pos.latitude
     searchPath=list()
-    for i in range(len(x)):
+    for i in range(len(theta)):
         searchPath.append(RoveyPosClass(lat[i],lng[i]))
     return searchPath
  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -128,8 +128,8 @@ def initNavigation():
     global waypoint_iter
     global spiral_engaged
     spiral_engaged = False
-    #des_pos.setCoords(-37.91008843314037 ,145.1362295348945)
-    des_pos.setCoords(req.latitude, req.longitude)
+    des_pos.setCoords(-37.9105245 ,145.1360125)
+    #des_pos.setCoords(req.latitude, req.longitude)
     auto_engaged = True
     waypoint_list = wayPoint(rovey_pos.longitude,rovey_pos.latitude,des_pos.longitude,des_pos.latitude,4)
     waypoint_iter = iter(waypoint_list)
@@ -148,11 +148,11 @@ def initSearch():
     global new_destination
     global spiral_engaged
     waypoint_list = spiralSearch(rovey_pos,25,0,10)
-    aypoint_iter = iter(searchpath)
+    waypoint_iter = iter(waypoint_list)
     new_destination = True
     spiral_engaged = True
     rospy.loginfo('Spiral Search Engaged!')
-    rospy.loginfo('Spiral WaypointList: ' + str(searchpath))
+    rospy.loginfo('Spiral WaypointList: ' + str(waypoint_list))
  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # Global variables
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
@@ -191,7 +191,7 @@ def navigation():
 
     server = rospy.Service('/core_rover/start_auto', StartAuto, handleStartAuto)
     #gps_sub = rospy.Subscriber("/pioneer3at/gps/values", NavSatFix, gpsCallback)
-    gps_sub = rospy.Subscriber("/nova_commono/gps_data", NavSatFix, gpsCallback)
+    gps_sub = rospy.Subscriber("/nova_common/gps_data", NavSatFix, gpsCallback)
     waypoint_pub  = rospy.Publisher("/core_rover/navigation/waypoint_coords", NavSatFix, queue_size=10)
     rospy.init_node('navigation', anonymous=True)
     rate = rospy.Rate(2) # Loop rate in Hz
@@ -201,9 +201,13 @@ def navigation():
     # new_destination = True
     # spiral_engaged = False
     #### DEBUG ONLY END ***************************
+    time.sleep(2)
+    initNavigation()
     while not rospy.is_shutdown():
-        if getRoverMode() == 'Auto':
-            if auto_engaged is True:
+	rospy.loginfo(rovey_pos)
+        if True:
+            if True:
+		rospy.loginfo("dog")
                 #Waypoint Publisher
                 #The following implements distance of line formula. However, it converts this from degrees to metres.
                 distance_to_dest = math.sqrt((rovey_pos.latitude - des_pos.latitude)**2 + (rovey_pos.longitude - des_pos.longitude)**2)*111000
@@ -219,6 +223,7 @@ def navigation():
                     try:
                         way_pos = next(waypoint_iter)
                         rospy.loginfo(way_pos)
+			rospy.loginfo("cat")
                         waypoint_msg = NavSatFix() #Initialize waypoint data structure.
                         waypoint_msg.latitude = way_pos.latitude # Populate structure with lat and long
                         waypoint_msg.longitude = way_pos.longitude
