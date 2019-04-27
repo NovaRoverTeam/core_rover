@@ -13,7 +13,7 @@ from std_msgs.msg import String
 # getAutoMode(): Retrieve Mode from parameter server.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def getAutoMode():
-    return rospy.get_param('/core_rover/autonomous_mode')
+    return rospy.get_param('/core_rover/autonomous_mode','Off')
 def X_Zone(x):
     zones = ('left','centre','right')
     centre_border = (426,853)
@@ -66,10 +66,10 @@ def tennis_loc():
     rospy.loginfo("tennis ball location node started")
     autonomous_mode = 'Off'
     while not rospy.is_shutdown():
-    	connection, client_address = sock.accept()
-    	while getAutoMode not 'Off':
-        	steer_limit = rospy.get_param('steer_limit')
-        	rpm_limit   = rospy.get_param('rpm_limit')
+        connection, client_address = sock.accept()
+        while getAutoMode() is not 'Off':
+            steer_limit = rospy.get_param('steer_limit')
+            rpm_limit   = rospy.get_param('rpm_limit')
             data = connection.recv(100) # 1 Byte per character
             if data:
                 status_pub.publish("Found")

@@ -39,13 +39,13 @@ def gpsCallback(gpsData):
 # getRoverMode(): Retrieve Mode from parameter server.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def getRoverMode():
-    return rospy.get_param('/core_rover/Mode')
+    return rospy.get_param('/core_rover/Mode','Standby')
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # getAutoMode(): Retrieve Mode from parameter server.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def getAutoMode():
-    return rospy.get_param('/core_rover/autonomous_mode')
+    return rospy.get_param('/core_rover/autonomous_mode','Off')
 
  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # wayPoint(lng_current_pos,lat_current_pos,lng_destination,lat_destination,no_of_waypoints):
@@ -114,11 +114,14 @@ def initNavigation():
 #  Intitialise Searching for Tennis Ball (Spiral)
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def initSearch():
-    searchpath = spiralSearch(rovey_pos,25,0,10)
-    global waypoint_list = searchpath
-    global waypoint_iter = iter(searchpath)
-    global new_destination = True
-    # spiral_engaged = True
+    global spiral_engaged
+    global waypoint_list
+    global waypoint_iter
+    global new_destination
+    waypoint_iter = iter(searchpath)
+    waypoint_list = spiralSearch(rovey_pos,25,0,10)
+    spiral_engaged = True
+    new_destination = True
     rospy.loginfo('Spiral Search Engaged!')
     rospy.loginfo('Spiral WaypointList: ' + str(searchpath))
  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -196,7 +199,6 @@ def navigation():
                             initNavigation()
                         else:
                             initSearch()
-                        spiral_engaged = False
         rate.sleep()
 
 if __name__ == '__main__':
