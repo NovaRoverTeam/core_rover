@@ -46,4 +46,15 @@
         <remap from="gps/filtered" to="/ekf/gps_data"/>
     </node>
 
+    <node pkg="move_base" type="move_base" name="move_base" respawn="false">
+        <!-- SUBSCRIBE to: "/odom" -->
+        <remap from="odom" to="/ekf/Odometry"/>
+
+        <rosparam file="costmap_common_params.yaml" command="load" ns="global_costmap"/>
+        <rosparam file="costmap_common_params.yaml" command="load" ns="local_costmap"/>
+        <rosparam file="local_costmap_params.yaml" command="load"/>
+        <rosparam file="global_costmap_params.yaml" command="load"/>
+        <rosparam file="base_local_planner_params.yaml" command="load"/>
+    </node>
+
 </launch>
