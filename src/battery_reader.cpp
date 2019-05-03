@@ -10,6 +10,7 @@
 #include <sys/ioctl.h>
 #include <signal.h>
 #include <iostream>
+#include <fstream>
 #include <cstdlib>
 #include <time.h>
 
@@ -20,15 +21,40 @@ int counter = 0;
 int line_counter = 0;
 int is_v = 0;
 int is_eq = 0;
+int minute_count = 0;
+std::string minute_buffer = "";
+std::string string_buffer;
+std::ofstream out;
+
 int main(int argc, char *argv[])
 {
   time_t now;
-  int fd = open("/dev/ttyUSB0", O_RDONLY | O_NOCTTY);
+  int fd = open("/dev/ttyACM0", O_RDONLY | O_NOCTTY);
+  //int fd = 0;
   printf("fd opened as %i\n", fd);
-  //fOut = fopen("../battery_data.txt","w"); //resetting
-  //fclose(fOut);
+  now = time(NULL);
+
+  std::string time_now = "";// asctime(localtime(&now));
+  std::cout << time_now;
+  for(int i=0; i<time_now.length(); i++){
+     if(time_now[i] == ' ' or time_now[i] == '\n' or time_now[i] =='\r' or time_now[i] == ':')
+     {
+        time_now.erase(i,1);
+     }
+}
+  std::string location = time_now;
+  printf("1");
+  std::cout << location;
+  printf("testing");
+  std::string s = "/home/nvidia/catkin_ws/src/core_rover/"+time_now+"battery_data.txt";
+  std::cout << s;
+  char cstr[s.size()+1];
+  strcpy(cstr, s.c_str());
+  printf("fd opened as %i\n", fd);
+//  fOut = fopen(cstr,"w"); //resetting
+//  fclose(fOut);
   /* wait for the Arduino to reboot */
-  usleep(3500000);
+  //usleep(3500000);
   struct termios toptions;
   /* get current serial port settings */
   tcgetattr(fd, &toptions);
@@ -45,17 +71,34 @@ int main(int argc, char *argv[])
   /* commit the serial port settings */
   tcsetattr(fd, TCSANOW, &toptions);
   while(true){
-  fOut = fopen("/home/nvidia/catkin_ws/src/core_rover/battery_data.txt","a");
+  //std::cout<<fOut;
 
-  if(fOut!=0){
+  //if(fOut!=0){
+  if(true){
     int n = read(fd, &serial_buffer, sizeof(serial_buffer));
     line_counter++;
+    string_buffer = serial_buffer[0];
     if(serial_buffer[0] == '\n' and line_counter > 5){
     //char equals[] = "= ";
 //    fputs(equals, fOut);
-    fputs(" ",fOut);
+    minute_count++;
+    //minute_buffer += " ";
     time(&now);
-    fputs(asctime(localtime(&now)), fOut);
+    time_now = asctime(localtime(&now));
+//    fputs(" ",fOut);
+
+    //minute_buffer += time_now;
+    if (minute_count > 60){
+       std::cout << minute_buffer;
+       out.open(s, std::ios::app);
+       minute_count = 0;
+       out << minute_buffer;
+       minute_buffer = "";
+       out.close(); 
+       puts("TeST!");
+       
+}
+//    fputs(asctime(localtime(&now)), fOut);
     line_counter = 0;
 
 }
@@ -64,7 +107,8 @@ int main(int argc, char *argv[])
 
 }
 
-    fputs(serial_buffer,fOut);
+//    fputs(serial_buffer,fOut);
+    minute_buffer += string_buffer;
     char test = 'r';
     double volts;
     counter++;
@@ -91,8 +135,8 @@ int main(int argc, char *argv[])
 
 
 
-    //puts(serial_buffer);
-    fclose(fOut);
+    puts(serial_buffer);
+    //fclose(fOut);
 }
 }
 }
