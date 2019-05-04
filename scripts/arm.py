@@ -6,7 +6,7 @@ from nova_common.msg import * #motor_arm
 from base_station.msg import *
 import time
 bustype = 'socketcan_native'
-channel = 'can0' #cantx is set virtual can, can set up by running the run_can.batch file in sim
+channel = 'can1' #cantx is set virtual can, can set up by running the run_can.batch file in sim
 bus = can.interface.Bus(channel=channel, bustype=bustype)  #Define the can bus interface to transmit on. 
 global trig_r_init
 trig_r_init = False
@@ -14,7 +14,7 @@ values = [0.0,0.0,0.0, 0.0, 0.0, 0.0,0.0] #[Ly, Lx, Ltw, Ry, Rx, Rtw,RClaw]
 ids = [0x02, 0x03, 0x01, 0x04, 0x05, 0x06, 0x07]
 resets = [0,0,0,0]
 def RightCallback(data):
-    data_array = [data.axis_ly_val,data.axis_lx_val,data.trig_l_val,data.trig_r_val]
+    data_array = [-data.axis_ly_val,data.axis_lx_val,data.trig_l_val,data.trig_r_val]
     #rospy.set_param('base_station/drive_mode','RightDrive')
     #drive_mode = rospy.get_param('base_station/drive_mode')
     if rospy.get_param('base_station/drive_mode') == 'RightDrive':
@@ -40,7 +40,7 @@ def RightCallback(data):
 
 
 def LeftCallback(data):
-    data_array = [data.axis_ly_val,data.axis_lx_val,data.trig_l_val]
+    data_array = [-data.axis_ly_val,data.axis_lx_val,data.trig_l_val]
     for i in range(0,len(data_array)):
                   if(i == 2):
 		        if(resets[1]==0 and data_array[i] !=0.0):
@@ -77,7 +77,7 @@ def listener():
 			complete_id = (ids[i] << 4)+field
 			#complete_id = format(complete_id, '#013b')
 			value = int(abs(values[i])*4095)
-			if value<20:
+			if value<10:
 				value = 0  #Getting rid of off centre
 			bit1 = value>>8&0xFF
 			bit2 = value&0xFF # format(value&0xFF,"#010b")
