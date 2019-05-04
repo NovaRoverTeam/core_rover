@@ -29,7 +29,7 @@ std::ofstream out;
 int main(int argc, char *argv[])
 {
   time_t now;
-  int fd = open("/dev/ttyACM0", O_RDONLY | O_NOCTTY);
+  int fd = open("/dev/ttyUSB0", O_RDONLY | O_NOCTTY);
   //int fd = 0;
   printf("fd opened as %i\n", fd);
   now = time(NULL);
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
   printf("1");
   std::cout << location;
   printf("testing");
-  std::string s = "/home/nvidia/catkin_ws/src/core_rover/"+time_now+"battery_data.txt";
+  std::string s = "/home/nvidia/catkin_ws/src/core_rover/battery_data.txt";
   std::cout << s;
   char cstr[s.size()+1];
   strcpy(cstr, s.c_str());
@@ -85,10 +85,11 @@ int main(int argc, char *argv[])
     //minute_buffer += " ";
     time(&now);
     time_now = asctime(localtime(&now));
+    minute_buffer += time_now;
 //    fputs(" ",fOut);
 
     //minute_buffer += time_now;
-    if (minute_count > 60){
+    if (minute_count > 5){
        std::cout << minute_buffer;
        out.open(s, std::ios::app);
        minute_count = 0;
