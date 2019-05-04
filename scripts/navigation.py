@@ -151,7 +151,7 @@ def initSearch():
     global waypoint_iter
     global new_destination
     global spiral_engaged
-    waypoint_list = spiralSearch(rovey_pos,25,0,10)
+    waypoint_list = spiralSearch(rovey_pos,25,0,8*math.pi)
     waypoint_iter = iter(waypoint_list)
     new_destination = True
     spiral_engaged = True

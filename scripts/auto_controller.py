@@ -146,7 +146,7 @@ class AutonomousStateMachine():
     def startSearch(self):
         '''Intitialise Search for Tennis Ball (Spiral)'''
         self.metricCalculation()
-        self.waypoint_list = spiralSearch(self.rovey_pos,25,0,10)
+        self.waypoint_list = spiralSearch(self.rovey_pos,25,0,8*math.pi)
         self.waypoint_iter = iter(self.waypoint_list)
         self.setMode('Search')
         rospy.loginfo('Spiral Search Engaged!')
