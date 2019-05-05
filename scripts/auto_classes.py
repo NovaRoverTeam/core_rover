@@ -22,16 +22,20 @@ class WaypointClass(object):
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 class RoveyPosClass(object):
 
-    def __init__(self, lat, lng, x, z):
+    def __init__(self, lat, lng, roll, pitch, yaw):
         self.latitude = lat
-        self.longitude = lng
-        self.x = x
-        self.z = z
-
+        self.longitude = lng  
+        self.roll = roll
+        self.pitch = pitch
+        self.yaw = yaw
+          
     def setCoords(self, lat, lng):
         self.latitude = lat
-        self.longitude = lng
+        self.longitude = lng 
 
-    def setOrientation(self, x, z):
-        self.x = x
-        self.z = z
+    def setOrientation(self, roll, pitch, yaw):
+        self.roll = roll
+        self.pitch = pitch
+        self.yaw = yaw
+    def __repr__(self):
+        return str((self.latitude,self.longitude))  

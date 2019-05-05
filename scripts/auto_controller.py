@@ -9,6 +9,7 @@ from auto_functions import *
 # from core_rover.srv import *
 from transitions import Machine
 simulator = True
+testing = True
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # Class representation of Autonomous state machine
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -18,7 +19,7 @@ class AutonomousStateMachine():
     distance_to_dest = None # In metres (default is empty)
     distance_to_waypt = None # In metres (default is empty)
     orientation = None # In degrees (default is empty)
-    rovey_pos = RoveyPosClass(0,0,0,0)
+    rovey_pos = RoveyPosClass(0,0,0,0,0)
     des_pos = WaypointClass(0,0) #Object GPS coords given by the competition. This is updated by the GUI
     waypoint = WaypointClass(0, 0) #Object GPS coords of current waypoint.
     waypoint_list = wayPoint(1,1,0,0,4)
@@ -30,12 +31,11 @@ class AutonomousStateMachine():
         lat = gpsData.latitude
         lng = gpsData.longitude
         self.rovey_pos.setCoords(lat,lng)
-
-    def compassCallback(self,compassData):
-        '''Callback for the orientation of the rover'''
-        x = compassData.magnetic_field.x
-        z = compassData.magnetic_field.z
-        self.rovey_pos.setOrientation(x,z)
+  
+    def rpyCallback(self,rpyData):
+        '''Callback for roll, pitch, yaw from IMU'''
+        global rovey_pos
+        self.rovey_pos.setOrientation(rpyData.roll, rpyData.pitch, rpyData.yaw)
 
 
     def handleStartAuto(self,req):
@@ -46,10 +46,6 @@ class AutonomousStateMachine():
             return StartAutoResponse(True,"Successfully started Auto mission.")
         else:
             return StartAutoResponse(False,"Unable to start mission, must be in Auto mode.")
-    # Ros Publishers and Subscribers
-    drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
-    gps_sub     = rospy.Subscriber("/pioneer3at/gps/values", NavSatFix, gpsCallback)
-    compass_sub = rospy.Subscriber("/pioneer3at/compass/values", MagneticField, compassCallback)
 
     states = ['Off','Traverse','Search','Destroy','Panning','Complete']
 
@@ -83,6 +79,10 @@ class AutonomousStateMachine():
         # Initialize the state Machine
         self.mach = Machine(model=self,states=AutonomousStateMachine.states, initial='Off',
         transitions=transitions, ignore_invalid_triggers=True)
+            # Ros Publishers and Subscribers
+        self.drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
+        self.gps_sub     = rospy.Subscriber("/nova_common/gps_data", NavSatFix, self.gpsCallback)
+        self.rpy_sub     = rospy.Subscriber("/nova_common/RPY", RPY, self.rpyCallback)
         # Initialise the global state parameter
         self.setMode('Off')
     #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -104,6 +104,7 @@ class AutonomousStateMachine():
         rospy.loginfo("beta: %s", beta)
         rospy.loginfo("distance: %s", distance)
         rospy.loginfo("orientation: %s", self.orientation)
+        rospy.loginfo("current pos: %s", self.waypoint)
         rpm_limit   = rospy.get_param('rpm_limit',100)
         steer_limit = rospy.get_param('steer_limit',100)
         drive_msg = DriveCmd()
@@ -111,7 +112,7 @@ class AutonomousStateMachine():
         drive_msg.steer_pct = steer_limit*10*turn/180
         self.drive_pub.publish(drive_msg)
     def metricCalculation(self):
-        self.orientation = bearingInDegrees(self.rovey_pos.x, self.rovey_pos.z)
+        self.orientation = self.rovey_pos.yaw
         #Current rover distance from final destination, and current waypoint
         self.distance_to_dest = distanceBetween(self.rovey_pos.latitude, self.rovey_pos.longitude, self.des_pos.latitude, self.des_pos.longitude)*111000
         self.distance_to_waypt = distanceBetween(self.rovey_pos.latitude, self.rovey_pos.longitude, self.waypoint.latitude, self.waypoint.longitude)*111000
@@ -125,6 +126,7 @@ class AutonomousStateMachine():
         self.metricCalculation()
         self.waypoint_list = wayPoint(self.rovey_pos.longitude,self.rovey_pos.latitude,self.des_pos.longitude,self.des_pos.latitude,4)
         self.waypoint_iter = iter(self.waypoint_list)
+        self.waypoint = next(self.waypoint_iter)
         rospy.loginfo('DESTINATION:' + str(self.des_pos))
         rospy.loginfo('WaypointList: ' + str(self.waypoint_list))
         self.setMode('Traverse')
@@ -192,6 +194,7 @@ class AutonomousStateMachine():
 #    Main Autonomous Controller Initialise
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def auto_controller():
+    global testing
     ''' Run Autonomous Controller Node '''
     SM = AutonomousStateMachine() # Initialise state machine class
     #ROS Publisher Subscribers and Services
@@ -203,8 +206,11 @@ def auto_controller():
     rate = rospy.Rate(2) # Loop rate in Hz
     rospy.loginfo("Autonomous Controller Started")
     ## testing
-    SM.des_pos = WaypointClass(-37.660970, 145.368935)
-    SM.toTraverse()
+    if testing:
+        time.sleep(2)
+        SM.des_pos = WaypointClass(-37.660970, 145.368935)
+        SM.toTraverse()
+    ## end testing
     while not rospy.is_shutdown():
         if getMode() == 'Auto' or testing:
             SM.run()
