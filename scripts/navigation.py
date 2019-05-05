@@ -67,7 +67,7 @@ def wayPoint(lng_current_pos,lat_current_pos,lng_destination,lat_destination,no_
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def spiralSearch(current_pos,no_of_waypoints,rang_min,rang_max):
     theta = numpy.linspace(rang_min,rang_max,num=no_of_waypoints)
-    dd_const = 0.0000001 # No of degrees(lat long) the rover moves outward as it rotates theta degrees
+    dd_const =  0.000001 # No of degrees(lat long) the rover moves outward as it rotates theta degrees
     r = dd_const*theta
     lng=r*numpy.cos(theta) + current_pos.longitude
     lat=r*numpy.sin(theta) + current_pos.latitude
@@ -129,7 +129,9 @@ def initNavigation():
     global spiral_engaged
     spiral_engaged = False
     if testing:
-        des_pos.setCoords(-37.91008843314037 ,145.1362295348945)
+        #des_pos.setCoords(-37.91008843314037 ,145.1362295348945)
+        des_pos.setCoords(-37.9106163 ,145.1355009)
+        #des_pos.setCoords(-37.9103870 , 145.1360253)
     else:
         des_pos.setCoords(req.latitude, req.longitude)
     auto_engaged = True
@@ -149,7 +151,7 @@ def initSearch():
     global waypoint_iter
     global new_destination
     global spiral_engaged
-    waypoint_list = spiralSearch(rovey_pos,25,0,10)
+    waypoint_list = spiralSearch(rovey_pos,25,0,8*math.pi)
     waypoint_iter = iter(waypoint_list)
     new_destination = True
     spiral_engaged = True
@@ -208,9 +210,9 @@ def navigation():
     initNavigation()
     while not rospy.is_shutdown():
 	rospy.loginfo(rovey_pos)
-        if True:
-            if True:
-                rospy.loginfo("dog") if testing
+        if (getRoverMode() == 'Auto' or testing):
+            if auto_engaged is True or testing:
+                rospy.loginfo("dog") if testing else None
                 #Waypoint Publisher
                 #The following implements distance of line formula. However, it converts this from degrees to metres.
                 distance_to_dest = math.sqrt((rovey_pos.latitude - des_pos.latitude)**2 + (rovey_pos.longitude - des_pos.longitude)**2)*111000
@@ -226,7 +228,7 @@ def navigation():
                     try:
                         way_pos = next(waypoint_iter)
                         rospy.loginfo(way_pos)
-                        rospy.loginfo("cat") if testing
+                        rospy.loginfo("cat") if testing else None
                         waypoint_msg = NavSatFix() #Initialize waypoint data structure.
                         waypoint_msg.latitude = way_pos.latitude # Populate structure with lat and long
                         waypoint_msg.longitude = way_pos.longitude

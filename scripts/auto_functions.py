@@ -99,8 +99,8 @@ def wayPoint(lng_current_pos,lat_current_pos,lng_destination,lat_destination,no_
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def spiralSearch(current_pos,no_of_waypoints,rang_min,rang_max):
     theta = numpy.linspace(rang_min,rang_max,num=no_of_waypoints)
-    dd_const = 2 # No of degrees(lat long) the rover moves outward as it rotates theta degrees
-    r = 2*theta
+    dd_const = 0.000001 # No of degrees(lat long) the rover moves outward as it rotates theta degrees
+    r = dd_const*theta
     lng=r*numpy.cos(theta) + current_pos.longitude
     lat=r*numpy.sin(theta) + current_pos.latitude
     searchPath=list()
