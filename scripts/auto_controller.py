@@ -9,7 +9,6 @@ from auto_functions import *
 # from core_rover.srv import *
 from transitions import Machine
 simulator = True
-testing = False
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # Class representation of Autonomous state machine
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -97,7 +96,7 @@ class AutonomousStateMachine():
     #    Takes current waypoint and rover position. Creates drive command.
     #    Publishes drive command.
     #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
-    def auto_drive():
+    def auto_drive(self):
         beta = angleBetween(self.rovey_pos.latitude, self.rovey_pos.longitude, self.waypoint.latitude, self.waypoint.longitude)
         distance = distanceBetween(self.rovey_pos.latitude, self.rovey_pos.longitude, self.waypoint.latitude, self.waypoint.longitude)
         turn = turnDirection(beta, self.orientation)
@@ -105,8 +104,8 @@ class AutonomousStateMachine():
         rospy.loginfo("beta: %s", beta)
         rospy.loginfo("distance: %s", distance)
         rospy.loginfo("orientation: %s", self.orientation)
-        rpm_limit   = rospy.get_param('rpm_limit')
-        steer_limit = rospy.get_param('steer_limit')
+        rpm_limit   = rospy.get_param('rpm_limit',100)
+        steer_limit = rospy.get_param('steer_limit',100)
         drive_msg = DriveCmd()
         drive_msg.rpm       = rpm_limit*10
         drive_msg.steer_pct = steer_limit*10*turn/180
@@ -203,9 +202,13 @@ def auto_controller():
     rospy.init_node('autonomous_controller', anonymous=True) # Initialise Node
     rate = rospy.Rate(2) # Loop rate in Hz
     rospy.loginfo("Autonomous Controller Started")
+    ## testing
+    SM.des_pos = WaypointClass(-37.660970, 145.368935)
+    SM.toTraverse()
     while not rospy.is_shutdown():
         if getMode() == 'Auto' or testing:
             SM.run()
+            rospy.loginfo('RUN ITER')
         # TODO adjust rate that AutoStatus is published
         status_msg = AutoStatus()
         status_msg.latitude  = SM.rovey_pos.latitude

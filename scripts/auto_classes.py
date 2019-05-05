@@ -12,7 +12,10 @@ class WaypointClass(object):
     def setCoords(self, lat, lng):
         self.latitude = lat
         self.longitude = lng
-
+    def __str__(self):
+        return str((self.latitude,self.longitude))
+    def __repr__(self):
+        return str((self.latitude,self.longitude))
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # RoveyPosClass:
 #    Creates a class for the location of the rover
