@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import rospy
+import rospkg
+import roslaunch
 from rover_sm import RoverStateMachine
 from nova_common.msg import *
 from nova_common.srv import *
@@ -21,7 +23,7 @@ class RoverSync:
       self.handleReqChangeMode)
     
     self.req_change_mission_server = rospy.Service(
-      '/core_rover/req_change_mission', ChangeMode,
+      '/core_rover/req_change_mission', ChangeMission,
       self.handleReqChangeMission)
 
     self.rover_sm = RoverStateMachine() # Initialise state machine
@@ -33,6 +35,7 @@ class RoverSync:
   def handleReqChangeMission(self, req):
 	
     success = 0
+    name = "None"
     
     if    req.mission == 'STOP':
       #bash script here
@@ -51,26 +54,27 @@ class RoverSync:
         elif  req.mission == 'AUT':
           success = 1
           name = "aut"
+        
+        if (name is not "None"):
+          run_id = rospy.get_param("/run_id")
+          uuid = roslaunch.rlutil.get_or_generate_uuid(run_id, True)
+          roslaunch.configure_logging(uuid)
 
-        run_id = rospy.get_param("/run_id")
-        uuid = roslaunch.rlutil.get_or_generate_uuid(run_id, True)
-        roslaunch.configure_logging(uuid)
+          rospack = rospkg.RosPack() # Get the file path for nova_common
+          path = rospack.get_path('nova_common')
 
-        rospack = rospkg.RosPack() # Get the file path for nova_common
-        path = rospack.get_path('nova_common')
+          launch_file = [path + '/launch/{}.launch'.format(name)]
 
-        launch_file = [path + '/launch/{}.launch'.format(name)]
-
-        self.launch = roslaunch.parent.ROSLaunchParent(uuid, launch_file)
-        self.launch.start() # Start the launch file
+          self.launch = roslaunch.parent.ROSLaunchParent(uuid, launch_file)
+          self.launch.start() # Start the launch file
 
         if success:
           rospy.set_param('/core_rover/Mission', req.mission)
           message = "Successfully changed Mission to " + req.mission + "."
         else:
-          message = "Unable to change Mission. " + res_mission.message
+          message = "Unable to change Mission. " 
       
-    return ChangeModeResponse(success, message)
+    return ChangeMissionResponse(success, message)
 
   #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
   # handleReqChangeMode():
