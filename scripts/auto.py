@@ -127,8 +127,8 @@ def rpyCallback(rpyData):
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--  
 def waypointCallback(waypointData):
     global waypoint
-    lat = waypointData.latitude
-    lng = waypointData.longitude
+    lat = waypointData.lat
+    lng = waypointData.lng
     waypoint.setCoords(lat,lng)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -141,7 +141,7 @@ def waypointCallback(waypointData):
 # Global variables
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
 rovey_pos = RoveyPosClass(0,0,0,0,0)
-waypoint = WaypointClass(0,0)
+waypoint = WaypointClass(-37.9104679, 145.1361607)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # auto():

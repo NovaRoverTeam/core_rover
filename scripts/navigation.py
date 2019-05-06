@@ -39,7 +39,7 @@ def gpsCallback(gpsData):
 # getRoverMode(): Retrieve Mode from parameter server.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def getRoverMode():
-    return rospy.get_param('/core_rover/Mode', "Auto")
+    return rospy.get_param('/core_rover/Mode')
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # getAutoMode(): Retrieve Mode from parameter server.
@@ -104,6 +104,34 @@ def spiralSearch(current_pos,no_of_waypoints,rang_min,rang_max):
         searchPath.append(RoveyPosClass(lat[i],lng[i]))
     return searchPath
  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# wayPoint(lng_current_pos,lat_current_pos,lng_destination,lat_destination,no_of_waypoints):
+#  Function to generate list of waypoints, based on current and destination GPS coordinates.
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
+def wayPoint(lng_current_pos,lat_current_pos,lng_destination,lat_destination,no_of_waypoints):
+    lng_increment = (lng_destination-lng_current_pos)/float(no_of_waypoints)
+    lat_incrememnt = (lat_destination-lat_current_pos)/float(no_of_waypoints)
+    way_points_list = []
+    for i in range(no_of_waypoints):
+        waypoint_lng = lng_current_pos+(i+1)*lng_increment
+        waypoint_lat = lat_current_pos+(i+1)*lat_incrememnt
+        way_points_list.append(RoveyPosClass(waypoint_lat,waypoint_lng))
+    return way_points_list# list of tuples
+
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# spiralSearch(current_pos,no_of_waypoints,rang_min,rang_max): Generate waypoints for a spiral search.
+# Takes current position of rover, the number of waypoints desired, and the range of spiral.
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
+def spiralSearch(current_pos,no_of_waypoints,rang_min,rang_max):
+    theta = numpy.linspace(rang_min,rang_max,num=no_of_waypoints)
+    dd_const = 2 # No of degrees(lat long) the rover moves outward as it rotates theta degrees
+    r = 2*theta
+    lng=r*numpy.cos(theta) + current_pos.longitude
+    lat=r*numpy.sin(theta) + current_pos.latitude
+    searchPath=list()
+    for i in range(len(x)):
+        searchPath.append(RoveyPosClass(lat[i],lng[i]))
+    return searchPath
+ #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # handleStartAuto():
 #  Service server handler for starting autonomous mission.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
@@ -143,6 +171,10 @@ def initNavigation():
     rospy.loginfo('DESTINATION:' + str(des_pos))
     rospy.loginfo('WaypointList: ' + str(waypoint_list))
 
+<<<<<<< HEAD
+
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+=======
  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # initSearch():
 #  Intitialise Searching for Tennis Ball (Spiral)
@@ -152,13 +184,14 @@ def initSearch():
     global waypoint_iter
     global new_destination
     global spiral_engaged
-    waypoint_list = spiralSearch(rovey_pos,25,0,8*math.pi)
-    waypoint_iter = iter(waypoint_list)
+    waypoint_list = spiralSearch(rovey_pos,25,0,10)
+    aypoint_iter = iter(searchpath)
     new_destination = True
     spiral_engaged = True
     rospy.loginfo('Spiral Search Engaged!')
-    rospy.loginfo('Spiral WaypointList: ' + str(waypoint_list))
+    rospy.loginfo('Spiral WaypointList: ' + str(searchpath))
  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+>>>>>>> f49d18ca0e8111d937dee480355fcc97ac80dc7d
 # Global variables
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 rovey_pos = RoveyPosClass(0,0) #Object for GPS coords of current rover position.
@@ -209,10 +242,8 @@ def navigation():
     #### DEBUG ONLY END ***************************
     initNavigation()
     while not rospy.is_shutdown():
-	rospy.loginfo(rovey_pos)
-        if (getRoverMode() == 'Auto' or testing):
-            if auto_engaged is True or testing:
-                rospy.loginfo("dog") if testing else None
+        if getRoverMode() == 'Auto':
+            if auto_engaged is True:
                 #Waypoint Publisher
                 #The following implements distance of line formula. However, it converts this from degrees to metres.
                 distance_to_dest = math.sqrt((rovey_pos.latitude - des_pos.latitude)**2 + (rovey_pos.longitude - des_pos.longitude)**2)*111000
@@ -228,7 +259,6 @@ def navigation():
                     try:
                         way_pos = next(waypoint_iter)
                         rospy.loginfo(way_pos)
-                        rospy.loginfo("cat") if testing else None
                         waypoint_msg = NavSatFix() #Initialize waypoint data structure.
                         waypoint_msg.latitude = way_pos.latitude # Populate structure with lat and long
                         waypoint_msg.longitude = way_pos.longitude

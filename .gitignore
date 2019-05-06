@@ -69,6 +69,7 @@ scripts/test/imu-gps-test-small-fix.bag
 
 scripts/test/stereo_outdoor.bag
 
+scripts/test/merged_lidar_test.bag
 
 
 .vscode/
