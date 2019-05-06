@@ -6,6 +6,71 @@ scripts/auto_classes.pyc
 scripts/auto_functions.pyc
 src/battery_reader
 
+
+include/ctre/phoenix/CCI/CANifier_CCI\.h
+
+include/ctre/phoenix/CCI/Logger_CCI\.h
+
+include/ctre/phoenix/CCI/MotController_CCI\.h
+
+include/ctre/phoenix/Motion/MotionProfileStatus\.h
+
+include/ctre/phoenix/Motion/SetValueMotionProfile\.h
+
+include/ctre/phoenix/Motion/TrajectoryPoint\.h
+
+include/ctre/phoenix/tasking/Schedulers/SequentialScheduler\.h
+
+include/gps_common/conversions\.h~dev/integration_0
+
+include/gps_common/conversions\.h~Moved it to the correct place_0
+
+include/utils/ekf_utils/data_types\.h~dev/integration
+
+include/utils/ekf_utils/data_types\.h~dev/integration_0
+
+include/utils/ekf_utils/data_types\.h~Moved ekf src files to more appropriate place in file system:
+
+include/utils/ekf_utils/data_types\.h~Moved ekf src files to more appropriate place in file system:_0
+
+include/utils/ekf_utils/kalman_filter\.cpp~dev/integration
+
+include/utils/ekf_utils/kalman_filter\.cpp~dev/integration_0
+
+include/utils/ekf_utils/kalman_filter\.h~dev/integration
+
+include/utils/ekf_utils/kalman_filter\.h~dev/integration_0
+
+include/utils/ekf_utils/kalman_filter\.h~Moved ekf src files to more appropriate place in file system:
+
+include/utils/ekf_utils/matrix\.cpp~dev/integration
+
+include/utils/ekf_utils/matrix\.cpp~dev/integration_0
+
+include/utils/ekf_utils/matrix\.cpp~Moved ekf src files to more appropriate place in file system:
+
+include/utils/ekf_utils/matrix\.h~dev/integration
+
+include/utils/ekf_utils/matrix\.h~dev/integration_0
+
+include/utils/ekf_utils/matrix\.h~Moved ekf src files to more appropriate place in file system:
+
+include/utils/ekf_utils/matrix\.h~Moved ekf src files to more appropriate place in file system:_0
+
+scripts/test/ekf_output.bag
+
+scripts/field_test_19-04_imu_gps.bag
+
+scripts/test/field_test_ekf.bag
+
+scripts/test/imu-gps-test-small.bag
+
+scripts/test/imu-gps-test-small-fix.bag
+
+scripts/test/stereo_outdoor.bag
+
+
+
 .vscode/
 scripts/.vscode/
 src/.vscode/
