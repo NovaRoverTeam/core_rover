@@ -47,51 +47,49 @@ int main(int argc, char *argv[])
   while(true){
   fOut = fopen("/home/nvidia/catkin_ws/src/core_rover/battery_data.txt","a");
 
-  if(fOut!=0){
-    int n = read(fd, &serial_buffer, sizeof(serial_buffer));
-    line_counter++;
-    if(serial_buffer[0] == '\n' and line_counter > 5){
-    //char equals[] = "= ";
+if(fOut!=0){
+int n = read(fd, &serial_buffer, sizeof(serial_buffer));
+line_counter++;
+if(serial_buffer[0] == '\n' and line_counter > 5){
+//char equals[] = "= ";
 //    fputs(equals, fOut);
-    fputs(" ",fOut);
-    time(&now);
-    fputs(asctime(localtime(&now)), fOut);
-    line_counter = 0;
+fputs(" ",fOut);
+time(&now);
+fputs(asctime(localtime(&now)), fOut);
+line_counter = 0;
 
 }
-    else if(serial_buffer[0] == '\n'){
-    continue;
+else if(serial_buffer[0] == '\n'){
+continue;
 
 }
 
-    fputs(serial_buffer,fOut);
-    char test = 'r';
-    double volts;
-    counter++;
-    if(serial_buffer[0]=='V' && is_v!=1){
-    is_v = 1;
+fputs(serial_buffer,fOut);
+char test = 'r';
+double volts;
+counter++;
+if(serial_buffer[0]=='V' && is_v!=1){
+is_v = 1;
 }
 
-    if(is_eq==1){
-    message+=serial_buffer[0];
+if(is_eq==1){
+message+=serial_buffer[0];
 }
-    if(serial_buffer[0] == '=' && is_eq!=1){
-    is_eq = 1;
-}
-    
-    if(serial_buffer[0] == ' ' && is_eq){
-    volts=std::stod(message);
-    printf("%lf",volts);
-    message = "";
-    is_eq = 0;
-    is_v = 0;
+if(serial_buffer[0] == '=' && is_eq!=1){
+is_eq = 1;
 }
 
+if(serial_buffer[0] == ' ' && is_eq){
+volts=std::stod(message);
+printf("%lf",volts);
+message = "";
+is_eq = 0;
+is_v = 0;
+}
 
 
 
-
-    //puts(serial_buffer);
+    puts(serial_buffer);
     fclose(fOut);
 }
 }
