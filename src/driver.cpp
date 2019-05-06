@@ -187,6 +187,7 @@ int main(int argc, char **argv)
   n->getParam(paramKey, vehicle);
   if (vehicle == "Simulator"){
     simulator = true;
+    simulator = false;
   }
 
   double wheel[6]; //array to update motor values
@@ -236,6 +237,8 @@ int main(int argc, char **argv)
 
       if(hbeat || mode.compare("Auto") == 0){
            talon_speed = speed / 50.0;
+      if(hbeat){
+           talon_speed = speed / 50.0;
            talon_steer = steer / 100.0;
       }
       else{
@@ -256,26 +259,44 @@ int main(int argc, char **argv)
          talon_speed = -0.3;
 } PID STUFF*/ 
 
-      float right;
-      float left; 
-      string param;
-      n->getParam("/core_rover/driver/control_mode", param);
-      if(param == "PID"){
-      talon_speed = speed * 75;
-      talon_steer = steer * 75;
-      right = talon_speed - talon_steer;
-      left = talon_speed + talon_steer;
-      talon0.Set(ControlMode::Velocity, left);
-      talon1.Set(ControlMode::Velocity, left);
-      talon2.Set(ControlMode::Velocity, left);
-      //RIGHT SIDE
-      talon3.Set(ControlMode::Velocity, right);
-      talon4.Set(ControlMode::Velocity, right);
-      talon5.Set(ControlMode::Velocity, right);
-      }    
-      else{
-      right = talon_speed - talon_steer;   //Positive turn decreases right motors speeds to turn right.
-      left = talon_speed + talon_steer;
+      
+      
+      float right = talon_speed - talon_steer;   //Positive turn decreases right motors speeds to turn right.
+      float left = talon_speed + talon_steer;
+      
+      float delta_right = right - prev_right;
+      float delta_left = left - prev_left;
+      if (abs(right-0.0) < abs(prev_right-0.0) && abs(delta_right)>max_delta){
+          if (delta_right > 0){
+               right = prev_right + max_delta;
+               delta_right = max_delta;
+          }
+          else{
+               right = prev_right - max_delta;
+               delta_right = max_delta;
+          }
+      }
+      
+      if (abs(left-0.0) < abs(prev_left-0.0) && abs(delta_left)>max_delta){
+          if (delta_left > 0){
+               left = prev_left + max_delta;
+               delta_left = max_delta;
+          }
+          else{
+               left = prev_left - max_delta;
+               delta_left = max_delta;
+          }
+      }
+      prev_right = right;
+      prev_left = left;
+      
+      if(abs(right)>0.4){
+          right = 0.0;
+      }
+      if(abs(left)>0.4){
+          left = 0.0;
+      }
+      //printf("%lf",talon_speed);
       
       float delta_right = right - prev_right;
       float delta_left = left - prev_left;
@@ -329,15 +350,12 @@ int main(int argc, char **argv)
       talon4.Set(ControlMode::PercentOutput, right);
       talon5.Set(ControlMode::PercentOutput, right);
      
-      }
-
-
       
       //Output debug information
       if (loopCount >= 0) {
         loopCount = 0;
         //std::cout << "talon5 motor output: " << talon5.GetMotorOutputPercent() << std::endl;
-      // std::cout << "talon motor delta: " << delta_right << std::endl;
+       std::cout << "talon motor delta: " << delta_right << std::endl;
        // std::cout << "talon2 velocity: " << talon2.GetSelectedSensorVelocity() << std::endl;
       }
 
