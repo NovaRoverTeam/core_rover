@@ -130,7 +130,8 @@ def initNavigation():
     spiral_engaged = False
     if testing:
         #des_pos.setCoords(-37.91008843314037 ,145.1362295348945)
-        des_pos.setCoords(-37.9106163 ,145.1355009)
+        des_pos.setCoords(-37.6617318, 145.3689761)
+
         #des_pos.setCoords(-37.9103870 , 145.1360253)
     else:
         des_pos.setCoords(req.latitude, req.longitude)

@@ -3,6 +3,7 @@
 import rospy
 import rospkg
 import roslaunch
+import os
 from rover_sm import RoverStateMachine
 from nova_common.msg import *
 from nova_common.srv import *
@@ -14,10 +15,8 @@ class RoverSync:
   # __init__():
   #    Initialise class.
   #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--    
-  def __init__(self):
-
-    rospy.init_node('rover_sync')
-
+  def __init__(self, parent=None):
+    #super(RoverSync,self).__init__(parent)
     self.req_change_mode_server = rospy.Service(
       '/core_rover/req_change_mode', ChangeMode,
       self.handleReqChangeMode)
@@ -56,17 +55,7 @@ class RoverSync:
           name = "aut"
         
         if (name is not "None"):
-          run_id = rospy.get_param("/run_id")
-          uuid = roslaunch.rlutil.get_or_generate_uuid(run_id, True)
-          roslaunch.configure_logging(uuid)
-
-          rospack = rospkg.RosPack() # Get the file path for nova_common
-          path = rospack.get_path('nova_common')
-
-          launch_file = [path + '/launch/{}.launch'.format(name)]
-
-          self.launch = roslaunch.parent.ROSLaunchParent(uuid, launch_file)
-          self.launch.start() # Start the launch file
+          os.system("roslaunch nova_common {}.launch".format(name))
 
         if success:
           rospy.set_param('/core_rover/Mission', req.mission)
@@ -113,6 +102,7 @@ class RoverSync:
 #    Main function.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def main():
+  rospy.init_node('rover_sync')
   rover_sync = RoverSync()
  
   rate = rospy.Rate(0.1)
