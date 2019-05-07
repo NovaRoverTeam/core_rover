@@ -67,3 +67,11 @@ scripts/test/stereo_outdoor.bag
 
 scripts/test/merged_lidar_test.bag
 
+
+scripts/play_uav_bag\.sh\.save
+
+scripts/test/play_uav_bag\.sh\.save
+
+scripts/test/play_uav_bag\.sh\.save~Added Stereo Map Bui;der
+
+scripts/test/play_uav_bag\.sh\.save~dev/autonomous
