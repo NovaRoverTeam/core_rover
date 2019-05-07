@@ -51,3 +51,18 @@ include/utils/ekf_utils/matrix\.h~dev/integration_0
 include/utils/ekf_utils/matrix\.h~Moved ekf src files to more appropriate place in file system:
 
 include/utils/ekf_utils/matrix\.h~Moved ekf src files to more appropriate place in file system:_0
+
+/scripts/test/merged_lidar_test.bag
+
+/scripts/test/field_test_ekf.bag
+
+/scripts/test/ekf_output.bag
+
+/scripts/test/stereo_outdoor.bag
+
+scripts/test/field_test_19-04_imu_gps.bag
+
+scripts/test/imu-gps-test-small-fix.bag
+
+scripts/test/imu-gps-test-small.bag
+
