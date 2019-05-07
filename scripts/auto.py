@@ -8,6 +8,7 @@ from nav_msgs.msg import Odometry
 from nova_common.msg import *
 from nova_common.srv import *
 
+testing = True
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # DesPosClass:
 #    Creates a class for the GPS coords given by the competition.
@@ -130,7 +131,6 @@ def waypointCallback(waypointData):
     lat = waypointData.lat
     lng = waypointData.lng
     waypoint.setCoords(lat,lng)
-    print(lat)
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # getMode(): Retrieve Mode from parameter server.
@@ -151,7 +151,7 @@ waypoint = WaypointClass(-37.9104679, 145.1361607)
 def auto():
 
     global rovey_pos
-    global des_pos
+    global waypoint
     global auto_engaged
     
     rospy.init_node('auto', anonymous=True)
@@ -164,12 +164,12 @@ def auto():
     waypoint_sub = rospy.Subscriber("/core_rover/navigation/waypoint_coords", NavSatFix, waypointCallback)
     drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
     status_pub  = rospy.Publisher("/core_rover/auto_status", AutoStatus, queue_size=10)
-    
+    time.sleep(5) if testing else None
     while not rospy.is_shutdown():
 
         orientation = rovey_pos.yaw
 
-        if True:
+        if (True):
         
             beta =angleBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
             distance = 110000 * distanceBetween(rovey_pos.latitude, rovey_pos.longitude, waypoint.latitude, waypoint.longitude)
@@ -186,8 +186,8 @@ def auto():
            # steer_limit = rospy.get_param('steer_limit')
             
             drive_msg = DriveCmd()
-            drive_msg.rpm       = 0
-            drive_msg.steer_pct = turn * 0.3
+            drive_msg.rpm       = 10
+            drive_msg.steer_pct = turn * 0.5
             drive_pub.publish(drive_msg)
             
             #if distance < :

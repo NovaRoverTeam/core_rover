@@ -7,7 +7,7 @@ from nova_common.srv import *
 import time
 
 simulator = False
-
+testing = True
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # RoveyPosClass:
 #    Creates a class for the location of the rover
@@ -67,12 +67,40 @@ def wayPoint(lng_current_pos,lat_current_pos,lng_destination,lat_destination,no_
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def spiralSearch(current_pos,no_of_waypoints,rang_min,rang_max):
     theta = numpy.linspace(rang_min,rang_max,num=no_of_waypoints)
+    dd_const =  0.000001 # No of degrees(lat long) the rover moves outward as it rotates theta degrees
+    r = dd_const*theta
+    lng=r*numpy.cos(theta) + current_pos.longitude
+    lat=r*numpy.sin(theta) + current_pos.latitude
+    searchPath=list()
+    for i in range(len(x)):
+        searchPath.append(RoveyPosClass(lat[i],lng[i]))
+    return searchPath
+ #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# wayPoint(lng_current_pos,lat_current_pos,lng_destination,lat_destination,no_of_waypoints):
+#  Function to generate list of waypoints, based on current and destination GPS coordinates.
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
+def wayPoint(lng_current_pos,lat_current_pos,lng_destination,lat_destination,no_of_waypoints):
+    lng_increment = (lng_destination-lng_current_pos)/float(no_of_waypoints)
+    lat_incrememnt = (lat_destination-lat_current_pos)/float(no_of_waypoints)
+    way_points_list = []
+    for i in range(no_of_waypoints):
+        waypoint_lng = lng_current_pos+(i+1)*lng_increment
+        waypoint_lat = lat_current_pos+(i+1)*lat_incrememnt
+        way_points_list.append(RoveyPosClass(waypoint_lat,waypoint_lng))
+    return way_points_list# list of tuples
+
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# spiralSearch(current_pos,no_of_waypoints,rang_min,rang_max): Generate waypoints for a spiral search.
+# Takes current position of rover, the number of waypoints desired, and the range of spiral.
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
+def spiralSearch(current_pos,no_of_waypoints,rang_min,rang_max):
+    theta = numpy.linspace(rang_min,rang_max,num=no_of_waypoints)
     dd_const = 2 # No of degrees(lat long) the rover moves outward as it rotates theta degrees
     r = 2*theta
     lng=r*numpy.cos(theta) + current_pos.longitude
     lat=r*numpy.sin(theta) + current_pos.latitude
     searchPath=list()
-    for i in range(len(x)):
+    for i in range(len(theta)):
         searchPath.append(RoveyPosClass(lat[i],lng[i]))
     return searchPath
  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -204,7 +232,10 @@ def navigation():
     # auto_engaged = True #Override
     # new_destination = True
     # spiral_engaged = False
+    if testing:
+        time.sleep(2)
     #### DEBUG ONLY END ***************************
+    initNavigation()
     while not rospy.is_shutdown():
         if getRoverMode() == 'Auto':
             if auto_engaged is True:

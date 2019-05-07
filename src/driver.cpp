@@ -87,7 +87,7 @@ void ConfigTalon(TalonSRX* talon);
 void DriveCmdCb(const nova_common::DriveCmd::ConstPtr& msg)
 {
   //Instantiiating vars
-  double speedFactor  = 1.0;    //currently not in use, but can be used to increase/decrease speed by a factor
+  double speedFactor  = 2.0;    //currently not in use, but can be used to increase/decrease speed by a factor
 
   speed = msg->rpm * 2;     //speed = forward or reverse
   steer = msg->steer_pct; //steer = steering percentage left or right
@@ -148,7 +148,7 @@ int main(int argc, char **argv)
   talon2.SetInverted(false);
   talon3.SetNeutralMode(Brake);
   
-  double delay = 3.0;
+  double delay = 2.0;
   talon0.ConfigOpenloopRamp(delay,0);
   talon1.ConfigOpenloopRamp(delay,0);
   talon2.ConfigOpenloopRamp(delay,0);
@@ -284,7 +284,7 @@ int main(int argc, char **argv)
     loopCount++;
 
     if(hbeat_cnt > hbeat_timeout){
-        hbeat = false;
+        hbeat = true;
     }
 
     hbeat_cnt++;

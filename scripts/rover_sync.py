@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import rospy
+import rospkg
+import roslaunch
 from rover_sm import RoverStateMachine
 from nova_common.msg import *
 from nova_common.srv import *
@@ -21,7 +23,7 @@ class RoverSync:
       self.handleReqChangeMode)
     
     self.req_change_mission_server = rospy.Service(
-      '/core_rover/req_change_mission', ChangeMode,
+      '/core_rover/req_change_mission', ChangeMission,
       self.handleReqChangeMission)
 
     self.rover_sm = RoverStateMachine() # Initialise state machine
@@ -31,17 +33,48 @@ class RoverSync:
   #   Service server handler for handling requests for Mission change.
   #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
   def handleReqChangeMission(self, req):
-
-    # Change Mode to Standby
-    res_mode = self.handleReqChangeMode(ChangeModeRequest('Standby'))
-
-    if res_mode.success:
-      rospy.set_param('/core_rover/Mission', req.mode)
-      message = "Successfully changed Mission to " + req.mode + "."
+	
+    success = 0
+    name = "None"
+    
+    if    req.mission == 'STOP':
+      #bash script here
+      message = "STOPPING ALL NODES"
+      success = 1
     else:
-      message = "Unable to change Mission. " + res_mode.message
+        if  req.mission == 'SENSORS':
+          success = 1
+          name = "sensors"
+        elif  req.mission == 'ERT' or req.mission == 'EQP':
+          success = 1
+          name = "eqpORert"
+        elif  req.mission == 'SCI':
+          success = 1
+          name = "sci"
+        elif  req.mission == 'AUT':
+          success = 1
+          name = "aut"
+        
+        if (name is not "None"):
+          run_id = rospy.get_param("/run_id")
+          uuid = roslaunch.rlutil.get_or_generate_uuid(run_id, True)
+          roslaunch.configure_logging(uuid)
+
+          rospack = rospkg.RosPack() # Get the file path for nova_common
+          path = rospack.get_path('nova_common')
+
+          launch_file = [path + '/launch/{}.launch'.format(name)]
+
+          self.launch = roslaunch.parent.ROSLaunchParent(uuid, launch_file)
+          self.launch.start() # Start the launch file
+
+        if success:
+          rospy.set_param('/core_rover/Mission', req.mission)
+          message = "Successfully changed Mission to " + req.mission + "."
+        else:
+          message = "Unable to change Mission. " 
       
-    return ChangeModeResponse(res_mode.success, message)
+    return ChangeMissionResponse(success, message)
 
   #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
   # handleReqChangeMode():
@@ -73,6 +106,7 @@ class RoverSync:
         + '. Mode will remain as ' + self.rover_sm.state + '.')
         
     return ChangeModeResponse(success, message)
+
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # main():
