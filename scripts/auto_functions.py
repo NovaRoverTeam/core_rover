@@ -1,5 +1,5 @@
 import rospy, math,numpy
-from auto_classes import WaypointClass
+from auto_classes import WaypointClass 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # bearingInDegrees():
 #    Calculates the direction an object is pointing in relation to the
@@ -104,6 +104,6 @@ def spiralSearch(current_pos,no_of_waypoints,rang_min,rang_max):
     lng=r*numpy.cos(theta) + current_pos.longitude
     lat=r*numpy.sin(theta) + current_pos.latitude
     searchPath=list()
-    for i in range(len(x)):
-        searchPath.append(RoveyPosClass(lat[i],lng[i]))
+    for i in range(len(theta)):
+        searchPath.append(WaypointClass(lat[i],lng[i]))
     return searchPath
