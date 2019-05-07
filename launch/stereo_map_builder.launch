@@ -1,117 +1,57 @@
 <launch>
-  <!-- "Disable" wheel odometry from azimut3 -->
-  <group ns="base_controller">
-    <param name="odom_frame_id" type="string" value="az3_odom"/>
-    <param name="base_frame_id" type="string" value="az3_base_link"/>
-  </group>
+  <!--
+   Demo of outdoor stereo mapping.
+   From bag:
+   $ rosbag record
+         /stereo_camera/left/image_raw_throttle/compressed
+         /stereo_camera/right/image_raw_throttle/compressed
+         /stereo_camera/left/camera_info_throttle
+         /stereo_camera/right/camera_info_throttle
+         /tf
 
-  <remap from="/base_controller/odom" to="/base_controller/az3_odom"/>
+   $ roslaunch rtabmap demo_stereo_outdoor.launch
+   $ rosbag play -.-clock stereo_oudoorA.bag
+-->
 
-  <!-- AZIMUT 3 bringup: launch motors and TF -->
-  <include file="$(find az3_bringup)/az3_standalone.launch"/>
-
-  <node name="joy" pkg="joy" type="joy_node"/>
-  <group ns="teleop">
-      <remap from="joy" to="/joy"/>
-      <node name="teleop" pkg="nodelet" type="nodelet" args="standalone azimut_tools/Teleop"/>
-      <param name="cmd_eta/abtr_priority" value="50"/>
-  </group>
-
-    <!-- ************************ ROS navigation stack move_base ***************** -->
-    <group ns="planner">
-        <remap from="openni_points" to="/planner_cloud"/>
-        <remap from="base_scan" to="/base_scan"/>
-        <remap from="map" to="/rtabmap/proj_map"/>
-        <remap from="move_base_simple/goal" to="/planner_goal"/>
-
-        <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
-    	  <rosparam file="$(find rtabmap_ros)/launch/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
-     	  <rosparam file="$(find rtabmap_ros)/launch/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
-    	  <rosparam file="$(find rtabmap_ros)/launch/config/local_costmap_params_3d.yaml" command="load" />
-    	  <rosparam file="$(find rtabmap_ros)/launch/config/global_costmap_params.yaml" command="load" ns="global_costmap"/>
-    	  <rosparam file="$(find rtabmap_ros)/launch/config/base_local_planner_params.yaml" command="load" />
-   		</node>
-
-      <param name="cmd_vel/abtr_priority" value="10"/>
-    </group>
-
-    <node name="az3_abtr" pkg="azimut_tools" type="azimut_abtr_priority_node">
-        <remap from="abtr_cmd_eta" to="/base_controller/cmd_eta"/>
-    </node>
-
-    <!-- Arbitration between teleop and planner -->
-    <node name="register_cmd_eta" pkg="abtr_priority" type="register" args="/cmd_eta /teleop/cmd_eta"/>
-    <node name="register_cmd_vel" pkg="abtr_priority" type="register" args="/cmd_vel /planner/cmd_vel"/>
-
-    <!-- *********************** Stereo camera ******************************* -->
-    <node pkg="camera1394stereo" type="camera1394stereo_node" name="camera1394stereo_node" output="screen" >
-        <param name="video_mode" value="format7_mode3" />
-        <param name="format7_color_coding" value="raw16" />
-        <param name="bayer_pattern" value="bggr" />
-        <param name="bayer_method" value="" />
-        <param name="stereo_method" value="Interlaced" />
-        <param name="camera_info_url_left" value="" />
-        <param name="camera_info_url_right" value="" />
-    </node>
-
-  	<!-- TF transforms for the stereo camera -->
+  	<!-- TF transforms for the stereo camera
     <arg name="pi/2" value="1.5707963267948966" />
     <arg name="optical_rotate" value="0 0 0 -$(arg pi/2) 0 -$(arg pi/2)" />
     <node pkg="tf" type="static_transform_publisher" name="stereo_camera_base_link"
 	    args="$(arg optical_rotate) stereo_camera_base stereo_camera 100" />
     <node pkg="tf" type="static_transform_publisher" name="base_to_stereo_camera_base_link"
 	    args="0.01 0.06 0.90 0 0.37 0 base_link stereo_camera_base 100" />
-    <arg name="pi/4" value="0.785398163397448309" />
+    <arg name="pi/4" value="0.785398163397448309" />-->
 
 	<!-- Run the ROS package stereo_image_proc for image rectification-->
-	<group ns="/stereo_camera" >
-	   <node pkg="nodelet" type="nodelet" name="stereo_nodelet"  args="manager"/>
+  <!-- Choose visualization -->
+  <arg name="rviz" default="true" />
+  <arg name="rtabmapviz" default="false" />
+  <arg name="local_bundle" default="true" />
+  <arg name="stereo_sync" default="false" />
 
-		<!-- HACK: the fps parameter on camera1394stereo_node doesn't work for my camera!?!?
-			 Throttle camera images -->
-		<node pkg="nodelet" type="nodelet" name="stereo_throttle" args="load rtabmap_ros/stereo_throttle stereo_nodelet">
-			<remap from="left/image"       to="left/image_raw"/>
-		    <remap from="right/image"      to="right/image_raw"/>
-		    <remap from="left/camera_info" to="left/camera_info"/>
-		    <remap from="right/camera_info" to="right/camera_info"/>
+  <param name="use_sim_time" type="bool" value="True"/>
 
-		    <param name="queue_size" type="int" value="10"/>
-		    <param name="rate" type="double" value="20"/>
-		</node>
+  <!-- Just to uncompress images for stereo_image_rect -->
+  <node name="republish_left"  type="republish" pkg="image_transport" args="compressed in:=/stereo_camera/left/image_raw_throttle raw out:=/stereo_camera/left/image_raw_throttle_relay" />
+  <node name="republish_right" type="republish" pkg="image_transport" args="compressed in:=/stereo_camera/right/image_raw_throttle raw out:=/stereo_camera/right/image_raw_throttle_relay" />
 
-		<node pkg="stereo_image_proc" type="stereo_image_proc" name="stereo_image_proc">
-			<remap from="left/image_raw"    to="left/image_raw_throttle"/>
-			<remap from="left/camera_info"  to="left/camera_info_throttle"/>
-			<remap from="right/image_raw"   to="right/image_raw_throttle"/>
-			<remap from="right/camera_info" to="right/camera_info_throttle"/>
-			<param name="disparity_range" value="128"/>
-		</node>
+  <!-- Run the ROS package stereo_image_proc for image rectification -->
+  <group ns="/stereo_camera" >
+     <node pkg="stereo_image_proc" type="stereo_image_proc" name="stereo_image_proc">
+        <remap from="left/image_raw"    to="left/image_raw_throttle_relay"/>
+        <remap from="left/camera_info"  to="left/camera_info_throttle"/>
+        <remap from="right/image_raw"   to="right/image_raw_throttle_relay"/>
+        <remap from="right/camera_info" to="right/camera_info_throttle"/>
+        <param name="disparity_range" value="128"/>
+     </node>
 
-    <!--*********************** Generate Local Costmap ***********************-->
-		<!-- Create point cloud for the planner -->
-		<node pkg="nodelet" type="nodelet" name="disparity2cloud" args="load rtabmap_ros/point_cloud_xyz stereo_nodelet">
-			<remap from="disparity/image"       to="disparity"/>
-			<remap from="disparity/camera_info" to="right/camera_info_throttle"/>
-			<remap from="cloud"                 to="cloudXYZ"/>
-
-			<param name="voxel_size" type="double" value="0.05"/>
-			<param name="decimation" type="int" value="4"/>
-			<param name="max_depth" type="double" value="4"/>
-		</node>
-
-		<node pkg="nodelet" type="nodelet" name="obstacles_detection" args="load rtabmap_ros/obstacles_detection stereo_nodelet">
-    			<remap from="cloud" to="cloudXYZ"/>
-			<remap from="obstacles" to="/planner_cloud"/>
-
-			<!--param name="frame_id" type="string" value="base_link"/-->
-			<param name="frame_id" type="string" value="base_footprint"/>
-			<param name="map_frame_id" type="string" value="map"/>
-			<param name="wait_for_transform" type="bool" value="true"/>
-			<param name="min_cluster_size" type="int" value="20"/>
-			<param name="max_obstacles_height" type="double" value="0.0"/>
-      			<param name="ground_normal_angle" type="double" value="$(arg pi/4)"/>
-  		</node>
-	</group>
+     <node if="$(arg stereo_sync)" pkg="nodelet" type="nodelet" name="stereo_sync" args="standalone rtabmap_ros/stereo_sync">
+     <remap from="left/image_rect"   to="left/image_rect_color"/>
+     <remap from="right/image_rect"   to="right/image_rect"/>
+     <remap from="left/camera_info"   to="left/camera_info_throttle"/>
+     <remap from="right/camera_info"   to="right/camera_info_throttle"/>
+   </node>
+  </group>
 
     <!--*********************** Visual Odometry ***********************-->
    <node pkg="rtabmap_ros" type="stereo_odometry" name="stereo_odometry" output="screen">
@@ -119,7 +59,7 @@
       <remap from="right/image_rect"      to="/stereo_camera/right/image_rect"/>
       <remap from="left/camera_info"      to="/stereo_camera/left/camera_info_throttle"/>
       <remap from="right/camera_info"     to="/stereo_camera/right/camera_info_throttle"/>
-      <remap from="odom"                  to="/odometry"/>
+      <remap from="odom"                  to="/stereo_camera/Odometry"/>
 
       <!--param name="frame_id" type="string" value="base_link"/-->
       <param name="frame_id" type="string" value="base_footprint"/>
@@ -132,6 +72,17 @@
 
       <param name="GFTT/MaxCorners" type="string" value="500"/>
       <param name="GFTT/MinDistance" type="string" value="5"/>
+
+      <param name="Odom/Strategy"      type="string" value="0"/> <!-- 0=Frame-to-Map, 1=Frame=to=Frame -->
+
+      <param name="Vis/EstimationType" type="string" value="1"/> <!-- 0=3D->3D 1=3D->2D (PnP) -->
+      <param name="Vis/MaxDepth"       type="string" value="0"/>
+      <param name="Odom/GuessMotion" type="string" value="true"/>
+      <param name="Vis/MinInliers"     type="string" value="10"/>
+      <param unless="$(arg local_bundle)" name="OdomF2M/BundleAdjustment" type="string" value="0"/>
+      <param name="OdomF2M/MaxSize"    type="string" value="1000"/>
+      <param name="GFTT/MinDistance"   type="string" value="10"/>
+      <param name="GFTT/QualityLevel"  type="string" value="0.00001"/>
     </node>
 
     <!--*********************** Generate Map ***********************-->
@@ -139,9 +90,10 @@
       <!-- Visual SLAM: args: "delete_db_on_start" and "udebug" -->
       <node name="rtabmap" pkg="rtabmap_ros" type="rtabmap" output="screen" args="--delete_db_on_start">
          <!--param name="frame_id" type="string" value="base_link"/-->
-	 <param name="frame_id" type="string" value="base_footprint"/>
+	       <param name="frame_id" type="string" value="base_footprint"/>
          <param name="map_frame_id" value="map"/>
-         <param name="subscribe_stereo" type="bool" value="true"/>
+         <!--param name="subscribe_stereo" type="bool" value="true"/-->
+         <param name="subscribe_stereo" type="bool" value="false"/>
          <param name="subscribe_depth" type="bool" value="false"/>
          <!--param name="subscribe_scan_cloud" type="bool" value="true"/-->
 
@@ -151,7 +103,7 @@
          <remap from="right/camera_info" to="/stereo_camera/right/camera_info_throttle"/>
          <remap from="scan_cloud" to="/nova_common/ptcloud">
          <!--remap from="odom" to="/ekf/Odometry"/-->
-	 <remap from="odom" to="/odometry"/>
+	        <remap from="odom" to="/stereo_odometry"/>
 
          <param name="queue_size" type="int" value="30"/>
 
@@ -161,6 +113,8 @@
          <param name="grid_eroded" value="false"/>
          <param name="grid_unknown_space_filled"/>
 
+         <param name="RGBD/CreateOccupancyGrid"          type="string" value="true"/>
+
         <!-- Map Projection Params -->
         <param name="proj_max_ground_angle" value="45"/>
         <param name="proj_min_cluster_size" value="20"/>
@@ -169,6 +123,7 @@
 
         <param name="Grid/FootprintLength" value="0.0"/>
         <param name="Grid/FootprintWidth" value="0.0"/>
+        <param name="Grid/DepthDecimation" type="string" value="4"/>
 
          <!-- RTAB-Map's parameters -->
          <param name="Rtabmap/TimeThr" type="string" value="700"/>
@@ -186,5 +141,29 @@
          <param name="LccReextract/Activated" type="string" value="true"/>
          <param name="LccReextract/MaxWords" type="string" value="500"/>
       </node>
+
+      <!-- Visualisation RTAB-Map -->
+      <node if="$(arg rtabmapviz)" pkg="rtabmap_ros" type="rtabmapviz" name="rtabmapviz" args="-d $(find rtabmap_ros)/launch/config/rgbd_gui.ini" output="screen">
+         <param unless="$(arg stereo_sync)" name="subscribe_stereo"    type="bool" value="true"/>
+         <param name="subscribe_odom_info" type="bool" value="true"/>
+         <param name="subscribe_rgbd"      type="bool" value="$(arg stereo_sync)"/>
+         <param name="queue_size"          type="int" value="10"/>
+         <param name="frame_id"            type="string" value="base_footprint"/>
+
+         <remap from="left/image_rect"  to="/stereo_camera/left/image_rect_color"/>
+         <remap from="right/image_rect"  to="/stereo_camera/right/image_rect"/>
+         <remap from="left/camera_info"  to="/stereo_camera/left/camera_info_throttle"/>
+         <remap from="right/camera_info" to="/stereo_camera/right/camera_info_throttle"/>
+         <remap from="rgbd_image"          to="/stereo_camera/rgbd_image"/>
+         <remap from="odom_info"         to="odom_info"/>
+         <remap from="odom"              to="/stereo_odometry"/>
+         <remap from="mapData"           to="mapData"/>
+      </node>
+
+      </group>
+
+      <!-- Visualisation RVIZ -->
+      <node if="$(arg rviz)" pkg="rviz" type="rviz" name="rviz" args="-d $(find rtabmap_ros)/launch/config/demo_stereo_outdoor.rviz"/>
+
    </group>
 </launch>
