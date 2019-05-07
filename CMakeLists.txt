@@ -64,6 +64,10 @@ target_link_libraries(driver ${PROJECT_SOURCE_DIR}/include/lib/x86-64/libCTRE_Ph
 target_link_libraries(driver ${PROJECT_SOURCE_DIR}/include/lib/x86-64/libCTRE_PhoenixCanutils.a)
 target_link_libraries(driver Threads::Threads)
 
+add_executable(drill src/drill.cpp)
+add_dependencies(drill core_rover_generate_messages_cpp)
+target_link_libraries(drill ${catkin_LIBRARIES})
+
 add_executable(testUART src/testUART.cpp)
 add_dependencies(testUART core_rover_generate_messages_cpp)
 target_link_libraries(testUART ${catkin_LIBRARIES})
@@ -75,6 +79,12 @@ target_link_libraries(NovaAhrs ${catkin_LIBRARIES})
 add_executable(gps_node src/gps_node.cpp)
 add_dependencies(gps_node core_rover_generate_messages_cpp)
 target_link_libraries(gps_node ${catkin_LIBRARIES})
+
+add_executable(controller_node src/controller_node.cpp)
+target_link_libraries(controller_node ${catkin_LIBRARIES})
+
+#add_executable(goal_node src/goal_node.cpp)
+#target_link_libraries(goal_node ${catkin_LIBRARIES})
 
 add_executable(rtimulib_ros src/rtimulib_ros.cpp)
 target_link_libraries(rtimulib_ros
