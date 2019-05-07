@@ -75,3 +75,5 @@ scripts/test/play_uav_bag\.sh\.save
 scripts/test/play_uav_bag\.sh\.save~Added Stereo Map Bui;der
 
 scripts/test/play_uav_bag\.sh\.save~dev/autonomous
+
+launch/map_builder\.launch~Modified params
