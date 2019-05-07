@@ -355,7 +355,7 @@ int main(int argc, char **argv)
       if (loopCount >= 0) {
         loopCount = 0;
         //std::cout << "talon5 motor output: " << talon5.GetMotorOutputPercent() << std::endl;
-       std::cout << "talon motor delta: " << delta_right << std::endl;
+      // std::cout << "talon motor delta: " << delta_right << std::endl;
        // std::cout << "talon2 velocity: " << talon2.GetSelectedSensorVelocity() << std::endl;
       }
 
