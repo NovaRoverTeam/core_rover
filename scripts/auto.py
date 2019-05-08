@@ -7,6 +7,7 @@ from webots_ros.srv import set_float
 from nav_msgs.msg import Odometry
 from nova_common.msg import *
 from nova_common.srv import *
+import steeringPID
 
 testing = True
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -132,6 +133,10 @@ def waypointCallback(waypointData):
     lng = waypointData.lng
     waypoint.setCoords(lat,lng)
 
+def pdiSteer(controller, rawCommand):
+    controller.ComputeTurn(rawCommand)
+    return controller.turn_est 
+
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # getMode(): Retrieve Mode from parameter server.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
@@ -149,7 +154,7 @@ waypoint = WaypointClass(-37.9104679, 145.1361607)
 #    Main function
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def auto():
-
+    pdiSteering = steeringPID(0,2)
     global rovey_pos
     global waypoint
     global auto_engaged
@@ -186,10 +191,9 @@ def auto():
            # steer_limit = rospy.get_param('steer_limit')
             
             drive_msg = DriveCmd()
-            drive_msg.rpm       = 10
-            drive_msg.steer_pct = turn * 0.5
-            drive_pub.publish(drive_msg)
-            
+            drive_msg.steer_pct = turn
+            drive_pub.publish(pdiSteer(pdiSteering, turn))
+            drive_msg.rpm       = 0
             #if distance < :
             #   desPos.set_coords(route[1][0], route[1][1])   
 
