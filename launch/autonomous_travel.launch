@@ -54,19 +54,4 @@
         <param name="publish_filtered_gps" value="true"/>
         <remap from="gps/filtered" to="/ekf/gps_data"/>
     </node>
-
-    <node name="rtabmap" pkg="rtabmap_ros" type="rtabmap" output="screen" args="--delete_db_on_start">
-        <param name="frame_id" type="string" value="base_link"/>
-
-        <param name="subscribe_depth" type="bool" value="false"/>
-        <param name="subscribe_rgbd" type="bool" value="true"/>
-        <param name="subscribe_scan_cloud" type="bool" value="true"/>
-
-        <remap from="odom" to="/ekf/Odometry"/>
-        <remap from="scan_cloud" to="/ptcloud"/>
-        <remap from="rgbd_image" to="rgbd_image"/>
-
-        <param name="queue_size" type="int" value="10"/>
-    </node>
-
 </launch>
