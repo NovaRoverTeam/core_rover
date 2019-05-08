@@ -171,11 +171,8 @@ def initNavigation():
     rospy.loginfo('DESTINATION:' + str(des_pos))
     rospy.loginfo('WaypointList: ' + str(waypoint_list))
 
-<<<<<<< HEAD
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-=======
- #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # initSearch():
 #  Intitialise Searching for Tennis Ball (Spiral)
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
@@ -191,7 +188,7 @@ def initSearch():
     rospy.loginfo('Spiral Search Engaged!')
     rospy.loginfo('Spiral WaypointList: ' + str(searchpath))
  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
->>>>>>> f49d18ca0e8111d937dee480355fcc97ac80dc7d
+
 # Global variables
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 rovey_pos = RoveyPosClass(0,0) #Object for GPS coords of current rover position.
