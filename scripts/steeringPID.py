@@ -7,8 +7,8 @@ class steeringPID:
         self.freq = frequency
         self.filteredTurn = lpf(1,frequency,first_value)
         self.kp = 0.1 
-        self.kI = 0.3
-        self.kd = 0.01
+        self.kI = 0.03
+        self.kd = 0.4
         self.kiMax = 1
         self.turn_est = 0 
         self.freq = 1
@@ -40,6 +40,6 @@ class lpf:
 
 
     def stateUpdate(self,newValue):
-        self.state = a*newValue + (1-a)*self.state
+        self.state = self.a*newValue + (1-self.a)*self.state
 
     
