@@ -24,7 +24,7 @@
 
 	<!-- Run the ROS package stereo_image_proc for image rectification-->
   <!-- Choose visualization -->
-  <arg name="rviz" default="true" />
+  <arg name="rviz" default="false" />
   <arg name="rtabmapviz" default="false" />
   <arg name="local_bundle" default="true" />
   <arg name="stereo_sync" default="false" />
@@ -163,6 +163,5 @@
 
       <!-- Visualisation RVIZ -->
       <node if="$(arg rviz)" pkg="rviz" type="rviz" name="rviz" args="-d $(find rtabmap_ros)/launch/config/demo_stereo_outdoor.rviz"/>
-
    </group>
 </launch>
