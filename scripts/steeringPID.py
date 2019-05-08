@@ -13,22 +13,22 @@ class steeringPID:
         self.turn_est = 0 
         self.freq = 1
         self.derTerm = 0
-        self.propTerm = 0.1
-        self.IntTerm = 0.01
+        self.propTerm = 0.0
+        self.intTerm = 0.0
     def ComputeTurn(self, raw_command):
         self.computeder(raw_command)
         self.filteredTurn.stateUpdate(raw_command)
         self.propTerm = self.filteredTurn.state
         self.computeInt(raw_command)
-        self.turn_est = self.kd*self.derTerm + self.kp*self.propTerm + self.kI*self.IntTerm
+        self.turn_est = self.kd*self.derTerm + self.kp*self.propTerm + self.kI*self.intTerm
     
     def computeder(self,raw_value):
         return self.freq* (raw_value - self.turn_est)*-1
 
     def computeInt(self,raw_value):
-        self.IntTerm = self.IntTerm + raw_value
-        if self.IntTerm*self.IntTerm > self.kiMax:
-            self.IntTerm = 1
+        self.intTerm = self.intTerm + raw_value
+        if self.intTerm*self.intTerm > self.kiMax:
+            self.intTerm = 1
 ## Usage of a lpf here to reduce the likelihood of large spikes in the yaw estimate 
 # Causing hard turning of the motors, and possibly damaging them.
 class lpf:
