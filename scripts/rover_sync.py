@@ -8,6 +8,9 @@ from rover_sm import RoverStateMachine
 from nova_common.msg import *
 from nova_common.srv import *
 
+name = "None"
+changeMission = False
+
 # Class handling ROS behaviour of rover_sync node
 class RoverSync:
 
@@ -16,7 +19,9 @@ class RoverSync:
   #    Initialise class.
   #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--    
   def __init__(self, parent=None):
-    #super(RoverSync,self).__init__(parent)
+  
+    rospy.init_node('rover_sync', disable_signals=False)
+
     self.req_change_mode_server = rospy.Service(
       '/core_rover/req_change_mode', ChangeMode,
       self.handleReqChangeMode)
@@ -33,9 +38,10 @@ class RoverSync:
   #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-- 
   def handleReqChangeMission(self, req):
 	
+    global name
+    global changeMission 
     success = 0
-    name = "None"
-    
+       
     if    req.mission == 'STOP':
       #bash script here
       message = "STOPPING ALL NODES"
@@ -53,13 +59,11 @@ class RoverSync:
         elif  req.mission == 'AUT':
           success = 1
           name = "aut"
-        
-        if (name is not "None"):
-          os.system("roslaunch nova_common {}.launch".format(name))
 
         if success:
+          changeMission = True
           rospy.set_param('/core_rover/Mission', req.mission)
-          message = "Successfully changed Mission to " + req.mission + "."
+          message = "Changing Mission to " + req.mission + "."
         else:
           message = "Unable to change Mission. " 
       
@@ -102,12 +106,28 @@ class RoverSync:
 #    Main function.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def main():
-  rospy.init_node('rover_sync')
+  
+  global name
+  global changeMission 
   rover_sync = RoverSync()
  
   rate = rospy.Rate(0.1)
   while not rospy.is_shutdown(): 
 
+    if (name is not "None" and changeMission is True):
+      run_id = rospy.get_param("/run_id")
+      uuid = roslaunch.rlutil.get_or_generate_uuid(run_id, True)
+      roslaunch.configure_logging(uuid)
+
+      rospack = rospkg.RosPack() # Get the file path for nova_common
+      path = rospack.get_path('nova_common')
+
+      launch_file = [path + '/launch/{}.launch'.format(name)]
+
+      launch = roslaunch.parent.ROSLaunchParent(uuid, launch_file)
+      launch.start() # Start the launch file
+      changeMission = False
+      name = "None"
     rate.sleep()
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--

@@ -1,3 +1,7 @@
 include/lib/x86-64/*
 lib/x86-64/*
 scripts/rover_sm.pyc
+battery_data.txt
+scripts/auto_classes.pyc
+scripts/auto_functions.pyc
+src/battery_reader

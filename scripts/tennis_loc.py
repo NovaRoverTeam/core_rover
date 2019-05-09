@@ -69,24 +69,24 @@ def tennis_loc():
     autonomous_mode = 'Off'
     while not rospy.is_shutdown():
     	connection, client_address = sock.accept()
-    	while getAutoMode() not 'Off':
-        	steer_limit = rospy.get_param('steer_limit')
-        	rpm_limit   = rospy.get_param('rpm_limit')
-            data = connection.recv(100) # 1 Byte per character
-            if data:
-                status_pub.publish("Found")
-                #rospy.loginfo(data)
-                data_parsed = ast.literal_eval(data)
-                #print(data_parsed)
-                #array = Float32MultiArray(4,data_parsed)
-                msg = DriverMsg(data_parsed,steer_limit,rpm_limit)
-                rospy.loginfo('publishing: ' + str(msg) + str(data_parsed))
-                ball_pub.publish(msg)
-            else:
-                status_pub.publish("Lost")
-                connection.close()
-                break;
-            rate_active.sleep()
+    	while getAutoMode() != 'Off':
+          steer_limit = rospy.get_param('steer_limit')
+          rpm_limit   = rospy.get_param('rpm_limit')
+          data = connection.recv(100) # 1 Byte per character
+          if data:
+              status_pub.publish("Found")
+              #rospy.loginfo(data)
+              data_parsed = ast.literal_eval(data)
+              #print(data_parsed)
+              #array = Float32MultiArray(4,data_parsed)
+              msg = DriverMsg(data_parsed,steer_limit,rpm_limit)
+              rospy.loginfo('publishing: ' + str(msg) + str(data_parsed))
+              ball_pub.publish(msg)
+          else:
+              status_pub.publish("Lost")
+              connection.close()
+              break;
+          rate_active.sleep()
         rate_inactive.sleep()
 
 
