@@ -1,11 +1,8 @@
 import matplotlib.pyplot as plotter
 from auto_functions import sectorSearch
-from auto_classes import RoveyPosClass, WaypointClass, Vector2D
+from auto_classes import RoveyPosClass, WaypointClass
 
 if __name__ == "__main__":
-
-    vec = Vector2D(-1, 1)
-    vec.rotate(90)
 
     current_pos = RoveyPosClass(0, 0, 0, 0, 0)
     search_radius = 20 # meters
