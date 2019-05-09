@@ -1,3 +1,5 @@
+import math
+
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # DesPosClass:
 #    Creates a class for the GPS coords given by the competition.
@@ -39,3 +41,29 @@ class RoveyPosClass(object):
         self.yaw = yaw
     def __repr__(self):
         return str((self.latitude,self.longitude))  
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# Vector2D:
+#    Creates a class for a vector in 2d space
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
+class Vector2D():
+    def __init__(self, lat, lng):
+        self.latitude = lat
+        self.longitude = lng
+    
+    def get_length(self):
+        return math.sqrt(self.latitude**2 + self.longitude**2)
+
+    def normalise(self):
+        length = self.get_length
+        self.latitude = self.latitude/length
+        self.longitude = self.longitude/length
+
+    def scale(self, factor):
+        self.latitude *= factor
+        self.longitude *= factor
+
+    @staticmethod
+    def make_from_positions(from_pos, to_pos):
+        lat_diff = from_pos.latitude - to_pos.latitude
+        lng_diff = from_pos.longitude - to_pos.longitude
+        return Vector2D(lat_diff, lng_diff)
