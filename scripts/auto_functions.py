@@ -69,29 +69,6 @@ def turnDirection(beta, orientation):
     return turn
 
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-# cosineRule(angle, sideA, sideB): Calculate the length of the third edge
-# of a triangle given two other sides and the opposite angle.
-#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
-def cosineRule(angle, sideA, sideB):
-    sideA2 = math.pow(sideA, 2)
-    sideB2 = math.pow(sideB, 2)
-    return math.sqrt(sideA2 + sideB2 - 2 * sideA * sideB * math.cos(angle))
-
-#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-# sineRule(sideA, sideB, angle): Calculate the angle between sides a and c
-# of a triangle the lengths of all three sides and 
-#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
-def sineRule(sideA, sideB, sideC, angle):
-    pass
-
-#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-# calculateInternalAngles(side_count): Calcualte the internal angle of
-# each vertex of any regular polygon 
-#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
-def calculateInternalAngles(side_count):
-    return (side_count-2)*180
-
-#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # getMode(): Retrieve Mode from parameter server.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def getMode():
@@ -159,5 +136,4 @@ def sectorSearch(center_pos, search_radius):
         new_waypoint = WaypointClass.makeShiftedWaypoint(center_pos, vector_from_center)
         search_path.append(new_waypoint)
 
-    print(search_path)
     return search_path
