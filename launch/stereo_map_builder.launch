@@ -24,7 +24,7 @@
 
 	<!-- Run the ROS package stereo_image_proc for image rectification-->
   <!-- Choose visualization -->
-  <arg name="rviz" default="false" />
+  <arg name="rviz" default="true" />
   <arg name="rtabmapviz" default="false" />
   <arg name="local_bundle" default="true" />
   <arg name="stereo_sync" default="false" />
@@ -114,7 +114,7 @@
          
         <!-- Map Projection Params -->
 	<param name="Grid/NormalsSegmentation" value="true"/>
-        <param name="Grid/MaxGroundAngle" value="45"/>
+        <param name="Grid/MaxGroundAngle" value="20"/> <!-- 45 -->
         <param name="proj_min_cluster_size" value="20"/>
         <param name="Grid/MinGroundHeight" value="0.2"/>
         <param name="Grid/MaxGroundHeight" value="2.0"/>
