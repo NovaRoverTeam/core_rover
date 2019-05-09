@@ -1,7 +1,7 @@
 include/lib/x86-64/*
 lib/x86-64/*
 scripts/rover_sm.pyc
-
+*.bag
 
 include/ctre/phoenix/CCI/CANifier_CCI\.h
 
