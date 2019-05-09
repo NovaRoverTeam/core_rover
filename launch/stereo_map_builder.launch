@@ -65,24 +65,21 @@
       <param name="frame_id" type="string" value="base_footprint"/>
       <param name="odom_frame_id" type="string" value="odom"/>
 
-      <param name="Odom/InlierDistance" type="string" value="0.1"/>
-      <param name="Odom/MinInliers" type="string" value="10"/>
-      <param name="Odom/RoiRatios" type="string" value="0.03 0.03 0.04 0.04"/>
-      <param name="Odom/MaxDepth" type="string" value="10"/>
+      <param name="Vis/InlierDistance" type="string" value="0.1"/>
+      <param name="Vis/MinInliers" type="string" value="10"/>
+      <param name="Vis/RoiRatios" type="string" value="0.03 0.03 0.04 0.04"/>
+      <param name="Vis/MaxDepth" type="string" value="10"/>
 
-      <param name="GFTT/MaxCorners" type="string" value="500"/>
+      <param name="Vis/MaxFeatures" type="string" value="500"/>
       <param name="GFTT/MinDistance" type="string" value="5"/>
+      <param name="GFTT/QualityLevel"  type="string" value="0.00001"/>
 
       <param name="Odom/Strategy"      type="string" value="0"/> <!-- 0=Frame-to-Map, 1=Frame=to=Frame -->
 
       <param name="Vis/EstimationType" type="string" value="1"/> <!-- 0=3D->3D 1=3D->2D (PnP) -->
-      <param name="Vis/MaxDepth"       type="string" value="0"/>
       <param name="Odom/GuessMotion" type="string" value="true"/>
-      <param name="Vis/MinInliers"     type="string" value="10"/>
       <param unless="$(arg local_bundle)" name="OdomF2M/BundleAdjustment" type="string" value="0"/>
       <param name="OdomF2M/MaxSize"    type="string" value="1000"/>
-      <param name="GFTT/MinDistance"   type="string" value="10"/>
-      <param name="GFTT/QualityLevel"  type="string" value="0.00001"/>
     </node>
 
     <!--*********************** Generate Map ***********************-->
@@ -108,18 +105,19 @@
          <param name="queue_size" type="int" value="30"/>
 
          <!-- Grid Map Params-->
-         <param name="grid_size" value="0"/>
-         <param name="grid_cell_size" value="0.2"/>
-         <param name="grid_eroded" value="false"/>
+         <param name="Grid/MinSize" value="0.0"/>
+         <param name="Grid/CellSize" value="0.2"/>
+         <param name="Grid/Eroded" value="false"/>
          <param name="grid_unknown_space_filled" type="bool" value="false"/>
 
          <param name="RGBD/CreateOccupancyGrid"  type="string" value="true"/>
-
+         
         <!-- Map Projection Params -->
-        <param name="proj_max_ground_angle" value="45"/>
+	<param name="Grid/NormalsSegmentation" value="true"/>
+        <param name="Grid/MaxGroundAngle" value="45"/>
         <param name="proj_min_cluster_size" value="20"/>
-        <params name="Grid/MaxGroundHeight" value="0.2"/>
-        <params name="proj_max_height" value="2.0"/>
+        <param name="Grid/MinGroundHeight" value="0.2"/>
+        <param name="Grid/MaxGroundHeight" value="2.0"/>
 
         <param name="Grid/FootprintLength" value="0.0"/>
         <param name="Grid/FootprintWidth" value="0.0"/>
@@ -129,17 +127,11 @@
          <param name="Rtabmap/TimeThr" type="string" value="700"/>
          <param name="Rtabmap/DetectionRate" type="string" value="1"/>
 
-         <param name="Kp/WordsPerImage" type="string" value="200"/>
-         <param name="Kp/RoiRatios" type="string" value="0.03 0.03 0.04 0.04"/>
+         <param name="Kp/MaxDepth" type="string" value="0"/>
+         <param name="Kp/DetectorStrategy" type="string" value="6"/>
+	 <param name="Vis/EstimationType"  type="string" value="1"/>
+	 <param name="Vis/MaxDepth" type="string" value="0"/>
 
-         <param name="SURF/HessianThreshold" type="string" value="1000"/>
-
-         <param name="LccBow/MaxDepth" type="string" value="5"/>
-         <param name="LccBow/MinInliers" type="string" value="10"/>
-         <param name="LccBow/InlierDistance" type="string" value="0.05"/>
-
-         <param name="LccReextract/Activated" type="string" value="true"/>
-         <param name="LccReextract/MaxWords" type="string" value="500"/>
       </node>
 
       <!-- Visualisation RTAB-Map -->
