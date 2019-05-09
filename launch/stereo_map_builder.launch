@@ -59,7 +59,7 @@
       <remap from="right/image_rect"      to="/stereo_camera/right/image_rect"/>
       <remap from="left/camera_info"      to="/stereo_camera/left/camera_info_throttle"/>
       <remap from="right/camera_info"     to="/stereo_camera/right/camera_info_throttle"/>
-      <remap from="odom"                  to="/stereo_camera/Odometry"/>
+      <remap from="odom"                  to="/stereo_odometry"/>
 
       <!--param name="frame_id" type="string" value="base_link"/-->
       <param name="frame_id" type="string" value="base_footprint"/>
