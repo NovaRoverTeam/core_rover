@@ -202,7 +202,7 @@ def auto_controller():
 
     status_pub  = rospy.Publisher("/core_rover/auto_status", AutoStatus, queue_size=10)
 
-    rospy.init_node('autonomous_controller', anonymous=True) # Initialise Node
+    rospy.init_node('auto_controller', anonymous=True) # Initialise Node
     rate = rospy.Rate(2) # Loop rate in Hz
     rospy.loginfo("Autonomous Controller Started")
     ## testing

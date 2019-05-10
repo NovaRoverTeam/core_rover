@@ -43,9 +43,11 @@ class RoverSync:
     success = 0
        
     if    req.mission == 'STOP':
-      #bash script here
       message = "STOPPING ALL NODES"
       success = 1
+      os.system("killall -9 roscore")
+      os.system("killall -9 rosmaster")
+      #probs a bad way to do this
     else:
         if  req.mission == 'SENSORS':
           success = 1
@@ -60,10 +62,13 @@ class RoverSync:
           success = 1
           name = "aut"
 
-        if success:
+        if success and req.mission != 'SENSORS':
           changeMission = True
           rospy.set_param('/core_rover/Mission', req.mission)
           message = "Changing Mission to " + req.mission + "."
+        elif success and req.mission == 'SENSORS':
+          changeMission = True
+          message = "Turning on Sensors"
         else:
           message = "Unable to change Mission. " 
       
