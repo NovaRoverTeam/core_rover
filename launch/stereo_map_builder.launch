@@ -3,62 +3,54 @@
    Demo of outdoor stereo mapping.
    From bag:
    $ rosbag record
-         /stereo_camera/left/image_raw_throttle/compressed
-         /stereo_camera/right/image_raw_throttle/compressed
-         /stereo_camera/left/camera_info_throttle
-         /stereo_camera/right/camera_info_throttle
+         /elp/left/image_raw_throttle/compressed
+         /elp/right/image_raw_throttle/compressed
+         /elp/left/camera_info_throttle
+         /elp/right/camera_info_throttle
          /tf
 
    $ roslaunch rtabmap demo_stereo_outdoor.launch
    $ rosbag play -.-clock stereo_oudoorA.bag
 -->
 
-    <!-- TF transforms for the stereo camera
-    <arg name="pi/2" value="1.5707963267948966" />
-    <arg name="optical_rotate" value="0 0 0 -$(arg pi/2) 0 -$(arg pi/2)" />
-    <node pkg="tf" type="static_transform_publisher" name="stereo_camera_base_link"
-	    args="$(arg optical_rotate) stereo_camera_base stereo_camera 100" />
-    <node pkg="tf" type="static_transform_publisher" name="base_to_stereo_camera_base_link"
-	    args="0.01 0.06 0.90 0 0.37 0 base_link stereo_camera_base 100" />
-    <arg name="pi/4" value="0.785398163397448309" />-->
-
-	<!-- Run the ROS package stereo_image_proc for image rectification-->
+  <!-- Run the ROS package stereo_image_proc for image rectification-->
   <!-- Choose visualization -->
   <arg name="rviz" default="true" />
   <arg name="rtabmapviz" default="false" />
   <arg name="local_bundle" default="true" />
   <arg name="stereo_sync" default="false" />
+  <arg name="CAMERA_NAME" default="elp"/>
 
   <param name="use_sim_time" type="bool" value="True"/>
 
   <!-- Just to uncompress images for stereo_image_rect -->
-  <node name="republish_left"  type="republish" pkg="image_transport" args="compressed in:=/stereo_camera/left/image_raw_throttle raw out:=/stereo_camera/left/image_raw_throttle_relay" />
-  <node name="republish_right" type="republish" pkg="image_transport" args="compressed in:=/stereo_camera/right/image_raw_throttle raw out:=/stereo_camera/right/image_raw_throttle_relay" />
+  <node name="republish_left"  type="republish" pkg="image_transport" args="compressed in:=/elp/left/image_raw raw out:=/elp/left/image_raw_relay" />
+  <node name="republish_right" type="republish" pkg="image_transport" args="compressed in:=/elp/right/image_raw raw out:=/elp/right/image_raw_relay" />
 
   <!-- Run the ROS package stereo_image_proc for image rectification -->
-  <group ns="/stereo_camera" >
+  <group ns="$(arg CAMERA_NAME)" >
      <node pkg="stereo_image_proc" type="stereo_image_proc" name="stereo_image_proc">
-        <remap from="left/image_raw"    to="left/image_raw_throttle_relay"/>
-        <remap from="left/camera_info"  to="left/camera_info_throttle"/>
-        <remap from="right/image_raw"   to="right/image_raw_throttle_relay"/>
-        <remap from="right/camera_info" to="right/camera_info_throttle"/>
+        <remap from="left/image_raw"    to="left/image_raw_relay"/>
+        <remap from="left/camera_info"  to="left/camera_info"/>
+        <remap from="right/image_raw"   to="right/image_raw_relay"/>
+        <remap from="right/camera_info" to="right/camera_info"/>
         <param name="disparity_range" value="128"/>
      </node>
 
      <node if="$(arg stereo_sync)" pkg="nodelet" type="nodelet" name="stereo_sync" args="standalone rtabmap_ros/stereo_sync">
      <remap from="left/image_rect"   to="left/image_rect_color"/>
      <remap from="right/image_rect"   to="right/image_rect"/>
-     <remap from="left/camera_info"   to="left/camera_info_throttle"/>
-     <remap from="right/camera_info"   to="right/camera_info_throttle"/>
+     <remap from="left/camera_info"   to="left/camera_info"/>
+     <remap from="right/camera_info"   to="right/camera_info"/>
    </node>
   </group>
 
     <!--*********************** Visual Odometry ***********************-->
    <node pkg="rtabmap_ros" type="stereo_odometry" name="stereo_odometry" output="screen">
-      <remap from="left/image_rect"       to="/stereo_camera/left/image_rect"/>
-      <remap from="right/image_rect"      to="/stereo_camera/right/image_rect"/>
-      <remap from="left/camera_info"      to="/stereo_camera/left/camera_info_throttle"/>
-      <remap from="right/camera_info"     to="/stereo_camera/right/camera_info_throttle"/>
+      <remap from="left/image_rect"       to="/elp/left/image_rect"/>
+      <remap from="right/image_rect"      to="/elp/right/image_rect"/>
+      <remap from="left/camera_info"      to="/elp/left/camera_info"/>
+      <remap from="right/camera_info"     to="/elp/right/camera_info"/>
       <remap from="odom"                  to="/stereo_odometry"/>
 
       <!--param name="frame_id" type="string" value="base_link"/-->
@@ -88,21 +80,22 @@
       <node name="rtabmap" pkg="rtabmap_ros" type="rtabmap" output="screen" args="--delete_db_on_start">
          <!--param name="frame_id" type="string" value="base_link"/-->
          <param name="frame_id" type="string" value="base_footprint"/>
-         <param name="map_frame_id" value="map"/>
+         <!-- param name="map_frame_id" value="map"/-->
          <param name="subscribe_rgbd" type="bool" value="false"/>
          <param name="subscribe_stereo" type="bool" value="true"/>
          <param name="subscribe_depth" type="bool" value="false"/>
          <!--param name="subscribe_scan_cloud" type="bool" value="true"/-->
 
-         <remap from="left/image_rect" to="/stereo_camera/left/image_rect_color"/>
-         <remap from="right/image_rect" to="/stereo_camera/right/image_rect"/>
-         <remap from="left/camera_info" to="/stereo_camera/left/camera_info_throttle"/>
-         <remap from="right/camera_info" to="/stereo_camera/right/camera_info_throttle"/>
+         <remap from="left/image_rect" to="/elp/left/image_rect_color"/>
+         <remap from="right/image_rect" to="/elp/right/image_rect"/>
+         <remap from="left/camera_info" to="/elp/left/camera_info"/>
+         <remap from="right/camera_info" to="/elp/right/camera_info"/>
          <remap from="scan_cloud" to="/ptcloud"/>
          <!--remap from="odom" to="/ekf/Odometry"/-->
          <remap from="odom" to="/stereo_odometry"/> <!-- NOTE add stereo_odom to ekf -->
 
          <param name="queue_size" type="int" value="30"/>
+	 <!-- param name="map_negative_poses_ignored" type="bool" value="true" /-->
 
          <!-- Grid Map Params-->
          <param name="Grid/MinSize" value="0.0"/>
@@ -143,11 +136,11 @@
          <param name="queue_size"          type="int" value="10"/>
          <param name="frame_id"            type="string" value="base_footprint"/>
 
-         <remap from="left/image_rect"  to="/stereo_camera/left/image_rect_color"/>
-         <remap from="right/image_rect"  to="/stereo_camera/right/image_rect"/>
-         <remap from="left/camera_info"  to="/stereo_camera/left/camera_info_throttle"/>
-         <remap from="right/camera_info" to="/stereo_camera/right/camera_info_throttle"/>
-         <remap from="rgbd_image"          to="/stereo_camera/rgbd_image"/>
+         <remap from="left/image_rect"  to="/elp/left/image_rect_color"/>
+         <remap from="right/image_rect"  to="/elp/right/image_rect"/>
+         <remap from="left/camera_info"  to="/elp/left/camera_info"/>
+         <remap from="right/camera_info" to="/elp/right/camera_info"/>
+         <remap from="rgbd_image"          to="/elp/rgbd_image"/>
          <remap from="odom_info"         to="odom_info"/>
          <remap from="odom"              to="/stereo_odometry"/>
          <remap from="mapData"           to="mapData"/>
