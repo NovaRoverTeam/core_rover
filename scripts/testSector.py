@@ -7,7 +7,7 @@ if __name__ == "__main__":
     current_pos = RoveyPosClass(0, 0, 0, 0, 0)
     search_radius = 20 # meters
 
-    search_path = sectorSearch(current_pos, search_radius)
+    search_path = sectorSearch(current_pos, search_radius, 10)
     plottable_points = [[], []]
     for point in search_path:
         plottable_points[0].append(point.latitude)

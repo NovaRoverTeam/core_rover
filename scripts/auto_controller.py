@@ -9,7 +9,7 @@ from auto_functions import *
 # from core_rover.srv import *
 from transitions import Machine
 simulator = True
-testing = True
+testing = False
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # Class representation of Autonomous state machine
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -18,7 +18,7 @@ class AutonomousStateMachine():
     dist_to_way_thres = 4 #Distance to way point threshold (metres)
     distance_to_dest = None # In metres (default is empty)
     distance_to_waypt = None # In metres (default is empty)
-    orientation = None # In degrees (default is empty)
+    orientation = 0 # In degrees (default is empty)
     rovey_pos = RoveyPosClass(0,0,0,0,0)
     des_pos = WaypointClass(0,0) #Object GPS coords given by the competition. This is updated by the GUI
     waypoint = WaypointClass(0, 0) #Object GPS coords of current waypoint.
@@ -40,12 +40,12 @@ class AutonomousStateMachine():
 
     def handleStartAuto(self,req):
         '''Service server handler for starting autonomous mission.'''
-        if getMode() == 'Auto':
+        if getMode() == 'Standby':
             self.des_pos.setCoords(req.latitude, req.longitude) # Set the desired latitude and longitude from the service request
             self.toTraverse()
-            return StartAutoResponse(True,"Successfully started Auto mission.")
+            return StartAutoResponse(True,"Inputting coords for Autonomous Mission.")
         else:
-            return StartAutoResponse(False,"Unable to start mission, must be in Auto mode.")
+            return StartAutoResponse(False,"Unable to start mission, must be in Standby mode.")
 
     states = ['Off','Traverse','Search','Destroy','Panning','Complete']
 
@@ -100,11 +100,12 @@ class AutonomousStateMachine():
         beta = angleBetween(self.rovey_pos.latitude, self.rovey_pos.longitude, self.waypoint.latitude, self.waypoint.longitude)
         distance = distanceBetween(self.rovey_pos.latitude, self.rovey_pos.longitude, self.waypoint.latitude, self.waypoint.longitude)
         turn = turnDirection(beta, self.orientation)
-        rospy.loginfo("Logging Autonomous Parameters")
+        rospy.loginfo("\n")
         rospy.loginfo("beta: %s", beta)
         rospy.loginfo("distance: %s", distance)
         rospy.loginfo("orientation: %s", self.orientation)
-        rospy.loginfo("current pos: %s", self.waypoint)
+        rospy.loginfo("waypoint pos: %s", self.waypoint)
+        rospy.loginfo("current pos: %s, %s", self.rovey_pos.latitude, self.rovey_pos.longitude)
         rpm_limit   = rospy.get_param('rpm_limit',10)
         steer_limit = rospy.get_param('steer_limit',10)
         drive_msg = DriveCmd()
@@ -147,7 +148,8 @@ class AutonomousStateMachine():
     def startSearch(self):
         '''Intitialise Search for Tennis Ball (Sector)'''
         self.metricCalculation()
-        self.waypoint_list = spiralSearch(self.rovey_pos,25,0,8*math.pi)
+        #self.waypoint_list = spiralSearch(self.rovey_pos,25,0,8*math.pi)
+        self.waypoint_list = sectorSearch(self.rovey_pos, 20, 10)
         self.waypoint_iter = iter(self.waypoint_list)
         self.setAutonomousMode('Search')
         rospy.loginfo('Sector Search Engaged!')

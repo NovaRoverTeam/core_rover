@@ -112,8 +112,8 @@ def spiralSearch(current_pos,no_of_waypoints,rang_min,rang_max):
 # sectorSearch(center_pos, search_radius): Generate waypoints for a sector search.
 # Takes center position of search path in lat lng and search radius in meters.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
-def sectorSearch(center_pos, search_radius):
-    k_segment_count = 6
+def sectorSearch(center_pos, search_radius, segment_number):
+    k_segment_count = segment_number
     k_segment_angle = 360/k_segment_count
     k_meters_per_latlng = 111000
     k_latlng_radius = search_radius / k_meters_per_latlng
