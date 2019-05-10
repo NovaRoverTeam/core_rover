@@ -5,3 +5,8 @@ battery_data.txt
 scripts/auto_classes.pyc
 scripts/auto_functions.pyc
 src/battery_reader
+
+.vscode/
+scripts/.vscode/
+src/.vscode/
+

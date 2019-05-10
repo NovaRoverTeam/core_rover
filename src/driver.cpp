@@ -174,17 +174,14 @@ int main(int argc, char **argv)
   // Boolean variable describing whether we are using the simulator
   // or a real rover. 
   string vehicle;
-  bool simulator;
-  simulator = false;
+  bool simulator = false;
 
-  const int hbeat_timeout = 2*LOOP_HERTZ;
+  const int hbeat_timeout = 0.5*LOOP_HERTZ;
 
-	//It's supposed to detect the vehicle but this don't work yet :'(
   string paramKey = "Vehicle";
   n->getParam(paramKey, vehicle);
   if (vehicle == "Simulator"){
     simulator = true;
-    simulator = false;
   }
 
   double wheel[6]; //array to update motor values
@@ -228,8 +225,11 @@ int main(int argc, char **argv)
 
       float talon_speed;
       float talon_steer;
+      string mode;
+      string paramKey2 = "/core_rover/Mode";
+      n->getParam(paramKey2, mode);
 
-      if(hbeat){
+      if(hbeat || mode.compare("Auto") == 0){
            talon_speed = speed / 50.0;
            talon_steer = steer / 100.0;
       }
