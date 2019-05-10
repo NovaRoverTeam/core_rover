@@ -74,9 +74,9 @@ def turnDirection(beta, orientation):
 def getMode():
     return rospy.get_param('/core_rover/Mode','Standby')
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-# getAutoMode(): Retrieve Mode from parameter server.
+# getAutonomousMode(): Retrieve Mode from parameter server.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
-def getAutoMode():
+def getAutonomousMode():
     return rospy.get_param('/core_rover/autonomous_mode','Off')
 
  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--

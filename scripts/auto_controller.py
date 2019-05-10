@@ -84,11 +84,11 @@ class AutonomousStateMachine():
         self.gps_sub     = rospy.Subscriber("/nova_common/gps_data", NavSatFix, self.gpsCallback)
         self.rpy_sub     = rospy.Subscriber("/nova_common/RPY", RPY, self.rpyCallback)
         # Initialise the global state parameter
-        self.setMode('Off')
+        self.setAutonomousMode('Off')
     #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
     # Set autonomous mode ROS paramter
     #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-    def setMode(self, mode):
+    def setAutonomousMode(self, mode):
         rospy.set_param('/core_rover/autonomous_mode', mode)
 
     #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -129,7 +129,7 @@ class AutonomousStateMachine():
         self.waypoint = next(self.waypoint_iter)
         rospy.loginfo('DESTINATION:' + str(self.des_pos))
         rospy.loginfo('WaypointList: ' + str(self.waypoint_list))
-        self.setMode('Traverse')
+        self.setAutonomousMode('Traverse')
     def Traverse(self):
         # Run Traverse
         self.metricCalculation()
@@ -143,48 +143,48 @@ class AutonomousStateMachine():
             rospy.loginfo('Rover close to GPS coordinate destination. Commencing Search')
             self.toSearch()# Switch to search state
         self.auto_drive()
-        self.setMode('Traverse')
+        self.setAutonomousMode('Traverse')
     def startSearch(self):
-        '''Intitialise Search for Tennis Ball (Spiral)'''
+        '''Intitialise Search for Tennis Ball (Sector)'''
         self.metricCalculation()
         self.waypoint_list = spiralSearch(self.rovey_pos,25,0,8*math.pi)
         self.waypoint_iter = iter(self.waypoint_list)
-        self.setMode('Search')
-        rospy.loginfo('Spiral Search Engaged!')
-        rospy.loginfo('Spiral WaypointList: ' + str(self.waypoint_list))
+        self.setAutonomousMode('Search')
+        rospy.loginfo('Sector Search Engaged!')
+        rospy.loginfo('Sector WaypointList: ' + str(self.waypoint_list))
 
     def Search(self):
-        '''Run Spiral Search'''
+        '''Run Sector Search'''
         self.metricCalculation()
-        rospy.loginfo('Spiral Search for Tennis Ball')
+        rospy.loginfo('Sector Search for Tennis Ball')
         if ((self.distance_to_waypt<self.dist_to_dest_thres)):
             try:
                 self.waypoint = next(self.waypoint_iter)
             except StopIteration:
-                rospy.loginfo("Spiral Search Waypoint List Exhausted - Going back to GPS coordinate")
+                rospy.loginfo("Sector Search Waypoint List Exhausted - Going back to GPS coordinate")
                 self.toTraverse()
         self.auto_drive()
-        self.setMode('Search')
+        self.setAutonomousMode('Search')
     def startDestroy(self):
         '''Start tracking the tennis ball to mow it down. '''
         self.metricCalculation()
-        self.setMode('Destroy')
+        self.setAutonomousMode('Destroy')
     def Destroy(self):
         '''Mowing the tennis ball down'''
         self.metricCalculation()
-        self.setMode('Destroy')
+        self.setAutonomousMode('Destroy')
     def startPanning(self):
         self.metricCalculation()
-        self.setMode('Panning')
+        self.setAutonomousMode('Panning')
     def Panning(self):
         self.metricCalculation()
-        self.setMode('Panning')
+        self.setAutonomousMode('Panning')
     def Complete(self):
         self.metricCalculation()
-        self.setMode('Complete')
+        self.setAutonomousMode('Complete')
     def Off(self):
         self.metricCalculation()
-        self.setMode('Off')
+        self.setAutonomousMode('Off')
 ###########################################
 #END State Machine Class
 ###########################################
@@ -217,9 +217,10 @@ def auto_controller():
             rospy.loginfo('RUN ITER')
         # TODO adjust rate that AutoStatus is published
         status_msg = AutoStatus()
-        status_msg.latitude  = SM.rovey_pos.latitude
-        status_msg.longitude = SM.rovey_pos.longitude
-        status_msg.bearing   = SM.orientation
+        status_msg.auto_state = getAutonomousMode()
+        status_msg.latitude   = SM.rovey_pos.latitude
+        status_msg.longitude  = SM.rovey_pos.longitude
+        status_msg.bearing    = SM.orientation
         status_pub.publish(status_msg)
         rate.sleep() # Sleep until next iteration
 if __name__ == '__main__':
