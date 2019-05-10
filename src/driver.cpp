@@ -153,17 +153,19 @@ int main(int argc, char **argv)
  //printf("test");
 
   //Configure talons for pid control
-  //ConfigTalon(&talon5);
-  //ConfigTalon(&talon4);
- // ConfigTalon(&talon3);
- // ConfigTalon(&talon2);
- // ConfigTalon(&talon1);
-  //ConfigTalon(&talon0);
+  ConfigTalon(&talon5);
+  ConfigTalon(&talon4);
+  ConfigTalon(&talon3);
+  ConfigTalon(&talon2);
+  ConfigTalon(&talon1);
+  ConfigTalon(&talon0);
   //printf("test!");
 
   ros::init(argc, argv, "driver", ros::init_options::AnonymousName); // Initialise node
   n = new ros::NodeHandle;
   ros::Rate loop_rate(LOOP_HERTZ);
+
+  n->setParam("/core_rover/driver/control_mode","Voltage"); //Sets control mode of talons
 
   // Declare subscriber to drive cmds
   ros::Subscriber drive_cmd_sub = n->subscribe("/core_rover/driver/drive_cmd", 1, DriveCmdCb);
@@ -248,14 +250,36 @@ int main(int argc, char **argv)
          talon_speed = -0.3;
 } PID STUFF*/ 
 
-      
-      
-      float right = talon_speed - talon_steer;   //Positive turn decreases right motors speeds to turn right.
-      float left = talon_speed + talon_steer;
+      float right;
+      float left; 
+      string param;
+      n->getParam("/core_rover/driver/control_mode", param);
+      if(param == "PID"){
+      talon_speed = speed * 75;
+      talon_steer = steer * 75;
+      right = talon_speed - talon_steer;
+      left = talon_speed + talon_steer;
+      talon0.Set(ControlMode::Velocity, left);
+      talon1.Set(ControlMode::Velocity, left);
+      talon2.Set(ControlMode::Velocity, left);
+      //RIGHT SIDE
+      talon3.Set(ControlMode::Velocity, right);
+      talon4.Set(ControlMode::Velocity, right);
+      talon5.Set(ControlMode::Velocity, right);
+      }    
+      else{
+      right = talon_speed - talon_steer;   //Positive turn decreases right motors speeds to turn right.
+      left = talon_speed + talon_steer;
       
       float delta_right = right - prev_right;
       float delta_left = left - prev_left;
-      if (abs(right-0.0) < abs(prev_right-0.0) && abs(delta_right)>max_delta){
+ 
+    //Slowing down ramp
+     if (abs(right)<0.01){  // If value is basically 0, set it off.
+         right = 0;
+      }
+      else{
+      if (abs(right) < abs(prev_right) && abs(delta_right)>max_delta){
           if (delta_right > 0){
                right = prev_right + max_delta;
                delta_right = max_delta;
@@ -265,8 +289,14 @@ int main(int argc, char **argv)
                delta_right = max_delta;
           }
       }
-      
-      if (abs(left-0.0) < abs(prev_left-0.0) && abs(delta_left)>max_delta){
+      }
+
+     
+      if(abs(left)<0.01){
+         left = 0;
+      }
+      else{
+      if (abs(left) < abs(prev_left) && abs(delta_left)>max_delta){
           if (delta_left > 0){
                left = prev_left + max_delta;
                delta_left = max_delta;
@@ -278,16 +308,13 @@ int main(int argc, char **argv)
       }
       prev_right = right;
       prev_left = left;
-      
+      }
       if(abs(right)>0.4){
           right = 0.0;
       }
       if(abs(left)>0.4){
           left = 0.0;
       }
-      //printf("%lf",talon_speed);
-      
-      //LEFT SIDE
       talon0.Set(ControlMode::PercentOutput, left);
       talon1.Set(ControlMode::PercentOutput, left);
       talon2.Set(ControlMode::PercentOutput, left);
@@ -296,6 +323,9 @@ int main(int argc, char **argv)
       talon4.Set(ControlMode::PercentOutput, right);
       talon5.Set(ControlMode::PercentOutput, right);
      
+      }
+
+
       
       //Output debug information
       if (loopCount >= 0) {
