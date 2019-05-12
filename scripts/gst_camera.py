@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import gi, os, sys, subprocess, StringIO
+import gi, os, sys, subprocess, StringIO, requests
 from enum import Enum
 from PyQt5.QtWidgets import *
 
@@ -197,6 +197,7 @@ while isRunning:
   "\nChange Quality:\t'q', 'quality'" +
   "\nStart Feed:\t's', 'start'" +
   "\nStop Feed:\t'x', 'stop'" +
+  "\nAdjust Foscam:\t'f', 'foscam'" +
   '\n*******************************************')
   
   
@@ -462,9 +463,93 @@ while isRunning:
       print('No stream playing at this feed.')
 	
 	
+	
+	##################################
+	######### ADJUST FOSCAM ##########
+	##################################
+	
+	# Foscam adjustments
+	if command in ('f', 'foscam'):
+	
+		# Run in a loop
+		isFosMenu = True
+	
+		while isFosMenu:
+			# Get user input for foscam feed type:
+		  fos_input = str(raw_input(
+		    '\n*******************************************\n' +
+			  'Press (A) for Rotate Left\n' +
+			  'Press (D) for Rotate Right\n' +
+			  'Press (W) for Rotate Up\n' +
+			  'Press (S) for Rotate Down\n' +
+			  'Press (X) for Stop Rotation\n' +
+			  'Press (I) for Zoom In\n' +
+			  'Press (O) for Zoom Out\n' +
+			  'Press (C) to Cancel\n' +
+			  '\t: ')).lower()
+			  
+			# Print break
+		  print('*******************************************')
+		  
+		  
+		  fosCommand = ""
+		  
+		  # Rotate Left
+		  if fos_input == 'a':
+		  	fosCommand = 'ptzMoveLeft'
+		  
+		  # Rotate Right
+		  if fos_input == 'd':
+		  	fosCommand = 'ptzMoveRight'
+		  
+		  # Rotate Up
+		  if fos_input == 'w':
+		  	fosCommand = 'ptzMoveUp'
+		  	
+		  # Rotate Down
+		  if fos_input == 's':
+		  	fosCommand = 'ptzMoveDown'
+		  	
+		  # Stop Rotation
+		  if fos_input == 'x':
+		  	fosCommand = 'ptzStopMove'
+		  	
+		  # Zoom In
+		  if fos_input == 'i':
+		  	fosCommand = 'zoomIn'
+		  
+		  # Zoom Out
+		  if fos_input == 'o':
+		  	fosCommand = 'zoomOut'
+		  	
+		  
+		  # Run the command
+		  if fosCommand != "":
+		  
+		  	# Send the request
+		  	req = "http://192.168.1.53:88/cgi-bin/CGIProxy.fcgi?cmd={}&usr=nova&pwd=rovanova".format(fosCommand)
+		  	resp = requests.get(req)
+		  	
+		  	# Print the output
+		  	print(resp.text)
+		  
+		  
+		  # Cancel the Foscam Menu
+		  if fos_input == 'c':
+		  	isFosMenu = False
+	
+	
+	
+	
+	
 	# Waits for enter to be pressed
   if isRunning:
     raw_input('\nPress Enter to continue...\n')
+    
+    
+    
+    
+    
   
 	
 	
