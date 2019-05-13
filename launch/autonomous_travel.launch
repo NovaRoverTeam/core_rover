@@ -5,6 +5,8 @@
     <rosparam param="rpm_limit">1000</rosparam>
     <rosparam param="steer_limit">1000</rosparam>
 
+    <node pkg="tf" type="static_transform_publisher" name="imu_base_link" args="0 0 0 0 0 0 imu base_link 1--">   
+
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization_node">
         <!-- switch on debug -->
         <param name="debug" value="true"/>
@@ -30,13 +32,14 @@
                                        true,true,true,
                                        true,true,true,
                                        true,true,true]</rosparam>
-	<param name="odom0" value="/stereo_odometry"/>
+<!--	<param name="odom0" value="/stereo_odometry"/>
 
 	<rosparam param="odom0_config">[true,  true,  false,
                                false, false, true,
                                true,  false, false,
                                false, false, true,
-                               false, false, false]</rosparam>
+                               false, false, false]</rosparam> 
+-->
 
         <!-- PUBLISH to: "/ekf/Odometry" -->
         <remap from="/odometry/filtered" to="/ekf/Odometry"/>
