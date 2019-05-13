@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
   printf("fd opened as %i\n", fd);
   
   /* wait for the Arduino to reboot */
-  usleep(3500000);
+  usleep(1000000);
   
   /* get current serial port settings */
   tcgetattr(fd, &toptions);

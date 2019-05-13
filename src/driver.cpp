@@ -139,7 +139,12 @@ int main(int argc, char **argv)
   talon0.SetInverted(true);
   talon1.SetInverted(true);
   talon2.SetInverted(false);
+  talon0.SetNeutralMode(Brake);
+  talon1.SetNeutralMode(Brake);
+  talon2.SetNeutralMode(Brake);
   talon3.SetNeutralMode(Brake);
+  talon4.SetNeutralMode(Brake);
+  talon5.SetNeutralMode(Brake);
   
   double delay = 0.0;
   talon0.ConfigOpenloopRamp(delay,0);
@@ -275,7 +280,7 @@ int main(int argc, char **argv)
       float delta_left = left - prev_left;
  
     //Slowing down ramp
-     if (abs(right)<0.01){  // If value is basically 0, set it off.
+     if (abs(right)<0.02){  // If value is basically 0, set it off.
          right = 0;
       }
       else{
@@ -292,7 +297,7 @@ int main(int argc, char **argv)
       }
 
      
-      if(abs(left)<0.01){
+      if(abs(left)<0.02){
          left = 0;
       }
       else{
@@ -309,12 +314,12 @@ int main(int argc, char **argv)
       prev_right = right;
       prev_left = left;
       }
-      if(abs(right)>0.4){
+/*      if(abs(right)>0.4){
           right = 0.0;
       }
       if(abs(left)>0.4){
           left = 0.0;
-      }
+      } */
       talon0.Set(ControlMode::PercentOutput, left);
       talon1.Set(ControlMode::PercentOutput, left);
       talon2.Set(ControlMode::PercentOutput, left);

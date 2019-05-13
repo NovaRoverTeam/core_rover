@@ -281,7 +281,7 @@ while isRunning:
 	    'Press (S) for Stereo Cam\n' +
 	    'Press (T) for Telescopic Cam\n' +
 	    'Press (B) for Black Foscam\n' +
-	    'Press (W) for Black Foscam\n' +
+	    'Press (W) for White Foscam\n' +
 	    'Press (1) for Arm Cam 1\n' +
 	    'Press (2) for Arm Cam 2\n' +
 	    '\t: ')).lower()
@@ -469,8 +469,11 @@ while isRunning:
 	##################################
 	
 	# Foscam adjustments
-	if command in ('f', 'foscam'):
-	
+  if command in ('f', 'foscam'):
+		
+		# End IP of foscam
+		fos_end_ip = 53
+
 		# Run in a loop
 		isFosMenu = True
 	
@@ -512,7 +515,7 @@ while isRunning:
 		  	
 		  # Stop Rotation
 		  if fos_input == 'x':
-		  	fosCommand = 'ptzStopMove'
+		  	fosCommand = 'ptzStopRun'
 		  	
 		  # Zoom In
 		  if fos_input == 'i':
@@ -527,7 +530,7 @@ while isRunning:
 		  if fosCommand != "":
 		  
 		  	# Send the request
-		  	req = "http://192.168.1.53:88/cgi-bin/CGIProxy.fcgi?cmd={}&usr=nova&pwd=rovanova".format(fosCommand)
+		  	req = "http://192.168.1.{}:88/cgi-bin/CGIProxy.fcgi?cmd={}&usr=nova&pwd=rovanova".format(fos_end_ip, fosCommand)
 		  	resp = requests.get(req)
 		  	
 		  	# Print the output
