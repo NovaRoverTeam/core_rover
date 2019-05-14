@@ -2,6 +2,7 @@
 import rospy
 import can
 from std_msgs.msg import String
+from std_msgs.msg import Empty
 from nova_common.msg import * #motor_arm
 from base_station.msg import *
 import time
@@ -13,6 +14,9 @@ trig_r_init = False
 values = [0.0,0.0,0.0, 0.0, 0.0, 0.0,0.0] #[Ly, Lx, Ltw, Ry, Rx, Rtw,RClaw]
 ids = [0x02, 0x03, 0x01, 0x04, 0x05, 0x06, 0x07]
 resets = [0,0,0,0]
+hbeat = False;
+hbeat_cnt = 0;
+max_hbeat = 3;
 def RightCallback(data):
     data_array = [-data.axis_ly_val,data.axis_lx_val,data.trig_l_val,data.trig_r_val]
     #rospy.set_param('base_station/drive_mode','RightDrive')
@@ -59,32 +63,50 @@ def LeftCallback(data):
 	rospy.loginfo("True")
 	rospy.set_param('base_station/drive_mode','XboxDrive')
 
+def HBeatCb():
+  global hbeat
+  global hbeat_cnt
+  hbeat = True
+  hbeat_cnt = 0
+
 def listener():
 
     rospy.init_node('arm', anonymous=True)
     rospy.set_param('base_station/drive_mode','XboxDrive')
     rospy.Subscriber("/base_station/rjs_raw_ctrl", RawCtrl, RightCallback)
     rospy.Subscriber("/base_station/ljs_raw_ctrl", RawCtrl, LeftCallback)
-
+    rospy.Subscriber("/heartbeat", Empty, HBeatCb)
     #rospy.spin()
     while(True):
 
  #	    sock.recv()
-		for i in range(0,len(values)):
-			field = 0x3
-			if values[i]<0:
-				field = 0x4
+                global hbeat_cnt
+                hbeat_cnt+=1
+                if (hbeat_cnt > max_hbeat):
+                    hbeat = False
+		    for i in range(0,len(values)):
+			field = 0x0
 			complete_id = (ids[i] << 4)+field
 			#complete_id = format(complete_id, '#013b')
-			value = int(abs(values[i])*4095)
-			if value<10:
-				value = 0  #Getting rid of off centre
-			bit1 = value>>8&0xFF
-			bit2 = value&0xFF # format(value&0xFF,"#010b")
-			#rospy.loginfo(bin(bit2))
-			msg = can.Message(arbitration_id=complete_id, data=[bit1, bit2], extended_id = False)
+			msg = can.Message(arbitration_id=complete_id, data=[], extended_id = False)
  			bus.send(msg)
-			#rospy.loginfo("Id %s", complete_id)
+			#rospy.loginfo("Id %s", field)
+		else:
+			for i in range(0,len(values)):
+				field = 0x3
+				if values[i]<0:
+					field = 0x4
+				complete_id = (ids[i] << 4)+field
+				#complete_id = format(complete_id, '#013b')
+				value = int(abs(values[i])*4095)
+				if value<10:
+					value = 0  #Getting rid of off centre
+				bit1 = value>>8&0xFF
+				bit2 = value&0xFF # format(value&0xFF,"#010b")
+				#rospy.loginfo(bin(bit2))
+				msg = can.Message(arbitration_id=complete_id, data=[bit1, bit2], extended_id = False)
+	 			bus.send(msg)
+				#rospy.loginfo("Id %s", field)
 			
 		time.sleep(0.1)
 
