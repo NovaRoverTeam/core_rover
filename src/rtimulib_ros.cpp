@@ -149,10 +149,10 @@ int main(int argc, char **argv)
 
             RPY_pub.publish(RPY_msg);
 
-            float heading = atan2(imu_data.compass.y(),imu_data.compass.x())/M_PI*180;
+            float heading = -1 * atan2(imu_data.compass.y(),imu_data.compass.x())/M_PI*180 + 180;
 
-            if (heading < 0) heading += 360.0;
-            else if (heading > 360) heading -= 360.0;
+            //if (heading < 0) heading += 360.0;
+            //else if (heading > 360) heading -= 360.0;
 
             compass_msg.approx_compass = heading;
 
