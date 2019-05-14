@@ -15,12 +15,15 @@ class WaypointClass(object):
         self.latitude = lat
         self.longitude = lng
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def __eq__(self, other):
         k_tolerance = 1e-5 # 0.00001 lat lng dist ~= 1m
         try:
             return (
-                math.isclose(self.latitude, other.latitude, abs_tol=k_tolerance) 
-                and math.isclose(self.longitude, other.longitude, abs_tol=k_tolerance))
+                self.latitude - other.latitude < k_tolerance 
+                and self.longitude - other.longitude < k_tolerance)
         except:
             return False
 

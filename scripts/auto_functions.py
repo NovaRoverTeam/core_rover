@@ -1,3 +1,4 @@
+from __future__ import division
 import rospy, math, numpy, copy
 from auto_classes import WaypointClass, Vector2D, RoveyPosClass
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
