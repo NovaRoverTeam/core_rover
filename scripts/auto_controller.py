@@ -8,7 +8,7 @@ from auto_classes import WaypointClass, RoveyPosClass
 from auto_functions import *
 # from core_rover.srv import *
 from transitions import Machine
-simulator = True
+simulator = False
 testing = False
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # Class representation of Autonomous state machine
@@ -37,11 +37,10 @@ class AutonomousStateMachine():
         global rovey_pos
         self.rovey_pos.setOrientation(rpyData.roll, rpyData.pitch, rpyData.yaw)
 
-
     def handleStartAuto(self,req):
         '''Service server handler for starting autonomous mission.'''
         if getMode() == 'Standby':
-            self.des_pos.setCoords(req.latitude, req.longitude) # Set the desired latitude and longitude from the service request
+            self.des_pos = WaypointClass(req.latitude, req.longitude) # Set the desired latitude and longitude from the service request
             self.toTraverse()
             return StartAutoResponse(True,"Inputting coords for Autonomous Mission.")
         else:
