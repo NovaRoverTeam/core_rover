@@ -241,6 +241,7 @@ int main(int argc, char **argv)
       else{
            talon_speed = 0;
            talon_steer = 0;
+           std::cout << "No beep boop detected" << std::endl;
 	   
       }
 
