@@ -11,6 +11,8 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 #include "std_msgs/Int8.h"
+#include <std_msgs/Empty.h>
+
 
 #define DEBUG 0
 ros::NodeHandle *nh;
@@ -18,7 +20,10 @@ std::string inputString;
 int fd;
 // Forward declare functions
 bool isNumber(std::string str);
-
+bool hbeat = false;
+int hbeat_cnt = 0;
+int hbeat_timeout = 3;
+int stop = 4;
 void DrillCmdCb(const std_msgs::Int8::ConstPtr& msg)
 {
   int data = msg->data;
@@ -27,6 +32,11 @@ void DrillCmdCb(const std_msgs::Int8::ConstPtr& msg)
   write(fd, &data, 1);
 }
 
+void HbeatCb(const std_msgs::Empty::ConstPtr& msg)
+{
+  hbeat = true;
+  hbeat_cnt = 0;
+}
 
 int main(int argc, char *argv[])
 {
@@ -36,15 +46,15 @@ int main(int argc, char *argv[])
   ros::init(argc,argv, "drill", ros::init_options::AnonymousName);
   nh = new ros::NodeHandle;
   ros::Subscriber drill_cmd_sub = nh->subscribe("/base_station/drill_cmd", 1, DrillCmdCb);
+  ros::Subscriber hbeat_sub = nh->subscribe("/heartbeat", 1, HbeatCb);
 
-
-  
+  ros::Rate loop_rate(10);
 
   char buf[64] = "temp text";
   struct termios toptions;
 
   /* open serial port */
-  fd = open("/dev/megaduino", O_RDWR | O_NOCTTY);
+  fd = open("/dev/ttyACM0", O_RDWR | O_NOCTTY);
   printf("fd opened as %i\n", fd);
   
   /* wait for the Arduino to reboot */
@@ -87,7 +97,14 @@ int main(int argc, char *argv[])
     }
 
   while (ros::ok()){
+    hbeat_cnt++;
+
+    if(hbeat_cnt > hbeat_timeout){
+        write(fd, &stop, 1);
+        hbeat = true;
+    }
     ros::spinOnce();
+    loop_rate.sleep();
 }
   while(false){
 
