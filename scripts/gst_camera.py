@@ -118,9 +118,9 @@ def gst_pipeline_stereo():
 
 
 # Returns the GST pipeline with updated variable values for single USB Cameras
-def gst_pipeline_single():
+def gst_pipeline_single(_idx):
   qual = QualityFactor(cur_qualityType)
-  return "v4l2src device=/dev/video{} ! videoscale ! video/x-raw, width={}, height={}, framerate={}/1, format={} ! jpegenc ! rtpjpegpay ! udpsink host=192.168.1.{} port={}".format(video_IDs[0], int(width * qual), int(height * qual), frame_rate, img_format, ip_end, port)
+  return "v4l2src device=/dev/video{} ! videoscale ! video/x-raw, width={}, height={}, framerate={}/1, format={} ! jpegenc ! rtpjpegpay ! udpsink host=192.168.1.{} port={}".format(video_IDs[_idx], int(width * qual), int(height * qual), frame_rate, img_format, ip_end, port)
 
 
 
@@ -303,7 +303,7 @@ while isRunning:
     elif feed_input == '1':
 	    # Change to Arm Camera 1 feed
 	    cur_feedType = FeedType.FT_Arm_1
-	    device_name = ''
+	    device_name = 'HD USB Camera'
 	    width = 640
 	    height = 480
 	    port = '5004'
@@ -313,7 +313,7 @@ while isRunning:
     elif feed_input == '2':
 	    # Change to Arm Camera 2 feed
 	    cur_feedType = FeedType.FT_Arm_2
-	    device_name = ''
+	    device_name = 'HD USB Camera'
 	    width = 640
 	    height = 480
 	    port = '5005'
@@ -374,13 +374,13 @@ while isRunning:
     bash_cmd = "ls /dev/ | grep video"
     output = subprocess.check_output(['bash','-c', bash_cmd])
 
-    # Create list of video device names
+    # Create list of video devices (ie video1)
     devs = []  
     s = StringIO.StringIO(output)
     for line in s:
 	    devs.append(line.strip("\n"))
 
-     # Create list of video device ids
+     # Create list of video device names (ie HD USB Camera)
     ids = []  
     for i in range(len(devs)):  
 	    bash_cmd  = "cat /sys/class/video4linux/" + devs[i] + "/name "
@@ -408,17 +408,17 @@ while isRunning:
       if cur_feedType == FeedType.FT_Stereo_Dual:
         gstCode = gst_pipeline_stereo()
       elif cur_feedType == FeedType.FT_Stereo_Single:
-        gstCode = gst_pipeline_single()
+        gstCode = gst_pipeline_single(0)
       elif cur_feedType == FeedType.FT_Telescopic:
-			  gstCode = gst_pipeline_single()
+			  gstCode = gst_pipeline_single(0)
       elif cur_feedType == FeedType.FT_FoscamBlack:
 			  gstCode = gst_pipeline_foscam(53)
       elif cur_feedType == FeedType.FT_FoscamWhite:
 			  gstCode = gst_pipeline_foscam(52)
       elif cur_feedType == FeedType.FT_Arm_1:
-			  gstCode = gst_pipeline_single()
+			  gstCode = gst_pipeline_single(1)
       elif cur_feedType == FeedType.FT_Arm_2:
-			  gstCode = gst_pipeline_single()
+			  gstCode = gst_pipeline_single(2)
 		
 		
 	  # Create pipeline
