@@ -84,17 +84,22 @@ def tennis_loc():
           rospy.loginfo(type(data))
           rospy.loginfo(data)
           if data != '0':
-              status_pub.publish("Found")
+              
               rospy.loginfo("Found")
               data_parsed = ast.literal_eval(data)
               #print(data_parsed)
               #array = Float32MultiArray(4,data_parsed)
               msg = DriverMsg(data_parsed,steer_limit,rpm_limit)
+              if cmd.rpm==0 and cmd.steer==0:
+                  status_pub.publish("Complete")
+              else:
+                  status_pub.publish("Found")
               rospy.loginfo('publishing: ' + str(msg) + str(data_parsed))
-              ball_pub.publish(msg)
+              if getAutoMode() == 'Destroy':
+                ball_pub.publish(msg)
           else:
               status_pub.publish("Lost")
-              rospy.loginfo("lost")
+              rospy.loginfo("Lost")
           rate_active.sleep()
     	else:
           rate_inactive.sleep()

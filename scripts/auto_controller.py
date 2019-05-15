@@ -36,6 +36,23 @@ class AutonomousStateMachine():
         '''Callback for roll, pitch, yaw from IMU'''
         global rovey_pos
         self.rovey_pos.setOrientation(rpyData.roll, rpyData.pitch, rpyData.yaw)
+    def tbCallback(self,tbData):
+        ''' Callback for tennisball status '''
+        if tbData == "Found":
+            if self.state not 'Destroy':
+              self.previousState = self.state
+              self.toDestroy()
+            self.wasLost = False
+        elif tbData=='Lost' and self.state is 'Destroy':
+            if self.wasLost == False:
+                self.lostTimer = time.time()
+                self.wasLost = True
+            else:
+                if time.time()-self.lostTimer > 5:
+                    # If lost for more than 5 seconds then go to search.
+                    self.toSearch()
+        elif tbData=='Complete':
+            self.toComplete()
 
     def handleStartAuto(self,req):
         '''Service server handler for starting autonomous mission.'''
@@ -82,6 +99,7 @@ class AutonomousStateMachine():
         self.drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
         self.gps_sub     = rospy.Subscriber("/nova_common/gps_data", NavSatFix, self.gpsCallback)
         self.rpy_sub     = rospy.Subscriber("/nova_common/RPY", RPY, self.rpyCallback)
+        self.tb_sub = rospy.Subscriber("/core_rover/navigation/tennis_stat", String, self.tbCallback)
         # Initialise the global state parameter
         self.setAutonomousMode('Off')
     #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
