@@ -4,7 +4,6 @@ import can
 from std_msgs.msg import String
 from std_msgs.msg import Empty
 from nova_common.msg import * #motor_arm
-from base_station.msg import *
 import time
 bustype = 'socketcan_native'
 channel = 'can1' #cantx is set virtual can, can set up by running the run_can.batch file in sim
