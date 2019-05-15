@@ -27,9 +27,13 @@ def objective_node():
     while not rospy.is_shutdown():
         if is_ready():
             msg = NavSatFix()
+            msg.header.stamp = rospy.get_rostime()
             msg.latitude = state_objective_latitude
             msg.longitude = state_objective_longitude
             objective_publisher.publish(msg)
         else:
             rospy.logdebug("Objective node not ready to publish.")
         publish_rate.sleep()
+
+if __name__ == "__main__":
+    objective_node()
