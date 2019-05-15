@@ -105,11 +105,14 @@ class AutonomousStateMachine():
         rospy.loginfo("orientation: %s", self.orientation)
         rospy.loginfo("waypoint pos: %s", self.waypoint)
         rospy.loginfo("current pos: %s, %s", self.rovey_pos.latitude, self.rovey_pos.longitude)
-        rpm_limit   = rospy.get_param('rpm_limit',10)
-        steer_limit = rospy.get_param('steer_limit',10)
+        rpm_limit   = rospy.get_param('rpm_limit',0.3)
+        steer_limit = rospy.get_param('steer_limit',0.5)
         drive_msg = DriveCmd()
-        drive_msg.rpm       = 10
-        drive_msg.steer_pct = 0.5*turn
+        drive_msg.rpm       = 50 * rpm_limit 
+        drive_msg.steer_pct = turn * steer_limit
+        if getMode() == "Standby":
+            drive_msg.rpm       = 0
+            drive_msg.steer_pct = 0
         self.drive_pub.publish(drive_msg)
     def metricCalculation(self):
         self.orientation = self.rovey_pos.yaw
