@@ -36,6 +36,8 @@ def RightCallback(data):
 		else:
 			sub_data = sub_data/(0.435)
 		data_array[i]=sub_data
+                if(i == 3):
+                    data_array[i] = -sub_data
         values[i+3] = data_array[i]**1.8 if data_array[i]>0 else -(abs(data_array[i])**1.8)
 	#rospy.loginfo(data_array[i])
         if data.but_b_trg == True:
