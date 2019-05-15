@@ -34,7 +34,7 @@ def sensors_pub():
  
     gps_sub     = rospy.Subscriber("/nova_common/gps_data", NavSatFix, gpsCallback)
     rpy_sub     = rospy.Subscriber("/nova_common/RPY", RPY, rpyCallback)
-    compass_sub = rospy.Subscriber("/nova_common/approx_compass", , compassCallback)
+    compass_sub = rospy.Subscriber("/nova_common/approx_compass", ApproxCompass, compassCallback)
     status_pub  = rospy.Publisher("/core_rover/auto_status", AutoStatus, queue_size=10)
     
     while not rospy.is_shutdown():

@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
   ros::init(argc,argv, "drill", ros::init_options::AnonymousName);
   nh = new ros::NodeHandle;
   ros::Subscriber drill_cmd_sub = nh->subscribe("/base_station/drill_cmd", 1, DrillCmdCb);
-  ros::Subscriber hbeat_sub = nh->subscribe("/heartbeat", 1, HbeatCb);
+//  ros::Subscriber hbeat_sub = nh->subscribe("/heartbeat", 1, HbeatCb);
 
   ros::Rate loop_rate(10);
 
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
   struct termios toptions;
 
   /* open serial port */
-  fd = open("/dev/ttyACM0", O_RDWR | O_NOCTTY);
+  fd = open("/dev/megaduino", O_RDWR | O_NOCTTY);
   printf("fd opened as %i\n", fd);
   
   /* wait for the Arduino to reboot */
@@ -97,14 +97,14 @@ int main(int argc, char *argv[])
     }
 
   while (ros::ok()){
-    hbeat_cnt++;
+//    hbeat_cnt++;
 
-    if(hbeat_cnt > hbeat_timeout){
-        write(fd, &stop, 1);
-        hbeat = true;
-    }
+//    if(hbeat_cnt > hbeat_timeout){
+//        write(fd, &stop, 1);
+//        hbeat = true;
+//    }
     ros::spinOnce();
-    loop_rate.sleep();
+//    loop_rate.sleep();
 }
   while(false){
 
