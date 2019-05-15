@@ -17,6 +17,8 @@ resets = [0,0,0,0]
 hbeat = False;
 hbeat_cnt = 0;
 max_hbeat = 3;
+ignore_endstops = False;
+
 def RightCallback(data):
     data_array = [-data.axis_ly_val,data.axis_lx_val,data.trig_l_val,data.trig_r_val]
     #rospy.set_param('base_station/drive_mode','RightDrive')
@@ -43,6 +45,12 @@ def RightCallback(data):
         if data.but_b_trg == True:
             rospy.loginfo("Switching to joystick drive")
             rospy.set_param('base_station/drive_mode','RightDrive')
+        if data.but_b_trg == True:
+            if ignore_endstops==False:
+                ignore_endstops = True
+            else:
+                ignore_endstops = False
+            rospy.loginfo(ignore_endstops)
 
 
 def LeftCallback(data):
@@ -95,10 +103,16 @@ def listener():
 			#rospy.loginfo("Id %s", field)
 		else:
 			for i in range(0,len(values)):
-				field = 0x3
-				if values[i]<0:
-					field = 0x4
+                                if (i==4 or i==6) and ignore_endstops == True:
+                                     field = 0x5
+                                     if values[i]<0:
+                                         field = 0x6 
+                                else:
+				     field = 0x3
+				     if values[i]<0:
+					 field = 0x4
 				complete_id = (ids[i] << 4)+field
+
 				#complete_id = format(complete_id, '#013b')
 				value = int(abs(values[i])*4095)
 				if value<10:
