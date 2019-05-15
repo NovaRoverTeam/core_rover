@@ -431,22 +431,22 @@ while isRunning:
 		  # Get the appropriate GST pipeline command
       if cur_feedType == FeedType.FT_Stereo_Dual:
         gstCode = gst_pipeline_stereo(0)
-      elif cur_feedType == FeedType.FT_Stereo_Single:
+			elif cur_feedType == FeedType.FT_Stereo_Single:
         gstCode = gst_pipeline_single(0)
-      elif cur_feedType == FeedType.FT_Telescopic:
+			elif cur_feedType == FeedType.FT_Telescopic:
 			  gstCode = gst_pipeline_single(0)
-      elif cur_feedType == FeedType.FT_FoscamBlack:
+			elif cur_feedType == FeedType.FT_FoscamBlack:
 			  gstCode = gst_pipeline_foscam(53)
-      elif cur_feedType == FeedType.FT_FoscamWhite:
+			elif cur_feedType == FeedType.FT_FoscamWhite:
 			  gstCode = gst_pipeline_foscam(52)
-      elif cur_feedType == FeedType.FT_Arm_1:
+			elif cur_feedType == FeedType.FT_Arm_1:
 			  gstCode = gst_pipeline_single(1)
-      elif cur_feedType == FeedType.FT_Arm_2:
-			  gstCode = gst_pipeline_single(2)
+			elif cur_feedType == FeedType.FT_Arm_2:
+				gstCode = gst_pipeline_single(2)
 			elif cur_feedType == FeedType.FT_Stereo_Dual_2:
-        gstCode = gst_pipeline_stereo(2)
-      elif cur_feedType == FeedType.FT_Stereo_Single_2:
-        gstCode = gst_pipeline_single(2)
+				gstCode = gst_pipeline_stereo(2)
+			elif cur_feedType == FeedType.FT_Stereo_Single_2:
+				gstCode = gst_pipeline_single(2)
 		
 		
 	  # Create pipeline
