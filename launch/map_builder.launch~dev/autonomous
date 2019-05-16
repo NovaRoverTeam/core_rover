@@ -1,0 +1,41 @@
+<launch>
+	<arg name="stereo" default="true">
+	<node pkg="rtabmap_ros" name="rtabmap_grid" type="rtabmap">
+		<!-- subscribe to raw point clouds -->
+		<remap from="scan_cloud" to="/nova_common/ptcloud"/>
+		<remap from="odom" to="/ekf/Odometry"/>
+
+		<!-- publish projected map -->
+		<>
+		<param name="subscribe_scan_cloud" value="true"/>
+
+		<param name="frame_id" value="base_link"/>
+		<param name="map_frame_id" value="map"/>
+		<remap from="odom" to="/ekf/Odometry"/>
+		
+		<!-- <param name="map_filter_radius" value="7.0"/> -->
+		<!-- <param name="map_filter_angle" value="0.0"> -->
+
+		<!-- define map grid params -->
+		<!-- min 20m wide map -->
+		<param name="grid_size" value="50">
+
+		<!-- define grid cell params -->
+		<param name="grid_cell_size" value="0.2"/>
+		<param name="grid_eroded" value="false"/>
+		<param name="grid_unknown_space_filled" value="false"/>
+
+		<!-- define map downward projection params -->
+		<param name="proj_max_ground_angle" value="30.0"/>
+		<param name="proj_min_cluster_size" value="20"/>
+
+		<!-- all points above 20cm are obstacles -->
+		<param name="Grid/MaxGroundHeight" type="string" value="0.2"/>
+		<!-- all points below 2m are obstacles -->
+		<param name="proj_max_height" value="2.0"/>
+		<!-- define footprint params -->
+		<!-- param name="Grid/FootprintLength" value="0.0"/-->
+		<!-- param name="Grid/FootprintWidth" value="0.0"/-->
+
+	</node>
+</launch>
