@@ -61,7 +61,7 @@ class AutonomousStateMachine():
                 if (time.time()-self.lostTimer) > 5:
                     # If lost for more than 5 seconds then go to search.
                     rospy.loginfo("cat3")
-                    self.toSearch()
+                    self.toSearch() #todo: go to panning instead
         elif tbData.data == "Complete":
             self.toComplete()
 
@@ -97,6 +97,7 @@ class AutonomousStateMachine():
         {   'source': ['Off','Traverse','Search'],'dest':'Traverse','after':'startTraverse','trigger':'toTraverse'},
         {   'source': ['Traverse','Panning'],'dest':'Search','after':'startSearch','trigger':'toSearch'},
         {   'source': ['Traverse','Search','Panning'],'dest':'Destroy','after':'startDestroy','trigger':'toDestroy'},
+        {   'source': 'Destroy','dest':'Search','after':'startSearch','trigger':'toSearch'},
         {   'source': 'Destroy','dest':'Panning','after':'startPanning','trigger':'toPanning'},
         {   'source': 'Destroy','dest':'Complete','after':'startComplete','trigger':'toComplete'},
         {   'source': ['Traverse','Search','Destroy','Panning','Complete'],
