@@ -1,0 +1,8 @@
+<launch>
+
+    <node pkg="gps_common" type="utm_odometry_node" name="gps_common">
+        <remap from="fix" to="/core_rover/current_objective"/>
+        <remap from="odom" to="/core_rover/current_objective_pose"/>
+    </node>
+
+</launch>
