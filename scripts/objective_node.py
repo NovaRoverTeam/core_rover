@@ -7,8 +7,8 @@ state_objective_latitude = None
 state_objective_longitude = None
 
 def is_ready():
-    return state_objective_latitude != None and\
-           state_objecctive_longitude != None
+    return state_objective_latitude != None \
+           and state_objecctive_longitude != None
 
 def handle_receive_objective(req):
     state_objective_latitude = req.latitude
@@ -16,7 +16,7 @@ def handle_receive_objective(req):
 
 def objective_node():
 
-    # node should update objective when notified by server
+    # node should update objective when notifi3 ed by server
     server = Rospy.Service("/core_rover/start_auto", StartAuto, handle_receive_objective)
 
     # publish objective
