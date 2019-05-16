@@ -11,6 +11,7 @@ MUST HAVE Linux version 16.04 with ROS kinetic installed.
 http://wiki.ros.org/ROS/Tutorials
 
 sudo apt-get install libsdl2-dev
+sudo apt-get install ros-kinetic-robot-localization
 
 Create a directory with path core_rover/include/lib/x86-64 and include the Phoenix-Linux-SocketCAN-Example/lib/x86-64 binaries from this link in there:
 ```
