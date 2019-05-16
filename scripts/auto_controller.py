@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import rospy,math,time
 from sensor_msgs.msg import NavSatFix, MagneticField
+from std_msgs.msg import String
 from webots_ros.srv import set_float
 from nova_common.msg import *
 from nova_common.srv import *
@@ -24,8 +25,16 @@ class AutonomousStateMachine():
     waypoint = WaypointClass(0, 0) #Object GPS coords of current waypoint.
     waypoint_list = wayPoint(1,1,0,0,4)
     waypoint_iter = iter(waypoint_list) #Iterable object for way points to be sent.
-
+    wasLost = False #if the tennis ball has been found but is now lost
+    lostTimer = 0 #timout for lost tennis ball
     # ROS Publisher, Subscriber and Service Callbacks
+    def tdriveCallback(self,driveData):
+        '''Callback for the location of the rover'''
+        drive_msg = DriveCmd()
+        drive_msg.rpm       = driveData.rpm
+        drive_msg.steer_pct = driveData.steer_pct
+        self.drive_pub.publish(drive_msg)
+        
     def gpsCallback(self,gpsData):
         '''Callback for the location of the rover'''
         lat = gpsData.latitude
@@ -38,20 +47,22 @@ class AutonomousStateMachine():
         self.rovey_pos.setOrientation(rpyData.roll, rpyData.pitch, rpyData.yaw)
     def tbCallback(self,tbData):
         ''' Callback for tennisball status '''
-        if tbData == "Found":
-            if self.state not 'Destroy':
-              self.previousState = self.state
+        rospy.loginfo(getAutonomousMode())
+        if tbData.data == "Found":
+            if getAutonomousMode() != "Destroy":
+              #self.previousState = self.state
               self.toDestroy()
             self.wasLost = False
-        elif tbData=='Lost' and self.state is 'Destroy':
+        elif tbData.data == "Lost" and getAutonomousMode() == "Destroy":
             if self.wasLost == False:
                 self.lostTimer = time.time()
                 self.wasLost = True
             else:
-                if time.time()-self.lostTimer > 5:
+                if (time.time()-self.lostTimer) > 5:
                     # If lost for more than 5 seconds then go to search.
+                    rospy.loginfo("cat3")
                     self.toSearch()
-        elif tbData=='Complete':
+        elif tbData.data == "Complete":
             self.toComplete()
 
     def handleStartAuto(self,req):
@@ -97,9 +108,10 @@ class AutonomousStateMachine():
         transitions=transitions, ignore_invalid_triggers=True)
             # Ros Publishers and Subscribers
         self.drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
+        self.tdrive_sub  = rospy.Subscriber("/core_rover/driver/drive_cmd2", DriveCmd, self.tdriveCallback)
         self.gps_sub     = rospy.Subscriber("/nova_common/gps_data", NavSatFix, self.gpsCallback)
         self.rpy_sub     = rospy.Subscriber("/nova_common/RPY", RPY, self.rpyCallback)
-        self.tb_sub = rospy.Subscriber("/core_rover/navigation/tennis_stat", String, self.tbCallback)
+        self.tb_sub      = rospy.Subscriber("/core_rover/navigation/tennis_stat", String, self.tbCallback)
         # Initialise the global state parameter
         self.setAutonomousMode('Off')
     #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -123,12 +135,12 @@ class AutonomousStateMachine():
         rospy.loginfo("orientation: %s", self.orientation)
         rospy.loginfo("waypoint pos: %s", self.waypoint)
         rospy.loginfo("current pos: %s, %s", self.rovey_pos.latitude, self.rovey_pos.longitude)
-        rpm_limit   = rospy.get_param('rpm_limit',0.3)
-        steer_limit = rospy.get_param('steer_limit',0.5)
+        rpm_limit   = rospy.get_param('rpm_limit', 0.3)
+        steer_limit = rospy.get_param('steer_limit', 0.3)
         drive_msg = DriveCmd()
         drive_msg.rpm       = 50 * rpm_limit 
         drive_msg.steer_pct = turn * steer_limit
-        if getMode() == "Standby":
+        if getMode() == "Standby" and not testing:
             drive_msg.rpm       = 0
             drive_msg.steer_pct = 0
         self.drive_pub.publish(drive_msg)
@@ -201,6 +213,9 @@ class AutonomousStateMachine():
     def Panning(self):
         self.metricCalculation()
         self.setAutonomousMode('Panning')
+    def startComplete(self):
+        self.metricCalculation()
+        self.setAutonomousMode('Complete')
     def Complete(self):
         self.metricCalculation()
         self.setAutonomousMode('Complete')
@@ -232,6 +247,7 @@ def auto_controller():
         time.sleep(2)
         SM.des_pos = WaypointClass(-37.6617819, 145.3692175)
         SM.toTraverse()
+        SM.toSearch()
     ## end testing
     while not rospy.is_shutdown():
         if getMode() == 'Auto' or testing:
