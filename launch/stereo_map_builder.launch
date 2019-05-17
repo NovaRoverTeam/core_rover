@@ -7,13 +7,11 @@
   <arg name="stereo_sync" default="false" /> 
 
   <arg name="CAMERA_NAME" default="elp"/>
-  <arg name="frame_id" default="base_footprint"/>
+  <arg name="frame_id" default="base_link"/>
 
-  <param name="use_sim_time" type="bool" value="True"/>
-
-  <!-- Just to uncompress images for stereo_image_rect -->
-  <node name="republish_left"  type="republish" pkg="image_transport" args="compressed in:=/elp/left/image_raw raw out:=/elp/left/image_raw_relay" />
-  <node name="republish_right" type="republish" pkg="image_transport" args="compressed in:=/elp/right/image_raw raw out:=/elp/right/image_raw_relay" />
+  <param name="use_sim_time" type="bool" value="true"/>
+  <node name="republish_left" type="republish" pkg="image_transport" args="compressed in:=/elp/left/image_raw raw out:=/elp/left/image_raw_relay"/>
+  <node name="republish_right" type="republish" pkg="image_transport" args="compressed in:=/elp/right/image_raw raw out:=/elp/right/image_raw_relay"/>
 
   <!-- Run the ROS package stereo_image_proc for image rectification -->
   <group ns="$(arg CAMERA_NAME)" >
@@ -29,7 +27,7 @@
         <remap from="left/image_rect"   to="left/image_rect_color"/>
         <remap from="right/image_rect"   to="right/image_rect"/>
         <remap from="left/camera_info"   to="left/camera_info"/>
-        <remap from="right/camera_info"   to="right/camera_info"/>s
+        <remap from="right/camera_info"   to="right/camera_info"/>
      </node> 
 
   </group>
