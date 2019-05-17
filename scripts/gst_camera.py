@@ -331,8 +331,8 @@ while isRunning:
 	    # Change to Black Foscam feed
 	    cur_feedType = FeedType.FT_FoscamBlack
 	    device_name = 'Black Foscam'
-	    width = 640
-	    height = 480
+	    width = 720
+	    height = 540
 	    port = '5002'
 	    isUSB = False
 	    cam_index = 3
@@ -341,8 +341,8 @@ while isRunning:
 	    # Change to White Foscam feed
 	    cur_feedType = FeedType.FT_FoscamWhite
 	    device_name = 'White Foscam'
-	    width = 640
-	    height = 480
+	    width = 720
+	    height = 540
 	    port = '5003'
 	    isUSB = False
 	    cam_index = 4
