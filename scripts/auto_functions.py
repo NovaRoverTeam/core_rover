@@ -1,5 +1,6 @@
-import rospy, math,numpy
-from auto_classes import WaypointClass 
+from __future__ import division
+import rospy, math, numpy, copy
+from auto_classes import WaypointClass, Vector2D, RoveyPosClass
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # bearingInDegrees():
 #    Calculates the direction an object is pointing in relation to the
@@ -74,9 +75,9 @@ def turnDirection(beta, orientation):
 def getMode():
     return rospy.get_param('/core_rover/Mode','Standby')
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
-# getAutoMode(): Retrieve Mode from parameter server.
+# getAutonomousMode(): Retrieve Mode from parameter server.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
-def getAutoMode():
+def getAutonomousMode():
     return rospy.get_param('/core_rover/autonomous_mode','Off')
 
  #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -107,3 +108,33 @@ def spiralSearch(current_pos,no_of_waypoints,rang_min,rang_max):
     for i in range(len(theta)):
         searchPath.append(WaypointClass(lat[i],lng[i]))
     return searchPath
+
+#--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+# sectorSearch(center_pos, search_radius): Generate waypoints for a sector search.
+# Takes center position of search path in lat lng and search radius in meters.
+#--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
+def sectorSearch(center_pos, search_radius, segment_number):
+    k_segment_count = segment_number
+    k_segment_angle = 360/k_segment_count
+    k_meters_per_latlng = 111000
+    k_latlng_radius = search_radius / k_meters_per_latlng
+    search_path = []
+
+    # Calculate first waypoint (after first leg)
+    vector_from_center = Vector2D.makeFromBearingMagnitude(center_pos.yaw, k_latlng_radius)
+    first_waypoint = WaypointClass.makeShiftedWaypoint(center_pos, vector_from_center)
+    search_path.append(first_waypoint)
+    
+    # Calculate following waypoints until back to start
+    new_waypoint = None
+    while new_waypoint != first_waypoint:
+        # Add waypoint after crossleg
+        vector_from_center.rotate(k_segment_angle)
+        search_path.append(WaypointClass.makeShiftedWaypoint(center_pos, vector_from_center))
+
+        # Add waypoint after leg
+        vector_from_center.invert()
+        new_waypoint = WaypointClass.makeShiftedWaypoint(center_pos, vector_from_center)
+        search_path.append(new_waypoint)
+
+    return search_path

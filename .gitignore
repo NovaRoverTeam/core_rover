@@ -3,6 +3,14 @@ lib/x86-64/*
 scripts/rover_sm.pyc
 *.bag
 
+battery_data.txt
+
+scripts/auto_classes.pyc
+
+scripts/auto_functions.pyc'
+
+src/battery_reader
+
 include/ctre/phoenix/CCI/CANifier_CCI\.h
 
 include/ctre/phoenix/CCI/Logger_CCI\.h
@@ -67,6 +75,11 @@ scripts/test/stereo_outdoor.bag
 
 scripts/test/merged_lidar_test.bag
 
+.vscode/
+
+scripts/.vscode/
+
+src/.vscode/
 
 scripts/play_uav_bag\.sh\.save
 

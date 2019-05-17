@@ -147,7 +147,12 @@ int main(int argc, char **argv)
   talon0.SetInverted(true);
   talon1.SetInverted(true);
   talon2.SetInverted(false);
+  talon0.SetNeutralMode(Brake);
+  talon1.SetNeutralMode(Brake);
+  talon2.SetNeutralMode(Brake);
   talon3.SetNeutralMode(Brake);
+  talon4.SetNeutralMode(Brake);
+  talon5.SetNeutralMode(Brake);
   
   double delay = 0.0;
   talon0.ConfigOpenloopRamp(delay,0);
@@ -161,18 +166,20 @@ int main(int argc, char **argv)
  //printf("test");
 
   //Configure talons for pid control
-  //ConfigTalon(&talon5);
-  //ConfigTalon(&talon4);
- // ConfigTalon(&talon3);
- // ConfigTalon(&talon2);
- // ConfigTalon(&talon1);
-  //ConfigTalon(&talon0);
+  ConfigTalon(&talon5);
+  ConfigTalon(&talon4);
+  ConfigTalon(&talon3);
+  ConfigTalon(&talon2);
+  ConfigTalon(&talon1);
+  ConfigTalon(&talon0);
   //printf("test!");
   
 
   ros::init(argc, argv, "driver", ros::init_options::AnonymousName); // Initialise node
   n = new ros::NodeHandle;
   ros::Rate loop_rate(LOOP_HERTZ);
+
+  n->setParam("/core_rover/driver/control_mode","Voltage"); //Sets control mode of talons
 
   // Declare subscriber to drive cmds
   ros::Subscriber drive_cmd_sub = n->subscribe("/core_rover/driver/drive_cmd", 1, DriveCmdCb);
@@ -181,12 +188,10 @@ int main(int argc, char **argv)
   // Boolean variable describing whether we are using the simulator
   // or a real rover. 
   string vehicle;
-  bool simulator;
-  simulator = false;
+  bool simulator = false;
 
-  const int hbeat_timeout = 2*LOOP_HERTZ;
+  const int hbeat_timeout = 0.5*LOOP_HERTZ;
 
-	//It's supposed to detect the vehicle but this don't work yet :'(
   string paramKey = "Vehicle";
   n->getParam(paramKey, vehicle);
   if (vehicle == "Simulator"){
@@ -235,7 +240,12 @@ int main(int argc, char **argv)
 
       float talon_speed;
       float talon_steer;
+      string mode;
+      string paramKey2 = "/core_rover/Mode";
+      n->getParam(paramKey2, mode);
 
+      if(hbeat || mode.compare("Auto") == 0){
+           talon_speed = speed / 50.0;
       if(hbeat){
            talon_speed = speed / 50.0;
            talon_steer = steer / 100.0;
@@ -243,6 +253,7 @@ int main(int argc, char **argv)
       else{
            talon_speed = 0;
            talon_steer = 0;
+           std::cout << "No beep boop detected" << std::endl;
 	   
       }
 
@@ -297,6 +308,85 @@ int main(int argc, char **argv)
       //printf("%lf",talon_speed);
       
       //LEFT SIDE
+      
+      float delta_right = right - prev_right;
+      float delta_left = left - prev_left;
+      if (abs(right-0.0) < abs(prev_right-0.0) && abs(delta_right)>max_delta){
+          if (delta_right > 0){
+               right = prev_right + max_delta;
+               delta_right = max_delta;
+          }
+          else{
+               right = prev_right - max_delta;
+               delta_right = max_delta;
+          }
+      }
+      
+      if (abs(left-0.0) < abs(prev_left-0.0) && abs(delta_left)>max_delta){
+          if (delta_left > 0){
+               left = prev_left + max_delta;
+               delta_left = max_delta;
+          }
+          else{
+               left = prev_left - max_delta;
+               delta_left = max_delta;
+          }
+      }
+      prev_right = right;
+      prev_left = left;
+      
+      if(abs(right)>0.4){
+          right = 0.0;
+      }
+      if(abs(left)>0.4){
+          left = 0.0;
+      }
+      //printf("%lf",talon_speed);
+      
+      float delta_right = right - prev_right;
+      float delta_left = left - prev_left;
+ 
+    //Slowing down ramp
+     if (abs(right)<0.02){  // If value is basically 0, set it off.
+         right = 0;
+      }
+      else{
+      if (abs(right) < abs(prev_right) && abs(delta_right)>max_delta){
+          if (delta_right > 0){
+               right = prev_right + max_delta;
+               delta_right = max_delta;
+          }
+          else{
+               right = prev_right - max_delta;
+               delta_right = max_delta;
+          }
+      }
+      }
+
+     
+      if(abs(left)<0.02){
+         left = 0;
+      }
+      else{
+      if (abs(left) < abs(prev_left) && abs(delta_left)>max_delta){
+          if (delta_left > 0){
+               left = prev_left + max_delta;
+               delta_left = max_delta;
+          }
+          else{
+               left = prev_left - max_delta;
+               delta_left = max_delta;
+          }
+      }
+      prev_right = right;
+      prev_left = left;
+      }
+/*      if(abs(right)>0.4){
+          right = 0.0;
+      }
+      if(abs(left)>0.4){
+          left = 0.0;
+      } */
       talon0.Set(ControlMode::PercentOutput, left);
       talon1.Set(ControlMode::PercentOutput, left);
       talon2.Set(ControlMode::PercentOutput, left);

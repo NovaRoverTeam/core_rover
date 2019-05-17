@@ -15,9 +15,10 @@
         <param name="frequency" value="30"/>
         <param name="sensor_timeout" value="0.1"/>
         <param name="two_d_mode" value="false"/>
+	<param name="acceleration_limits" value = "[1.3, 0.0, 0.0, 0.0, 0.0, 4.5]"/>
 
         <!-- may need to change these depending on the frame_ids used by the playback data -->
-        <param name="map_frame" value="UTM"/>
+        <param name="map_frame" value="utm"/>
         <param name="odom_frame" value="odom"/>
         <!--param name="base_link_frame" value="base_link"/-->
         <param name="base_link_frame" value="imu"/> <!-- to run with uav-bag -->
@@ -26,20 +27,20 @@
         <!-- SUBUSCRIBE to: IMU "/nova_common/IMU" -->
 	
         <param name="imu0" value="/nova_common/IMU"/>
-        <param name="imu0_differential" value="false"/> <!-- set false if with navsat transform -->
-        <rosparam param="imu0_config">[true,true,true,
+        <param name="imu0_remove_gravitational_acceleration" value = "true"/>
+	<param name="imu0_differential" value="false"/> <!-- set false if with navsat transform -->
+        <rosparam param="imu0_config">[false,false,false,
                                        true,true,true,
+                                       false,false,false,
                                        true,true,true,
-                                       true,true,true,
-                                       true,true,true]</rosparam>
-	<param name="odom0" value="/stereo_odometry"/>
+                                       true,true,false]</rosparam>
 
+	<param name="odom0" value="/stereo_odometry"/>
 	<rosparam param="odom0_config">[true,  true,  false,
                                false, false, true,
                                true,  false, false,
                                false, false, true,
                                false, false, false]</rosparam> 
-
 
         <!-- PUBLISH to: "/ekf/Odometry" -->
         <remap from="/odometry/filtered" to="/ekf/Odometry/local"/>
@@ -55,11 +56,11 @@
         <param name="two_d_mode" value="false"/>
 
         <!-- may need to change these depending on the frame_ids used by the playback data -->
-        <param name="map_frame" value="UTM"/>
+        <param name="map_frame" value="utm"/>
         <param name="odom_frame" value="odom"/>
         <!--param name="base_link_frame" value="base_link"/-->
         <param name="base_link_frame" value="imu"/> <!-- to run with uav-bag -->
-        <param name="world_frame" value="UTM"/>
+        <param name="world_frame" value="utm"/>
 
         <!-- SUBUSCRIBE to: IMU "/nova_common/IMU" -->
 	
@@ -70,8 +71,8 @@
                                        true,true,true,
                                        true,true,true,
                                        true,true,true]</rosparam>
-	<param name="odom0" value="/stereo_odometry"/>
 
+	<param name="odom0" value="/stereo_odometry"/>
 	<rosparam param="odom0_config">[true,  true,  false,
                                false, false, true,
                                true,  false, false,
@@ -79,6 +80,7 @@
                                false, false, false]</rosparam> 
 
         <!-- PUBLISH to: "/ekf/Odometry" -->
+
         <remap from="/odometry/filtered" to="/ekf/Odometry/global"/>
     </node>
 

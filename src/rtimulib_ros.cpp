@@ -28,6 +28,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
 #include <nova_common/RPY.h>
+#include <nova_common/ApproxCompass.h>
 #include <math.h> 
 #include <tuple>
 
@@ -76,6 +77,7 @@ int main(int argc, char **argv)
 
     ros::Publisher imu_pub = nh.advertise<sensor_msgs::Imu>("/nova_common/IMU", 1);
     ros::Publisher RPY_pub = nh.advertise<nova_common::RPY>("/nova_common/RPY", 1);
+    ros::Publisher compass_pub = nh.advertise<nova_common::ApproxCompass>("/nova_common/approx_compass", 1);
 
     // Load the RTIMULib.ini config file
     RTIMUSettings *settings = new RTIMUSettings(calibration_file_path.c_str(),
@@ -101,6 +103,7 @@ int main(int argc, char **argv)
 
     sensor_msgs::Imu imu_msg;
     nova_common::RPY RPY_msg;
+    nova_common::ApproxCompass compass_msg;
 
 
     while (ros::ok())
@@ -139,6 +142,19 @@ int main(int argc, char **argv)
             RPY_msg.yaw = yaw ;
 
             RPY_pub.publish(RPY_msg);
+
+            float heading = -1 * atan2(imu_data.compass.y(),imu_data.compass.x())/M_PI*180 + 180;
+
+            //if (heading < 0) heading += 360.0;
+            //else if (heading > 360) heading -= 360.0;
+
+            compass_msg.approx_compass = heading;
+
+            compass_pub.publish(compass_msg);
+
+
+
+
 
         }
         ros::spinOnce();

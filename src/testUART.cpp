@@ -39,11 +39,11 @@ int main(int argc, char *argv[])
   struct termios toptions;
 
   /* open serial port */
-  fd = open("/dev/ttyACM0", O_RDWR | O_NOCTTY);
+  fd = open("/dev/megaduino", O_RDWR | O_NOCTTY);
   printf("fd opened as %i\n", fd);
   
   /* wait for the Arduino to reboot */
-  usleep(3500000);
+  usleep(1000000);
   
   /* get current serial port settings */
   tcgetattr(fd, &toptions);
