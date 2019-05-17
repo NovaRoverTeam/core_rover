@@ -39,7 +39,7 @@ def Drive_Forward(w,h,threshold):
     return avg<threshold
 
 def DriverMsg(data,steer_limit,rpm_limit):
-    steer = {'left':-steer_limit * 50,'centre':0,'right':steer_limit*50}
+    steer = {'left':-steer_limit * 100,'centre':0,'right':steer_limit*100}
     cmd = DriveCmd()
     cmd.rpm = 0
     direction = X_Zone(data[0])

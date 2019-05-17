@@ -219,6 +219,7 @@ class AutonomousStateMachine():
         self.setAutonomousMode('Complete')
     def Complete(self):
         self.metricCalculation()
+        rospy.loginfo("yayayaya")
         self.setAutonomousMode('Complete')
     def Off(self):
         self.metricCalculation()
