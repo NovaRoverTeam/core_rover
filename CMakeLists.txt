@@ -18,7 +18,6 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   tf
   webots_ros
-  octomap REQUIRED
 )
 
 find_package (Threads REQUIRED)
@@ -46,7 +45,7 @@ catkin_package(
 include_directories(
   # include
   ${catkin_INCLUDE_DIRS}
-  "${PROJECT_SOURCE_DIR}/include
+  "${PROJECT_SOURCE_DIR}"/include
 )
 
 
@@ -86,5 +85,3 @@ target_link_libraries(rtimulib_ros
   ${catkin_LIBRARIES}
   RTIMULib
 )
-
-target_link_libraries(octomap ${catkin_LIBRARIES})
