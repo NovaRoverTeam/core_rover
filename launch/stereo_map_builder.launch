@@ -100,9 +100,10 @@
         <param name="Grid/MaxGroundAngle" value="45"/>
         <param name="Grid/MinClusterSize" value="20"/>
         <param name="Grid/MaxGroundHeight" value="0.2"/>
+        <param name="Grid/MinGroundHeight" value="-0.2"/>
 
-        <param name="Grid/FootprintLength" value="0.0"/>
-        <param name="Grid/FootprintWidth" value="0.0"/>
+        <param name="Grid/FootprintLength" value="1.0"/>
+        <param name="Grid/FootprintWidth" value="1.0"/>
         <param name="Grid/DepthDecimation" type="string" value="4"/>
 
          <!-- RTAB-Map's parameters -->
