@@ -113,7 +113,7 @@ def spiralSearch(current_pos,no_of_waypoints,rang_min,rang_max):
 # sectorSearch(center_pos, search_radius): Generate waypoints for a sector search.
 # Takes center position of search path in lat lng and search radius in meters.
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
-def sectorSearch(center_pos, search_radius, segment_number):
+def sectorSearch(center_pos, search_radius, segment_number, start_bearing):
     k_segment_count = segment_number
     k_segment_angle = 360/k_segment_count
     k_meters_per_latlng = 111000
@@ -121,7 +121,7 @@ def sectorSearch(center_pos, search_radius, segment_number):
     search_path = []
 
     # Calculate first waypoint (after first leg)
-    vector_from_center = Vector2D.makeFromBearingMagnitude(center_pos.yaw, k_latlng_radius)
+    vector_from_center = Vector2D.makeFromBearingMagnitude(start_bearing, k_latlng_radius)
     first_waypoint = WaypointClass.makeShiftedWaypoint(center_pos, vector_from_center)
     search_path.append(first_waypoint)
     
