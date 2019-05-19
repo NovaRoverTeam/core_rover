@@ -116,7 +116,7 @@ class AutonomousStateMachine():
             # Ros Publishers and Subscribers
         self.drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
         self.tdrive_sub  = rospy.Subscriber("/core_rover/driver/drive_cmd2", DriveCmd, self.tdriveCallback)
-        self.planner_sub = rospy.Subscriber("/core_rover/planner/drive_cmd", DriveCmd, self.plannerCallback)
+        self.planner_sub = rospy.Subscriber("/planner/drive_cmd", DriveCmd, self.plannerCallback)
         self.gps_sub     = rospy.Subscriber("/nova_common/gps_data", NavSatFix, self.gpsCallback)
         self.rpy_sub     = rospy.Subscriber("/nova_common/RPY", RPY, self.rpyCallback)
         self.tb_sub      = rospy.Subscriber("/core_rover/navigation/tennis_stat", String, self.tbCallback)
