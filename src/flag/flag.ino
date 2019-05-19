@@ -16,10 +16,11 @@ void loop() {
 
   if (val == HIGH){
     flag_servo.write(20); //on
-    delay(5000);
    }
-
-  flag_servo.write(120); //off
+  else{
+    flag_servo.write(120); //off
+    }
+    
   delay(100);
   
 }

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import rospy,math,time
+import Jetson.GPIO as GPIO
 from sensor_msgs.msg import NavSatFix, MagneticField
 from std_msgs.msg import String
 from webots_ros.srv import set_float
@@ -161,6 +162,7 @@ class AutonomousStateMachine():
         self.setAutonomousMode('Traverse')
     def Traverse(self):
         # Run Traverse
+        GPIO.output(7, GPIO.LOW)
         self.metricCalculation()
         if ((self.distance_to_waypt<self.dist_to_dest_thres)):
             try:
@@ -213,11 +215,11 @@ class AutonomousStateMachine():
         self.metricCalculation()
         self.setAutonomousMode('Panning')
     def startComplete(self):
+        GPIO.output(7, GPIO.HIGH)
         self.metricCalculation()
         self.setAutonomousMode('Complete')
     def Complete(self):
         self.metricCalculation()
-        rospy.loginfo("yayayaya")
         self.setAutonomousMode('Complete')
         drive_msg = DriveCmd()
         drive_msg.rpm       = 0
@@ -240,6 +242,9 @@ class AutonomousStateMachine():
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def auto_controller():
     global testing
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setwarnings(False)
+    GPIO.setup(7, GPIO.OUT)
     ''' Run Autonomous Controller Node '''
     SM = AutonomousStateMachine() # Initialise state machine class
     #ROS Publisher Subscribers and Services
@@ -274,5 +279,6 @@ def auto_controller():
         status_msg.bearing    = SM.orientation
         status_pub.publish(status_msg)
         rate.sleep() # Sleep until next iteration
+    GPIO.cleanup()
 if __name__ == '__main__':
     auto_controller()
