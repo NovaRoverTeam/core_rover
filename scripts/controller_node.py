@@ -21,7 +21,7 @@ state_objective_gps = None
 def is_ready():
     return state_rover_pose != None\
            and state_rover_gps != None\
-           and state_waypoint_pose != None
+           and state_waypoint_pose != None\
            and state_objective_gps != None
 
 def odom_callback(msg):
