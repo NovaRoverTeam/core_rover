@@ -1,7 +1,10 @@
+#!/usr/bin/env python
+
 import rospy
 import tf
 from math import sin, cos, radians, atan2, sqrt, degrees
 from sensor_msgs.msg import NavSatFix
+from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose
 from std_msgs.msg import String
 from nova_common.msg import DriveCmd
@@ -9,20 +12,17 @@ from nova_common.msg import DriveCmd
 NODE_NAME = "controller_node"
 ROVER_ODOM_TOPIC = "/ekf/Odometry"
 ROVER_GPS_TOPIC = "/ekf/gps"
-WAYPOINT_TOPIC = "/planner/next_waypoint"
-OBJECTIVE_TOPIC = "/planner/current_objective_pose"
+WAYPOINT_TOPIC = "/core_rover/planner/next_waypoint_pose"
 DRIVE_CMD_TOPIC = "/core_rover/planner/drive_cmd"
 
 state_rover_pose = None
 state_rover_gps = None
 state_waypoint_pose = None
-state_objective_gps = None
 
 def is_ready():
     return state_rover_pose != None\
            and state_rover_gps != None\
-           and state_waypoint_pose != None\
-           and state_objective_gps != None
+           and state_waypoint_pose != None
 
 def odom_callback(msg):
     state_rover_pose = msg
@@ -32,9 +32,6 @@ def gps_callback(msg):
 
 def waypoint_callback(msg):
     state_waypoint_pose = msg
-
-def objective_callback(msg):
-    state_objective_gps = msg
 
 def construct_drive_cmd(current_pose, waypoint_pose):
     angle = angle_of_poses(current_pose, waypoint_pose)
@@ -102,9 +99,8 @@ def controller_node():
     odom_subscriber = rospy.Subscriber(ROVER_ODOM_TOPIC, Odometry, odom_callback)
     gps_subscriber = rospy.Subscriber(ROVER_GPS_TOPIC, NavSatFix, gps_callback)
 
-    # subscribe the the next waypoint from the planner, and the global objective
+    # subscribe the the next waypoint from the planner
     waypoint_subscriber = rospy.Subscriber(WAYPOINT_TOPIC, Pose, waypoint_callback)
-    objective_subscriber = rospy.Subscriber(OBJECTIVE_TOPIC, NavSatFix, objective_callback)
 
     # publish drive commands
     drive_cmd_publisher = rospy.Publisher(DRIVE_CMD_TOPIC, DriveCmd, queue_size=10)

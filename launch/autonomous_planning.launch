@@ -1,0 +1,14 @@
+<launch>
+
+    <group ns="planner">
+        <node pkg="core_rover" name="objective_node" type="objective_node.py"/>
+        <node pkg="gps_common" name="gps_common" type="utm_odometry_node">
+            <remap from="fix" to="/core_rover/planner/objective_gps"/>
+            <remap from="odom" to="/core_rover/planner/objective_pose"/>
+        </node>
+
+        <node pkg="core_rover" name="planner_node" type="planner_node.py"/>
+        <node pkg="core_rover" name="planner_controller_node" type="planner_controller_node.py"/>
+    </group>
+   
+</launch>

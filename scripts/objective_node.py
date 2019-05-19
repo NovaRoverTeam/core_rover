@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import rospy
 from sensor_msgs.msg import NavSatFix
 from nova_common.msg import *
@@ -5,6 +7,9 @@ from nova_common.srv import *
 
 state_objective_latitude = None
 state_objective_longitude = None
+
+NODE_NAME = "objective_node"
+OBJECTIVE_GPS_TOPIC = "/core_rover/planner/objective_gps"
 
 def is_ready():
     return state_objective_latitude != None \
@@ -17,12 +22,12 @@ def handle_receive_objective(req):
 def objective_node():
 
     # node should update objective when notifi3 ed by server
-    server = Rospy.Service("/core_rover/start_auto", StartAuto, handle_receive_objective)
+    server = rospy.Service("/core_rover/start_auto", StartAuto, handle_receive_objective)
 
     # publish objective
-    objective_publisher = rospy.Publisher("/core_rover/current_objective", NavSatFix, queue_size=1)
+    objective_publisher = rospy.Publisher(OBJECTIVE_GPS_TOPIC, NavSatFix, queue_size=1)
 
-    rospy.init_node("objective_node")
+    rospy.init_node(NODE_NAME)
     publish_rate = rospy.Rate(2)
     while not rospy.is_shutdown():
         if is_ready():

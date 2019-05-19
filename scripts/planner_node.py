@@ -1,7 +1,8 @@
+#!/usr/bin/env python
+
 import rospy
 import math
-from nav_msgs.msg import Odometry
-from nav_msgs.msg import OccupancyGrid, MapMetaData
+from nav_msgs.msg import Odometry, OccupancyGrid, MapMetaData
 from geometry_msgs.msg import Pose, Point, Quaternion
 from sensor_msgs.msg import NavSatFix
 
@@ -16,11 +17,11 @@ OBSTACLE_PROBABILITY_THRESHOLD = 85     # threshold over which cell is considere
 COST_OF_OBSTACLE = 10e10                # cost assigned to cells which are thought to contain obstacles
 
 # node configuration
-NODE_NAME = "planner"
+NODE_NAME = "planner_node"
 ODOM_TOPIC = "/ekf/Odometry" # nav_msgs/Odommetry
 MAP_TOPIC = "/rtabmap/grid_prob_map" # nav_msgs/OccupancyGrid
-OBJECTIVE_TOPIC = "/objective_pose" # geometry_msgs/Pose
-WAYPOINT_TOPIC = "/planner/waypoints" # nav_msgs/NavSatFix
+OBJECTIVE_POSE_TOPIC = "/core_rover/planner/objective_pose" # geometry_msgs/Pose
+WAYPOINT_TOPIC = "/core_rover/planner/next_waypoint_pose" # nav_msgs/Odometry
 
 QUEUE_SIZE = 10
 PUBLISH_FREQUENCY = 10
@@ -213,27 +214,33 @@ def planner():
     # subscribe to odom and grid_map
     odom_subscriber = rospy.Subscriber(ODOM_TOPIC, Odometry, odom_callback)
     grid_map_subscriber = rospy.Subscriber(MAP_TOPIC, OccupancyGrid, map_callback)
-    objective_subscriber = rospy.Subscriber(OBJECTIVE_TOPIC, NavSatFix, objective_callback)
+    objective_subscriber = rospy.Subscriber(OBJECTIVE_POSE_TOPIC, Odometry, objective_callback)
 
     # main control loop - generate waypoints over occupancy grid and publish
     waypoint_publisher = rospy.Publisher(WAYPOINT_TOPIC, Pose, queue_size=QUEUE_SIZE)
     publish_rate = rospy.Rate(PUBLISH_FREQUENCY)
+
     while not rospy.is_shutdown():
-        if is_ready() or True:
+
+        if is_ready():
             rospy.logdebug("Planner ready to publish.")
+
             start = pose_to_gridcell(state_rover_pose)
             end = latlon_to_gridcell(state_objective_pose)
-            grid = preprocess_occupancy_grid(state_occupancy_grid)
+
             # handle out-of-grid issue, get the right end grid
             end = get_objective_grid(grid, start, end)
 
-            # get smoothed waypoint
-            waypoints = [wp for wp in a_star(grid, start, end)]
+            grid = preprocess_occupancy_grid(state_occupancy_grid)
+            waypoints = a_star(grid, start, end)
 
+            # get smoothed waypoint
             waypoint = get_smooth_waypoint(start, waypoints)
             waypoint_publisher.publish(gridcell_to_pose(waypoint))
+
         else:
             rospy.logdebug("Planner not ready to publish.")
+
         publish_rate.sleep()
 
 if __name__ == "__main__":
