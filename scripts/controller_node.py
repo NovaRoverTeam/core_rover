@@ -11,7 +11,7 @@ ROVER_ODOM_TOPIC = "/ekf/Odometry"
 ROVER_GPS_TOPIC = "/ekf/gps"
 WAYPOINT_TOPIC = "/planner/next_waypoint"
 OBJECTIVE_TOPIC = "/planner/current_objective_pose"
-DRIVE_CMD_TOPIC = "/nova_common/drive_cmd"
+DRIVE_CMD_TOPIC = "/core_rover/planner/drive_cmd"
 
 state_rover_pose = None
 state_rover_gps = None
@@ -93,28 +93,6 @@ def turn_direction(beta, orientation):
     rospy.loginfo("turn: %s", turn)        
     return turn
 
-def near_global_objective(rover_gps, objective_gps):
-    # approximate radius of earth in meters
-    R = 6373000
-
-    lat1 = radians(rover_gps.latitude)
-    lon1 = radians(rover_gps.longitude)
-    lat2 = radians(objective_gps.latitude)
-    lon2 = radians(objective_gps.longitude)
-
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-
-    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-
-    distance = R * c
-
-    if distance <= 2.5:
-        return True
-
-    return False
-
 def controller_node():
 
     # node initalization
@@ -133,15 +111,8 @@ def controller_node():
     publish_rate = rospy.Rate(10)
     while not rospy.is_shutdown():
         if is_ready():
-            # if we're reached vicinity of the global objective ...
-            if near_global_objective(state_rover_gps, state_objective_gps):
-                # ...  TODO: advise state machine to switch to spiral search
-                pass
-
-            # otherwise continue driving towards the next waypoint 
-            else:
-                drive_cmd = construct_drive_cmd(state_rover_pose, state_waypoint_pose)
-                drive_cmd_pubisher.publish(drive_cmd)
+            drive_cmd = construct_drive_cmd(state_rover_pose, state_waypoint_pose)
+            drive_cmd_pubisher.publish(drive_cmd)
 
         publish_rate.sleep()
 

@@ -16,7 +16,6 @@ testing = False
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 class AutonomousStateMachine():
     dist_to_dest_thres = 3 #Distance to destination point threshold (metres)
-    dist_to_way_thres = 4 #Distance to way point threshold (metres)
     distance_to_dest = None # In metres (default is empty)
     distance_to_waypt = None # In metres (default is empty)
     orientation = 0 # In degrees (default is empty)
@@ -45,6 +44,7 @@ class AutonomousStateMachine():
         '''Callback for roll, pitch, yaw from IMU'''
         global rovey_pos
         self.rovey_pos.setOrientation(rpyData.roll, rpyData.pitch, rpyData.yaw)
+
     def tbCallback(self,tbData):
         ''' Callback for tennisball status '''
         rospy.loginfo(getAutonomousMode())
@@ -64,6 +64,12 @@ class AutonomousStateMachine():
                     self.toSearch() #todo: go to panning instead
         elif tbData.data == "Complete":
             self.toComplete()
+
+    def plannerCallback(self, msg):
+        '''Callback for drive commands received from planning subsystem'''
+        rospy.loginfo(getAutonomousMode())
+        if getAutonomousMode() == "Traverse":
+            drive_pub.publish(msg)
 
     def handleStartAuto(self,req):
         '''Service server handler for starting autonomous mission.'''
@@ -110,6 +116,7 @@ class AutonomousStateMachine():
             # Ros Publishers and Subscribers
         self.drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
         self.tdrive_sub  = rospy.Subscriber("/core_rover/driver/drive_cmd2", DriveCmd, self.tdriveCallback)
+        self.planner_sub = rospy.Subscriber("/core_rover/planner/drive_cmd", DriveCmd, self.plannerCallback)
         self.gps_sub     = rospy.Subscriber("/nova_common/gps_data", NavSatFix, self.gpsCallback)
         self.rpy_sub     = rospy.Subscriber("/nova_common/RPY", RPY, self.rpyCallback)
         self.tb_sub      = rospy.Subscriber("/core_rover/navigation/tennis_stat", String, self.tbCallback)
@@ -145,11 +152,13 @@ class AutonomousStateMachine():
             drive_msg.rpm       = 0
             drive_msg.steer_pct = 0
         self.drive_pub.publish(drive_msg)
+
     def metricCalculation(self):
         self.orientation = self.rovey_pos.yaw
         #Current rover distance from final destination, and current waypoint
         self.distance_to_dest = distanceBetween(self.rovey_pos.latitude, self.rovey_pos.longitude, self.des_pos.latitude, self.des_pos.longitude)*111000
         self.distance_to_waypt = distanceBetween(self.rovey_pos.latitude, self.rovey_pos.longitude, self.waypoint.latitude, self.waypoint.longitude)*111000
+
     #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
     # Functions Called "After" transitions - Sets the ROS Param to the
     # correct mode.
@@ -158,26 +167,17 @@ class AutonomousStateMachine():
     def startTraverse(self):
         '''Intitialise Navigation to Tennis Ball GPS location'''
         self.metricCalculation()
-        self.waypoint_list = wayPoint(self.rovey_pos.longitude,self.rovey_pos.latitude,self.des_pos.longitude,self.des_pos.latitude,4)
-        self.waypoint_iter = iter(self.waypoint_list)
-        self.waypoint = next(self.waypoint_iter)
         rospy.loginfo('DESTINATION:' + str(self.des_pos))
-        rospy.loginfo('WaypointList: ' + str(self.waypoint_list))
         self.setAutonomousMode('Traverse')
+
     def Traverse(self):
         # Run Traverse
         self.metricCalculation()
-        if ((self.distance_to_waypt<self.dist_to_dest_thres)):
-            try:
-                self.waypoint = next(self.waypoint_iter)
-            except StopIteration:
-                rospy.loginfo("Waypoint List Exhausted - Restarting Navigation to GPS coordinate")
-                self.toTraverse()
         if (self.distance_to_dest<self.dist_to_dest_thres):
             rospy.loginfo('Rover close to GPS coordinate destination. Commencing Search')
             self.toSearch()# Switch to search state
-        self.auto_drive()
         self.setAutonomousMode('Traverse')
+
     def startSearch(self):
         '''Intitialise Search for Tennis Ball (Sector)'''
         self.metricCalculation()
@@ -263,5 +263,6 @@ def auto_controller():
         status_msg.bearing    = SM.orientation
         status_pub.publish(status_msg)
         rate.sleep() # Sleep until next iteration
+        
 if __name__ == '__main__':
     auto_controller()
