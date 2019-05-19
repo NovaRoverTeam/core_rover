@@ -20,8 +20,8 @@ COST_OF_OBSTACLE = 10e10                # cost assigned to cells which are thoug
 NODE_NAME = "planner_node"
 ODOM_TOPIC = "/ekf/Odometry" # nav_msgs/Odommetry
 MAP_TOPIC = "/rtabmap/grid_prob_map" # nav_msgs/OccupancyGrid
-OBJECTIVE_POSE_TOPIC = "/core_rover/planner/objective_pose" # geometry_msgs/Pose
-WAYPOINT_TOPIC = "/core_rover/planner/next_waypoint_pose" # nav_msgs/Odometry
+OBJECTIVE_POSE_TOPIC = "/planner/objective_pose" # geometry_msgs/Pose
+WAYPOINT_TOPIC = "/planner/next_waypoint_pose" # nav_msgs/Odometry
 
 QUEUE_SIZE = 10
 PUBLISH_FREQUENCY = 10

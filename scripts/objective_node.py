@@ -9,7 +9,7 @@ state_objective_latitude = None
 state_objective_longitude = None
 
 NODE_NAME = "objective_node"
-OBJECTIVE_GPS_TOPIC = "/core_rover/planner/objective_gps"
+OBJECTIVE_GPS_TOPIC = "/planner/objective_gps"
 
 def is_ready():
     return state_objective_latitude != None \

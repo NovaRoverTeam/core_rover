@@ -12,8 +12,8 @@ from nova_common.msg import DriveCmd
 NODE_NAME = "controller_node"
 ROVER_ODOM_TOPIC = "/ekf/Odometry"
 ROVER_GPS_TOPIC = "/ekf/gps"
-WAYPOINT_TOPIC = "/core_rover/planner/next_waypoint_pose"
-DRIVE_CMD_TOPIC = "/core_rover/planner/drive_cmd"
+WAYPOINT_TOPIC = "/planner/next_waypoint_pose"
+DRIVE_CMD_TOPIC = "/planner/drive_cmd"
 
 state_rover_pose = None
 state_rover_gps = None
