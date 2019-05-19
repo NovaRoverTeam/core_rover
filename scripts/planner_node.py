@@ -6,7 +6,6 @@ from geometry_msgs.msg import Pose, Point, Quaternion
 from sensor_msgs.msg import NavSatFix
 
 import numpy as np
-
 from a_star import a_star
 
 EPSILON = 10e-10
@@ -19,7 +18,7 @@ COST_OF_OBSTACLE = 10e10                # cost assigned to cells which are thoug
 # node configuration
 NODE_NAME = "planner"
 ODOM_TOPIC = "/ekf/Odometry" # nav_msgs/Odommetry
-MAP_TOPIC = "/rtabmap/grid_map" # nav_msgs/OccupancyGrid
+MAP_TOPIC = "/rtabmap/grid_prob_map" # nav_msgs/OccupancyGrid
 OBJECTIVE_TOPIC = "/objective_pose" # geometry_msgs/Pose
 WAYPOINT_TOPIC = "/planner/waypoints" # nav_msgs/NavSatFix
 
@@ -116,6 +115,93 @@ def objective_callback(msg):
     """
     state_objective_pose = msg
 
+def get_objective_grid(occupancy_grid, start_grid, end_grid):
+    """
+    Returns the right objective grid cell
+    1. When the objective is inside the occupancy grid, Return as it is
+    2. When the objective is outside the occupancy grid,
+       Return the conjunction of start-objective line and the edge of the grid
+    """
+    x_max = len(occupancy_grid[0]) - 1
+    y_max = len(occupancy_grid) - 1
+    
+    # if the objective is outside the occuoancy grid
+    if end_grid[0] < 0 or end_grid[0] > x_max \
+        or end_grid[1] < 0 or end_grid[1] > y_max:
+        # the line connecting end_grid and start_grid will have conjunctions with
+        # all 4 sides of the edge, only the one between start_grid and end_grid 
+        # it the right objective
+
+        if end_grid[0] == start_grid[0]:
+            if end_grid[1] > start_grid[1]:
+                end_grid = (end_grid[0], y_max)
+            else:
+                end_grid = (end_grid[0], 0)
+        elif end_grid[1] == start_grid[1]:
+            if end_grid[0] > start_grid[0]:
+                end_grid = (x_max, end_grid[1])
+            else:
+                end_grid = (0, end_grid[1])
+        else:
+            k = (end_grid[1] - start_grid[1]) / (end_grid[0] - start_grid[0])
+            b = start_grid[1] - k * start_grid[0]
+
+            grids = []
+            # top grid
+            grids.append((int((y_max - b) // k), int(y_max)))
+            # left grid
+            grids.append((0, int(b)))
+            # bottom grid
+            grids.append((int(-b // k), 0))
+            # right grid
+            grids.append((int(x_max), int(k * x_max + b)))
+
+            for grid in grids:
+                if min(grid[0], start_grid[0], end_grid[0]) != grid[0] \
+                    and max(grid[0], start_grid[0], end_grid[0]) != grid[0]:
+                    if min(grid[1], start_grid[1], end_grid[1]) != grid[1] \
+                        and max(grid[1], start_grid[1], end_grid[1]) != grid[1]:
+                        end_grid = grid
+    return end_grid
+
+def get_smooth_waypoint(start, waypoints):
+    """
+    Returns the waypoint in a list of waypoints
+    This waypoint is the furthest that the rover can go without changing directions
+    """
+    # start with the second waypoint in the list
+    # the second waypoint could represent the turning directions of the rover
+    next_index = 1
+    next_point = waypoints[next_index]
+
+    smooth_waypoint = next_point
+
+    # the increment in coordinates for the next point if they are on the same line
+    increment_point = (0, 0)
+
+    # staight up/down
+    if smooth_waypoint[0] == start[0]:
+        increment_point = (smooth_waypoint[0] - start[0], 0)
+    elif smooth_waypoint[1] == start[1]:
+        increment_point = (0, smooth_waypoint[1] - start[1])
+    # diagonal
+    else:
+        increment_point = (smooth_waypoint[0] - start[0], smooth_waypoint[1] - start[1])
+
+    # investigate if the next point is on the same line
+    # increment the index by 2 each time
+    next_index += 2
+    while next_index < len(waypoints):
+        next_point_on_line = \
+        (smooth_waypoint[0] + increment_point[0], smooth_waypoint[1] + increment_point[1])
+        if next_point_on_line == waypoints[next_index]:
+            smooth_waypoint = waypoints[next_index]
+            next_index += 2
+            continue
+        break
+    
+    return smooth_waypoint
+
 def planner():
     """
     The "main" function for the rosnode. Initializes the node and runs the
@@ -138,9 +224,14 @@ def planner():
             start = pose_to_gridcell(state_rover_pose)
             end = latlon_to_gridcell(state_objective_pose)
             grid = preprocess_occupancy_grid(state_occupancy_grid)
-            #waypoints = [gridcell_to_pose(wp) for wp in a_star(grid, start, end)]
+            # handle out-of-grid issue, get the right end grid
+            end = get_objective_grid(grid, start, end)
+
+            # get smoothed waypoint
             waypoints = [wp for wp in a_star(grid, start, end)]
-            waypoint_publisher.publish(gridcell_to_pose(waypoints[0]))
+
+            waypoint = get_smooth_waypoint(start, waypoints)
+            waypoint_publisher.publish(gridcell_to_pose(waypoint))
         else:
             rospy.logdebug("Planner not ready to publish.")
         publish_rate.sleep()
