@@ -234,9 +234,12 @@ def planner():
             grid = preprocess_occupancy_grid(state_occupancy_grid)
             waypoints = a_star(grid, start, end)
 
-            # get smoothed waypoint
-            waypoint = get_smooth_waypoint(start, waypoints)
-            waypoint_publisher.publish(gridcell_to_pose(waypoint))
+            if len(waypoints) == 0:
+                rospy.logdebug("No waypoints returned by A*")
+            else:
+                # get smoothed waypoint
+                waypoint = get_smooth_waypoint(start, waypoints)
+                waypoint_publisher.publish(gridcell_to_pose(waypoint))
 
         else:
             rospy.logdebug("Planner not ready to publish.")
