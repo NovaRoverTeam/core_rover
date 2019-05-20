@@ -64,7 +64,7 @@ bool hbeat = false;
 int hbeat_cnt = 0;
 double prev_left = 0.0;
 double prev_right = 0.0;
-double max_delta = 0.04;
+double max_delta = 0.02;
 std::string tune_cmd = "";
 ros::Publisher encoder_data_pub;
 float tune_num;
@@ -163,19 +163,19 @@ void PIDCb(const std_msgs::Bool::ConstPtr& msg)
 //--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-
 void EncoderFeedback(){
   nova_common::EncoderData msg;
-  msg.talon0Velocity=talon0.GetSelectedSensorVelocity()*0.00207;
-  msg.talon1Velocity=talon1.GetSelectedSensorVelocity()*0.00207;
-  msg.talon2Velocity=talon2.GetSelectedSensorVelocity()*0.00207;
-  msg.talon3Velocity=talon3.GetSelectedSensorVelocity()*0.00207;
-  msg.talon4Velocity=talon4.GetSelectedSensorVelocity()*0.00207;
-  msg.talon5Velocity=talon5.GetSelectedSensorVelocity()*0.00207;
+  msg.talon0Velocity=talon0.GetSelectedSensorVelocity()*0.0818;
+  msg.talon1Velocity=talon1.GetSelectedSensorVelocity()*0.0818;
+  msg.talon2Velocity=-talon2.GetSelectedSensorVelocity()*0.0818;
+  msg.talon3Velocity=talon3.GetSelectedSensorVelocity()*0.0818;
+  msg.talon4Velocity=talon4.GetSelectedSensorVelocity()*0.0818;
+  msg.talon5Velocity=talon5.GetSelectedSensorVelocity()*0.0818;
 
-  msg.talon0Position=talon0.GetSelectedSensorPosition()/768.0;
-  msg.talon1Position=talon1.GetSelectedSensorPosition()/768.0;
-  msg.talon2Position=talon2.GetSelectedSensorPosition()/768.0;
-  msg.talon3Position=talon3.GetSelectedSensorPosition()/768.0;
-  msg.talon4Position=talon4.GetSelectedSensorPosition()/768.0;
-  msg.talon5Position=talon5.GetSelectedSensorPosition()/768.0;
+  msg.talon0Position=talon0.GetSelectedSensorPosition()*0.00818;
+  msg.talon1Position=talon1.GetSelectedSensorPosition()*0.00818;
+  msg.talon2Position=-talon2.GetSelectedSensorPosition()*0.00818;
+  msg.talon3Position=talon3.GetSelectedSensorPosition()*0.00818;
+  msg.talon4Position=talon4.GetSelectedSensorPosition()*0.00818;
+  msg.talon5Position=talon5.GetSelectedSensorPosition()*0.00818;
   
   encoder_data_pub.publish(msg);
   
@@ -423,6 +423,7 @@ int main(int argc, char **argv)
         //std::cout << "talon0 velocity: " << talon0.GetSelectedSensorVelocity() << std::endl;
       }
 
+      EncoderFeedback();
       //Enable rover with a timeout of 100ms
       ctre::phoenix::unmanaged::FeedEnable(100);
     }                     
