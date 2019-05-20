@@ -4,10 +4,9 @@ import can
 from std_msgs.msg import String
 from std_msgs.msg import Empty
 from nova_common.msg import * #motor_arm
-from base_station.msg import *
 import time
 bustype = 'socketcan_native'
-channel = 'can2' #cantx is set virtual can, can set up by running the run_can.batch file in sim
+channel = 'can1' #cantx is set virtual can, can set up by running the run_can.batch file in sim
 bus = can.interface.Bus(channel=channel, bustype=bustype)  #Define the can bus interface to transmit on. 
 global trig_r_init
 trig_r_init = False
@@ -16,7 +15,7 @@ ids = [0x02, 0x03, 0x01, 0x04, 0x05, 0x06, 0x07]
 resets = [0,0,0,0]
 hbeat = False;
 hbeat_cnt = 0;
-max_hbeat = 3;
+max_hbeat = 15;
 ignore_endstops = False;
 
 def RightCallback(data):
@@ -38,8 +37,8 @@ def RightCallback(data):
                 else:
                   sub_data = sub_data/(0.435)
                 data_array[i]=sub_data
-                if(i == 3):
-                    data_array[i] = -sub_data
+                if(i==2):
+                  data_array[i] = -sub_data
         values[i+3] = data_array[i]**1.8 if data_array[i]>0 else -(abs(data_array[i])**1.8)
 	#rospy.loginfo(data_array[i])
         if data.but_x_trg == True:
@@ -71,7 +70,7 @@ def LeftCallback(data):
       rospy.loginfo("Switching to xbox drive")
       rospy.set_param('base_station/drive_mode','XboxDrive')
 
-def HBeatCb():
+def HBeatCb(data):
   global hbeat
   global hbeat_cnt
   hbeat = True

@@ -108,6 +108,9 @@ device_name = "Stereo Vision 2"
 isUSB = True
 cam_index = 0
 
+# End IP of foscam for changing foscam rotation
+fos_end_ip = 53
+
 
 
 
@@ -328,9 +331,9 @@ while isRunning:
 	    # Change to Black Foscam feed
 	    cur_feedType = FeedType.FT_FoscamBlack
 	    device_name = 'Black Foscam'
-	    width = 640
-	    height = 480
-	    port = 5002
+	    width = 720
+	    height = 540
+	    port = '5002'
 	    isUSB = False
 	    cam_index = 3
 
@@ -338,9 +341,9 @@ while isRunning:
 	    # Change to White Foscam feed
 	    cur_feedType = FeedType.FT_FoscamWhite
 	    device_name = 'White Foscam'
-	    width = 640
-	    height = 480
-	    port = 5003
+	    width = 720
+	    height = 540
+	    port = '5003'
 	    isUSB = False
 	    cam_index = 4
 
@@ -350,7 +353,7 @@ while isRunning:
 	    device_name = "Stereo Vision 2"
 	    width = 720
 	    height = 500
-	    port = 5000
+	    port = '5000'
 	    isUSB = True
 	    cam_index = 1
 	    
@@ -360,7 +363,7 @@ while isRunning:
       device_name = "Stereo Vision 2"
       width = 720
       height = 500
-      port = 5000
+      port = '5000'
       isUSB = True
       cam_index = 0
       
@@ -370,7 +373,7 @@ while isRunning:
 	    device_name = "Stereo Vision 2"
 	    width = 720
 	    height = 500
-	    port = 5006
+	    port = '5006'
 	    isUSB = True
 	    cam_index = 8
 	    
@@ -380,7 +383,7 @@ while isRunning:
       device_name = "Stereo Vision 2"
       width = 720
       height = 500
-      port = 5006
+      port = '5006'
       isUSB = True
       cam_index = 7
       
@@ -431,25 +434,25 @@ while isRunning:
 		  # Get the appropriate GST pipeline command
       if cur_feedType == FeedType.FT_Stereo_Dual:
         gstCode = gst_pipeline_stereo(0)
-			elif cur_feedType == FeedType.FT_Stereo_Single:
+      elif cur_feedType == FeedType.FT_Stereo_Single:
         gstCode = gst_pipeline_single(0)
-			elif cur_feedType == FeedType.FT_Telescopic:
-			  gstCode = gst_pipeline_single(0)
-			elif cur_feedType == FeedType.FT_FoscamBlack:
-			  gstCode = gst_pipeline_foscam(53)
-			elif cur_feedType == FeedType.FT_FoscamWhite:
-			  gstCode = gst_pipeline_foscam(52)
-			elif cur_feedType == FeedType.FT_Arm_1:
-			  gstCode = gst_pipeline_single(1)
-			elif cur_feedType == FeedType.FT_Arm_2:
-				gstCode = gst_pipeline_single(2)
-			elif cur_feedType == FeedType.FT_Stereo_Dual_2:
-				gstCode = gst_pipeline_stereo(2)
-			elif cur_feedType == FeedType.FT_Stereo_Single_2:
-				gstCode = gst_pipeline_single(2)
+      elif cur_feedType == FeedType.FT_Telescopic:
+        gstCode = gst_pipeline_single(0)
+      elif cur_feedType == FeedType.FT_FoscamBlack:
+        gstCode = gst_pipeline_foscam(53)
+      elif cur_feedType == FeedType.FT_FoscamWhite:
+        gstCode = gst_pipeline_foscam(52)
+      elif cur_feedType == FeedType.FT_Arm_1:
+        gstCode = gst_pipeline_single(1)
+      elif cur_feedType == FeedType.FT_Arm_2:
+        gstCode = gst_pipeline_single(2)
+      elif cur_feedType == FeedType.FT_Stereo_Dual_2:
+        gstCode = gst_pipeline_stereo(2)
+      elif cur_feedType == FeedType.FT_Stereo_Single_2:
+        gstCode = gst_pipeline_single(2)
 		
 		
-	  # Create pipeline
+	  	# Create pipeline
       pipeline = Gst.parse_launch(gstCode)
       bus = pipeline.get_bus()  
 
@@ -462,8 +465,7 @@ while isRunning:
       # Add a new pipeline to the list
       pipelines[cam_index] = pipeline
       buses[cam_index] = bus
-      
-      
+           
       # Start the pipeline in the playing state
       pipelines[cam_index].set_state(Gst.State.PLAYING)
       
@@ -498,9 +500,6 @@ while isRunning:
 	
 	# Foscam adjustments
   if command in ('f', 'foscam'):
-		
-		# End IP of foscam
-		fos_end_ip = 53
 
 		# Run in a loop
 		isFosMenu = True
@@ -516,6 +515,8 @@ while isRunning:
 			  'Press (X) for Stop Rotation\n' +
 			  'Press (I) for Zoom In\n' +
 			  'Press (O) for Zoom Out\n' +
+			  'Press (1) for Black Foscam\n' +
+			  'Press (2) for White Foscam\n' +
 			  'Press (C) to Cancel\n' +
 			  '\t: ')).lower()
 			  
@@ -553,6 +554,13 @@ while isRunning:
 		  if fos_input == 'o':
 		  	fosCommand = 'zoomOut'
 		  	
+		  # Change to Black Foscam
+		  if fos_input == '1':
+		  	fos_end_ip = 53
+		  	
+		  # Change to White Foscam
+		  if fos_input == '2':
+		  	fos_end_ip = 52		  	
 		  
 		  # Run the command
 		  if fosCommand != "":

@@ -65,6 +65,16 @@ target_link_libraries(driver ${PROJECT_SOURCE_DIR}/include/lib/x86-64/libCTRE_Ph
 target_link_libraries(driver ${PROJECT_SOURCE_DIR}/include/lib/x86-64/libCTRE_PhoenixCanutils.a)
 target_link_libraries(driver Threads::Threads)
 
+add_executable(tuner src/tuner.cpp)
+add_dependencies(tuner core_rover_generate_messages_cpp)
+target_link_libraries(tuner ${catkin_LIBRARIES})
+
+target_link_libraries(tuner ${PROJECT_SOURCE_DIR}/include/lib/x86-64/libCTRE_Phoenix.a)
+target_link_libraries(tuner ${PROJECT_SOURCE_DIR}/include/lib/x86-64/libCTRE_PhoenixCCI.a)
+target_link_libraries(tuner ${PROJECT_SOURCE_DIR}/include/lib/x86-64/libCTRE_PhoenixPlatformLinuxSocketCan.a)
+target_link_libraries(tuner ${PROJECT_SOURCE_DIR}/include/lib/x86-64/libCTRE_PhoenixCanutils.a)
+target_link_libraries(tuner Threads::Threads)
+
 add_executable(drill src/drill.cpp)
 add_dependencies(drill core_rover_generate_messages_cpp)
 target_link_libraries(drill ${catkin_LIBRARIES})
