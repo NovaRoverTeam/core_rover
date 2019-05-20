@@ -6,7 +6,7 @@
     <rosparam param="steer_limit">1000</rosparam>
     <arg name="pi/2" value="1.5707963267948966"/>
 
-    <!--<node pkg="tf" type="static_transform_publisher" name="imu_base_link" args="0 0 0 0 0 0 imu base_link 100"/>-->   
+    <node pkg="tf" type="static_transform_publisher" name="imu_base_link" args="0 0 0 0 0 0 imu base_link 100"/>   
 
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_local">
         <!-- switch on debug -->
