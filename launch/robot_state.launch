@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<launch>
+  <param name="robot_description" command="$(find xacro)/xacro '$(find core_rover)/params/elp_standalone.urdf.xacro'" />
+
+  <!-- start publishing transforms -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+</launch>

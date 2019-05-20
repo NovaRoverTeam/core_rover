@@ -1,11 +1,15 @@
 include/lib/x86-64/*
 lib/x86-64/*
 scripts/rover_sm.pyc
-battery_data.txt
-scripts/auto_classes.pyc
-scripts/auto_functions.pyc
-src/battery_reader
+*.bag
 
+battery_data.txt
+
+scripts/auto_classes.pyc
+
+scripts/auto_functions.pyc'
+
+src/battery_reader
 
 include/ctre/phoenix/CCI/CANifier_CCI\.h
 
@@ -71,8 +75,18 @@ scripts/test/stereo_outdoor.bag
 
 scripts/test/merged_lidar_test.bag
 
-
 .vscode/
+
 scripts/.vscode/
+
 src/.vscode/
 
+scripts/play_uav_bag\.sh\.save
+
+scripts/test/play_uav_bag\.sh\.save
+
+scripts/test/play_uav_bag\.sh\.save~Added Stereo Map Bui;der
+
+scripts/test/play_uav_bag\.sh\.save~dev/autonomous
+
+launch/map_builder\.launch~Modified params
