@@ -279,6 +279,6 @@ def auto_controller():
         status_msg.bearing    = SM.orientation
         status_pub.publish(status_msg)
         rate.sleep() # Sleep until next iteration
-    GPIO.cleanup()
+    GPIO.cleanup(7)
 if __name__ == '__main__':
     auto_controller()
