@@ -17,6 +17,7 @@
 #include <ros/console.h>
 #include <nova_common/DriveCmd.h>
 #include <nova_common/TuneCmd.h>
+#include <nova_common/EncoderData.h>
 
 //..**.. Simulator includes
 #include <signal.h>
@@ -65,6 +66,7 @@ double prev_left = 0.0;
 double prev_right = 0.0;
 double max_delta = 0.04;
 std::string tune_cmd = "";
+ros::Publisher encoder_data_pub;
 float tune_num;
 ros::NodeHandle *n; // Create node handle to talk to ROS
 const int kTimeoutMs = 0;
@@ -141,7 +143,7 @@ void TuneCb(const nova_common::TuneCmd::ConstPtr& msg)
 
 //--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 // PIDCb():
-//    Change between PID control
+//    Change between PID control and voltage control of the motors
 //    
 //--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-
 void PIDCb(const std_msgs::Bool::ConstPtr& msg)
@@ -152,6 +154,31 @@ void PIDCb(const std_msgs::Bool::ConstPtr& msg)
   else{
     n->setParam("/core_rover/driver/control_mode","Voltage");
   }
+}
+
+//--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+// EncoderFeedback():
+//    Publishes encoder data to rostopic
+//    
+//--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-
+void EncoderFeedback(){
+  nova_common::EncoderData msg;
+  msg.talon0Velocity=talon0.GetSelectedSensorVelocity()*0.00207;
+  msg.talon1Velocity=talon1.GetSelectedSensorVelocity()*0.00207;
+  msg.talon2Velocity=talon2.GetSelectedSensorVelocity()*0.00207;
+  msg.talon3Velocity=talon3.GetSelectedSensorVelocity()*0.00207;
+  msg.talon4Velocity=talon4.GetSelectedSensorVelocity()*0.00207;
+  msg.talon5Velocity=talon5.GetSelectedSensorVelocity()*0.00207;
+
+  msg.talon0Position=talon0.GetSelectedSensorPosition()/768.0;
+  msg.talon1Position=talon1.GetSelectedSensorPosition()/768.0;
+  msg.talon2Position=talon2.GetSelectedSensorPosition()/768.0;
+  msg.talon3Position=talon3.GetSelectedSensorPosition()/768.0;
+  msg.talon4Position=talon4.GetSelectedSensorPosition()/768.0;
+  msg.talon5Position=talon5.GetSelectedSensorPosition()/768.0;
+  
+  encoder_data_pub.publish(msg);
+  
 }
 
 void ConfigTalon(TalonSRX* talon) {
@@ -229,6 +256,8 @@ int main(int argc, char **argv)
   ros::Subscriber PID_sub = n->subscribe("/base_station/PID_cmd", 1, PIDCb);
   ros::Subscriber PID_tune = n->subscribe("/core_rover/PID_tune", 1, TuneCb);
 
+  encoder_data_pub = n->advertise<nova_common::EncoderData>("/core_rover/encoder_data", 1);
+ 
   // Boolean variable describing whether we are using the simulator
   // or a real rover. 
   string vehicle;
