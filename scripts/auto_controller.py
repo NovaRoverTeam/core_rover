@@ -182,7 +182,10 @@ class AutonomousStateMachine():
         '''Intitialise Search for Tennis Ball (Sector)'''
         self.metricCalculation()
         #self.waypoint_list = spiralSearch(self.rovey_pos,25,0,8*math.pi)
-        self.waypoint_list = sectorSearch(self.rovey_pos, 20, 10)
+        self.waypoint_list = sectorSearch(self.rovey_pos, 2, 10, self.rovey_pos.yaw)
+        self.waypoint_list += sectorSearch(self.rovey_pos, 5, 10, self.rovey_pos.yaw + 10)
+        self.waypoint_list += sectorSearch(self.rovey_pos, 8, 10, self.rovey_pos.yaw + 20)
+        self.waypoint_list += sectorSearch(self.rovey_pos, 10, 10, self.rovey_pos.yaw + 30)
         self.waypoint_iter = iter(self.waypoint_list)
         self.setAutonomousMode('Search')
         rospy.loginfo('Sector Search Engaged!')
