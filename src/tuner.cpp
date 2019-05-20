@@ -33,14 +33,14 @@
 #include <unistd.h>
 
 using namespace std;
-TalonSRX talon1(1); 
+/*TalonSRX talon1(1); 
 TalonSRX talon2(2);
 TalonSRX talon3(3);
 TalonSRX talon4(4);
 TalonSRX talon5(5);
 TalonSRX talon0(0);
 
-void ConfigTalon(TalonSRX* talon, double num);
+void ConfigTalon(TalonSRX* talon, double num); */
 
 std::string inputString;
 std::string inputMode;
@@ -61,8 +61,8 @@ int main(int argc, char *argv[])
     printf("\n");
   } */
  
-  std::string interface;
-  interface = "can0";
+  //std::string interface;
+  //interface = "can0";
   //ctre::phoenix::platform::can::SetCANInterface(interface.c_str());
   ros::init(argc, argv, "tuner");
   ros::NodeHandle n;
@@ -84,6 +84,10 @@ int main(int argc, char *argv[])
   msg.coefficient = value;
   msg.constant = inputMode;
   tune_pub.publish(msg);
+  val = value;
+  if (inputMode == "p") p = val;
+  if (inputMode == "i") i = val;
+  if (inputMode == "d") d = val;
 
 }
 
