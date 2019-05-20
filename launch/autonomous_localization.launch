@@ -4,9 +4,9 @@
     <rosparam param="/core_rover/Mode">"Auto"</rosparam>
     <rosparam param="rpm_limit">1000</rosparam>
     <rosparam param="steer_limit">1000</rosparam>
-    <arg name="pi/2" value="1.5707963267948966"/>
+    <arg name="pi/2" value="1.5707963267948966"/> 
 
-    <node pkg="tf" type="static_transform_publisher" name="imu_base_link" args="0 0 0 0 0 0 imu base_link 100"/>   
+   <!-- <node pkg="tf" type="static_transform_publisher" name="imu_to_base_link" args="0 0 0 0 0 0 imu base_link 100"/> -->
 
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_local">
         <!-- switch on debug -->
@@ -93,12 +93,13 @@
         <remap from="imu/data" to="/nova_common/IMU"/>
         <remap from="gps/fix" to="/nova_common/gps_data"/>
         <remap from="/odometry/filtered" to="/ekf/Odometry/global"/>
+        <remap from="gps/filtered" to="/ekf/gps_data"/>
+
 	<!-- MUST BE RECALCULATED  -->
         <param name="magnetic_declination_radians" value="0.2052514"/> <!-- for lat long -37.910543 145.134827 -->
         <!-- Calculate via (www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml) and convert degrees to radians -->
 	<!-- REF: docs.ros.org/kinetic/api/robot_localization/html/navsat_transform_node.html-->
 	<param name="yaw_offset" value="$(arg pi/2)"/>
-        <remap from="gps/filtered" to="/ekf/gps_data"/>
 
         <!-- PUBLISH to: "/ekf/gps_data"-->
         <param name="publish_filtered_gps" value="true"/>

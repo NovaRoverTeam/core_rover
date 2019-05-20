@@ -23,7 +23,20 @@
         <geometry>
           <box size="0.002 0.070 .016"/>
         </geometry>
-        <origin xyz="0.001 0 0"/>
+        <origin xyz="0 0.5 0"/>
+        <material name="gray">
+          <color rgba="0.1 0.1 0.1 1"/>
+        </material>
+      </visual>
+    </link>
+
+
+    <link name="lidar">
+      <visual>
+        <geometry>
+          <box size="0.002 0.070 .016"/>
+        </geometry>
+        <origin xyz="0 0.5 0"/>
         <material name="gray">
           <color rgba="0.1 0.1 0.1 1"/>
         </material>
@@ -63,6 +76,13 @@
     <joint name="base_link_to_${name}" type="fixed">
       <parent link="base_link"/>
       <child link="${name}"/>
+        <!--TODO(naverill) update to actual dimensions-->
+      <origin xyz="0 0.5 0"/>
+    </joint>
+
+    <joint name="base_link_to_lidar" type="fixed">
+      <parent link="base_link"/>
+      <child link="lidar"/>
         <!--TODO(naverill) update to actual dimensions-->
       <origin xyz="0 0.5 0"/>
     </joint>
