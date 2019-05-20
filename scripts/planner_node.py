@@ -18,7 +18,7 @@ COST_OF_OBSTACLE = 10e10                # cost assigned to cells which are thoug
 
 # node configuration
 NODE_NAME = "planner_node"
-ODOM_TOPIC = "/ekf/Odometry" # nav_msgs/Odommetry
+ODOM_TOPIC = "/ekf/Odometry/global" # nav_msgs/Odommetry
 MAP_TOPIC = "/rtabmap/grid_prob_map" # nav_msgs/OccupancyGrid
 OBJECTIVE_POSE_TOPIC = "/planner/objective_pose" # geometry_msgs/Pose
 WAYPOINT_TOPIC = "/planner/next_waypoint_pose" # nav_msgs/Odometry

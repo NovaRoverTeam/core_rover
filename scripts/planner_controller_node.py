@@ -10,7 +10,7 @@ from std_msgs.msg import String
 from nova_common.msg import DriveCmd
 
 NODE_NAME = "controller_node"
-ROVER_ODOM_TOPIC = "/ekf/Odometry"
+ROVER_ODOM_TOPIC = "/ekf/Odometry/global"
 ROVER_GPS_TOPIC = "/ekf/gps"
 WAYPOINT_TOPIC = "/planner/next_waypoint_pose"
 DRIVE_CMD_TOPIC = "/planner/drive_cmd"
