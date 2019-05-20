@@ -16,6 +16,7 @@
 #include "ros/ros.h"
 #include <ros/console.h>
 #include <nova_common/DriveCmd.h>
+#include <nova_common/TuneCmd.h>
 
 //..**.. Simulator includes
 #include <signal.h>
@@ -25,6 +26,7 @@
 #include <sensor_msgs/NavSatFix.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Empty.h>
+#include <std_msgs/Bool.h>
 #include <tf/transform_broadcaster.h>
 
 #include <core_rover/set_float.h>
@@ -62,8 +64,11 @@ int hbeat_cnt = 0;
 double prev_left = 0.0;
 double prev_right = 0.0;
 double max_delta = 0.04;
+std::string tune_cmd = "";
+float tune_num;
 ros::NodeHandle *n; // Create node handle to talk to ROS
-
+const int kTimeoutMs = 0;
+const int kPIDLoopIdx = 0;
 //Declaring and creating talonSRX objects to control the 6 motors. 
 TalonSRX talon1(1); 
 TalonSRX talon2(2);
@@ -99,11 +104,57 @@ void HbeatCb(const std_msgs::Empty::ConstPtr& msg)
   hbeat_cnt = 0;
 }
 
+//--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+// TuneCb():
+//    Callback function for receiving a heartbeat from the
+//    base station if still connected.
+//--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-
+void TuneCb(const nova_common::TuneCmd::ConstPtr& msg)
+{
+    
+    tune_cmd = msg->constant;
+    if (tune_cmd == "p"){
+    talon0.Config_kP(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    talon1.Config_kP(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    talon2.Config_kP(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    talon3.Config_kP(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    talon4.Config_kP(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    talon5.Config_kP(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    }
+    if (tune_cmd == "i"){
+    talon0.Config_kI(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    talon1.Config_kI(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    talon2.Config_kI(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    talon3.Config_kI(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    talon4.Config_kI(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    talon5.Config_kI(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    }
+    if (tune_cmd == "d"){
+    talon0.Config_kD(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    talon1.Config_kD(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    talon2.Config_kD(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    talon3.Config_kD(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    talon4.Config_kD(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    talon5.Config_kD(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
+    }
+}
+
+//--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+// PIDCb():
+//    Change between PID control
+//    
+//--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-
+void PIDCb(const std_msgs::Bool::ConstPtr& msg)
+{
+  if(msg->data==true){
+    n->setParam("/core_rover/driver/control_mode","PID");
+  }
+  else{
+    n->setParam("/core_rover/driver/control_mode","Voltage");
+  }
+}
+
 void ConfigTalon(TalonSRX* talon) {
-
-	const int kTimeoutMs = 0;
-	const int kPIDLoopIdx = 0;
-
         /* first choose the sensor */
 	talon->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0, kTimeoutMs);
 	talon->SetSensorPhase(false);
@@ -111,12 +162,12 @@ void ConfigTalon(TalonSRX* talon) {
 	/* set the peak and nominal outputs */
 	talon->ConfigNominalOutputForward(0, kTimeoutMs);
 	talon->ConfigNominalOutputReverse(0, kTimeoutMs);
-	talon->ConfigPeakOutputForward(0.7, kTimeoutMs);
-	talon->ConfigPeakOutputReverse(-0.7, kTimeoutMs);
+	talon->ConfigPeakOutputForward(0.4, kTimeoutMs);
+	talon->ConfigPeakOutputReverse(-0.4, kTimeoutMs);
 
 	/* set closed loop gains in slot0 */
 	talon->Config_kF(kPIDLoopIdx, 0.1097, kTimeoutMs); //0.1097
-	talon->Config_kP(kPIDLoopIdx, 6, kTimeoutMs); //0.22
+	talon->Config_kP(kPIDLoopIdx, 3, kTimeoutMs); //0.22
 	talon->Config_kI(kPIDLoopIdx, 0.02, kTimeoutMs); //0.02
 	talon->Config_kD(kPIDLoopIdx, 0.03, kTimeoutMs);
 
@@ -175,6 +226,8 @@ int main(int argc, char **argv)
   // Declare subscriber to drive cmds
   ros::Subscriber drive_cmd_sub = n->subscribe("/core_rover/driver/drive_cmd", 1, DriveCmdCb);
   ros::Subscriber hbeat_sub = n->subscribe("/heartbeat", 1, HbeatCb);
+  ros::Subscriber PID_sub = n->subscribe("/base_station/PID_cmd", 1, PIDCb);
+  ros::Subscriber PID_tune = n->subscribe("/core_rover/PID_tune", 1, TuneCb);
 
   // Boolean variable describing whether we are using the simulator
   // or a real rover. 
@@ -261,10 +314,11 @@ int main(int argc, char **argv)
       string param;
       n->getParam("/core_rover/driver/control_mode", param);
       if(param == "PID"){
-      talon_speed = speed * 75;
-      talon_steer = steer * 75;
+      talon_speed = talon_speed * 250;
+      talon_steer = talon_steer * 250;
       right = talon_speed - talon_steer;
       left = talon_speed + talon_steer;
+      //std::cout << "speed: " << talon_speed << "second" << speed << std::endl;
       talon0.Set(ControlMode::Velocity, left);
       talon1.Set(ControlMode::Velocity, left);
       talon2.Set(ControlMode::Velocity, left);
@@ -276,7 +330,6 @@ int main(int argc, char **argv)
       else{
       right = talon_speed - talon_steer;   //Positive turn decreases right motors speeds to turn right.
       left = talon_speed + talon_steer;
-      
       float delta_right = right - prev_right;
       float delta_left = left - prev_left;
  
@@ -338,7 +391,7 @@ int main(int argc, char **argv)
         loopCount = 0;
         //std::cout << "talon5 motor output: " << talon5.GetMotorOutputPercent() << std::endl;
       // std::cout << "talon motor delta: " << delta_right << std::endl;
-       // std::cout << "talon2 velocity: " << talon2.GetSelectedSensorVelocity() << std::endl;
+        //std::cout << "talon0 velocity: " << talon0.GetSelectedSensorVelocity() << std::endl;
       }
 
       //Enable rover with a timeout of 100ms

@@ -22,8 +22,8 @@ class WaypointClass(object):
         k_tolerance = 1e-5 # 0.00001 lat lng dist ~= 1m
         try:
             return (
-                self.latitude - other.latitude < k_tolerance 
-                and self.longitude - other.longitude < k_tolerance)
+                abs(self.latitude - other.latitude) < k_tolerance 
+                and abs(self.longitude - other.longitude) < k_tolerance)
         except:
             return False
 

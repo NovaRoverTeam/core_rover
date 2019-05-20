@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import rospy,math,time
+import Jetson.GPIO as GPIO
 from sensor_msgs.msg import NavSatFix, MagneticField
+from std_msgs.msg import String
 from webots_ros.srv import set_float
 from nova_common.msg import *
 from nova_common.srv import *
@@ -24,8 +26,13 @@ class AutonomousStateMachine():
     waypoint = WaypointClass(0, 0) #Object GPS coords of current waypoint.
     waypoint_list = wayPoint(1,1,0,0,4)
     waypoint_iter = iter(waypoint_list) #Iterable object for way points to be sent.
-
+    wasLost = False #if the tennis ball has been found but is now lost
+    lostTimer = 0 #timout for lost tennis ball
     # ROS Publisher, Subscriber and Service Callbacks
+    def tdriveCallback(self,driveData):
+        '''Callback for the location of the rover'''
+        self.drive_pub.publish(driveData)
+        
     def gpsCallback(self,gpsData):
         '''Callback for the location of the rover'''
         lat = gpsData.latitude
@@ -36,6 +43,25 @@ class AutonomousStateMachine():
         '''Callback for roll, pitch, yaw from IMU'''
         global rovey_pos
         self.rovey_pos.setOrientation(rpyData.roll, rpyData.pitch, rpyData.yaw)
+
+    def tbCallback(self,tbData):
+        ''' Callback for tennisball status '''
+        rospy.loginfo(getAutonomousMode())
+        if tbData.data == "Found":
+            if getAutonomousMode() != "Destroy":
+              self.toDestroy()
+            self.wasLost = False
+        elif tbData.data == "Lost" and getAutonomousMode() == "Destroy":
+            if self.wasLost == False:
+                self.lostTimer = time.time()
+                self.wasLost = True
+            else: # if tennis ball was lost
+                if (time.time()-self.lostTimer) > 2:
+                    # If lost for more than 2 seconds then go to search.
+                    self.lostTimer = 0 #reset timer
+                    self.toSearch() #todo: go to panning instead
+        elif tbData.data == "Complete":
+            self.toComplete()
 
     def handleStartAuto(self,req):
         '''Service server handler for starting autonomous mission.'''
@@ -69,8 +95,10 @@ class AutonomousStateMachine():
         {   'source': ['Off','Traverse','Search'],'dest':'Traverse','after':'startTraverse','trigger':'toTraverse'},
         {   'source': ['Traverse','Panning'],'dest':'Search','after':'startSearch','trigger':'toSearch'},
         {   'source': ['Traverse','Search','Panning'],'dest':'Destroy','after':'startDestroy','trigger':'toDestroy'},
+        {   'source': 'Destroy','dest':'Search','after':'startSearch','trigger':'toSearch'},
         {   'source': 'Destroy','dest':'Panning','after':'startPanning','trigger':'toPanning'},
         {   'source': 'Destroy','dest':'Complete','after':'startComplete','trigger':'toComplete'},
+        {   'source': 'Complete','dest':'Traverse','after':'startTraverse','trigger':'toTraverse'},
         {   'source': ['Traverse','Search','Destroy','Panning','Complete'],
             'dest':'Off','after':'startOff','trigger':'Reset'},
         ]
@@ -80,8 +108,10 @@ class AutonomousStateMachine():
         transitions=transitions, ignore_invalid_triggers=True)
             # Ros Publishers and Subscribers
         self.drive_pub   = rospy.Publisher("/core_rover/driver/drive_cmd", DriveCmd, queue_size=10)
+        self.tdrive_sub  = rospy.Subscriber("/core_rover/driver/drive_cmd2", DriveCmd, self.tdriveCallback)
         self.gps_sub     = rospy.Subscriber("/nova_common/gps_data", NavSatFix, self.gpsCallback)
         self.rpy_sub     = rospy.Subscriber("/nova_common/RPY", RPY, self.rpyCallback)
+        self.tb_sub      = rospy.Subscriber("/core_rover/navigation/tennis_stat", String, self.tbCallback)
         # Initialise the global state parameter
         self.setAutonomousMode('Off')
     #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -105,14 +135,11 @@ class AutonomousStateMachine():
         rospy.loginfo("orientation: %s", self.orientation)
         rospy.loginfo("waypoint pos: %s", self.waypoint)
         rospy.loginfo("current pos: %s, %s", self.rovey_pos.latitude, self.rovey_pos.longitude)
-        rpm_limit   = rospy.get_param('rpm_limit',0.3)
-        steer_limit = rospy.get_param('steer_limit',0.5)
+        rpm_limit   = rospy.get_param('rpm_limit', 0.2)
+        steer_limit = rospy.get_param('steer_limit', 0.3)
         drive_msg = DriveCmd()
         drive_msg.rpm       = 50 * rpm_limit 
         drive_msg.steer_pct = turn * steer_limit
-        if getMode() == "Standby":
-            drive_msg.rpm       = 0
-            drive_msg.steer_pct = 0
         self.drive_pub.publish(drive_msg)
     def metricCalculation(self):
         self.orientation = self.rovey_pos.yaw
@@ -135,6 +162,7 @@ class AutonomousStateMachine():
         self.setAutonomousMode('Traverse')
     def Traverse(self):
         # Run Traverse
+        GPIO.output(7, GPIO.LOW)
         self.metricCalculation()
         if ((self.distance_to_waypt<self.dist_to_dest_thres)):
             try:
@@ -151,7 +179,10 @@ class AutonomousStateMachine():
         '''Intitialise Search for Tennis Ball (Sector)'''
         self.metricCalculation()
         #self.waypoint_list = spiralSearch(self.rovey_pos,25,0,8*math.pi)
-        self.waypoint_list = sectorSearch(self.rovey_pos, 20, 10)
+        self.waypoint_list = sectorSearch(self.rovey_pos, 5, 10, self.rovey_pos.yaw)
+        self.waypoint_list += sectorSearch(self.rovey_pos, 10, 10, self.rovey_pos.yaw + 10)
+        self.waypoint_list += sectorSearch(self.rovey_pos, 15, 10, self.rovey_pos.yaw + 20)
+        self.waypoint_list += sectorSearch(self.rovey_pos, 20, 10, self.rovey_pos.yaw + 30)
         self.waypoint_iter = iter(self.waypoint_list)
         self.setAutonomousMode('Search')
         rospy.loginfo('Sector Search Engaged!')
@@ -183,12 +214,24 @@ class AutonomousStateMachine():
     def Panning(self):
         self.metricCalculation()
         self.setAutonomousMode('Panning')
+    def startComplete(self):
+        GPIO.output(7, GPIO.HIGH)
+        self.metricCalculation()
+        self.setAutonomousMode('Complete')
     def Complete(self):
         self.metricCalculation()
         self.setAutonomousMode('Complete')
+        drive_msg = DriveCmd()
+        drive_msg.rpm       = 0
+        drive_msg.steer_pct = 0
+        self.drive_pub.publish(drive_msg)
     def Off(self):
         self.metricCalculation()
         self.setAutonomousMode('Off')
+        drive_msg = DriveCmd()
+        drive_msg.rpm       = 0
+        drive_msg.steer_pct = 0
+        self.drive_pub.publish(drive_msg)
 ###########################################
 #END State Machine Class
 ###########################################
@@ -199,6 +242,9 @@ class AutonomousStateMachine():
 #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 def auto_controller():
     global testing
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setwarnings(False)
+    GPIO.setup(7, GPIO.OUT)
     ''' Run Autonomous Controller Node '''
     SM = AutonomousStateMachine() # Initialise state machine class
     #ROS Publisher Subscribers and Services
@@ -214,11 +260,17 @@ def auto_controller():
         time.sleep(2)
         SM.des_pos = WaypointClass(-37.6617819, 145.3692175)
         SM.toTraverse()
+        SM.toSearch()
     ## end testing
     while not rospy.is_shutdown():
         if getMode() == 'Auto' or testing:
             SM.run()
             rospy.loginfo('RUN ITER')
+        elif getMode() == "Standby":
+            drive_msg = DriveCmd()
+            drive_msg.rpm       = 0
+            drive_msg.steer_pct = 0
+            SM.drive_pub.publish(drive_msg)
         # TODO adjust rate that AutoStatus is published
         status_msg = AutoStatus()
         status_msg.auto_state = getAutonomousMode()
@@ -227,5 +279,6 @@ def auto_controller():
         status_msg.bearing    = SM.orientation
         status_pub.publish(status_msg)
         rate.sleep() # Sleep until next iteration
+    GPIO.cleanup()
 if __name__ == '__main__':
     auto_controller()

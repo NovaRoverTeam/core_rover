@@ -19,20 +19,22 @@ Gst.init(sys.argv)
 
 
 # Number of feed types available
-numFeedTypes = 7
+numFeedTypes = 9
 
 
 
 # Create an enum of different feed types
 # Enum Name = Index
 class FeedType (Enum):
-	FT_Stereo_Dual		= 0
-	FT_Stereo_Single 	= 1
-	FT_Telescopic		  = 2
-	FT_FoscamBlack		= 3
-	FT_FoscamWhite		= 4
-	FT_Arm_1			    = 5
-	FT_Arm_2			    = 6
+	FT_Stereo_Dual			= 0
+	FT_Stereo_Single 		= 1
+	FT_Telescopic		 		= 2
+	FT_FoscamBlack			= 3
+	FT_FoscamWhite			= 4
+	FT_Arm_1			   		= 5
+	FT_Arm_2			    	= 6
+	FT_Stereo_Dual_2		= 7
+	FT_Stereo_Single_2 	= 8
 	
 	
 # Create an enum for different quality types
@@ -106,13 +108,16 @@ device_name = "Stereo Vision 2"
 isUSB = True
 cam_index = 0
 
+# End IP of foscam for changing foscam rotation
+fos_end_ip = 53
+
 
 
 
 # Returns the GST pipeline with updated variable values for Stereo Cam
-def gst_pipeline_stereo():
+def gst_pipeline_stereo(_idx):
   qual = QualityFactor(cur_qualityType)
-  return "v4l2src device=/dev/video{} ! videoscale ! video/x-raw, width={}, height={}, framerate={}/1, format={} ! compositor name=comp sink_1::xpos={} ! jpegenc ! rtpjpegpay ! udpsink host=192.168.1.{} port={} v4l2src device=/dev/video{} ! videoscale ! video/x-raw, width={}, height={}, framerate={}/1, format={} ! comp.".format(video_IDs[0], int(width * qual), int(height * qual), frame_rate, img_format, width, ip_end, port, video_IDs[1], width * qual, height * qual, frame_rate, img_format)
+  return "v4l2src device=/dev/video{} ! videoscale ! video/x-raw, width={}, height={}, framerate={}/1, format={} ! compositor name=comp sink_1::xpos={} ! jpegenc ! rtpjpegpay ! udpsink host=192.168.1.{} port={} v4l2src device=/dev/video{} ! videoscale ! video/x-raw, width={}, height={}, framerate={}/1, format={} ! comp.".format(video_IDs[_idx], int(width * qual), int(height * qual), frame_rate, img_format, width, ip_end, port, video_IDs[_idx + 1], width * qual, height * qual, frame_rate, img_format)
 
 
 
@@ -278,12 +283,14 @@ while isRunning:
     feed_input = str(raw_input(
       '\n*******************************************\n' +
 	    'Press (D) for Dual Stereo Cam\n' +
-	    'Press (S) for Stereo Cam\n' +
+	    'Press (S) for Single Stereo Cam\n' +
 	    'Press (T) for Telescopic Cam\n' +
 	    'Press (B) for Black Foscam\n' +
 	    'Press (W) for White Foscam\n' +
 	    'Press (1) for Arm Cam 1\n' +
 	    'Press (2) for Arm Cam 2\n' +
+	    'Press (3) for Arm Dual Stereo Cam\n' +
+	    'Press (4) for Arm Single Stereo Cam\n' +
 	    '\t: ')).lower()
 	    
 	  # Print break
@@ -324,9 +331,9 @@ while isRunning:
 	    # Change to Black Foscam feed
 	    cur_feedType = FeedType.FT_FoscamBlack
 	    device_name = 'Black Foscam'
-	    width = 640
-	    height = 480
-	    port = 5002
+	    width = 720
+	    height = 540
+	    port = '5002'
 	    isUSB = False
 	    cam_index = 3
 
@@ -334,9 +341,9 @@ while isRunning:
 	    # Change to White Foscam feed
 	    cur_feedType = FeedType.FT_FoscamWhite
 	    device_name = 'White Foscam'
-	    width = 640
-	    height = 480
-	    port = 5003
+	    width = 720
+	    height = 540
+	    port = '5003'
 	    isUSB = False
 	    cam_index = 4
 
@@ -346,7 +353,7 @@ while isRunning:
 	    device_name = "Stereo Vision 2"
 	    width = 720
 	    height = 500
-	    port = 5000
+	    port = '5000'
 	    isUSB = True
 	    cam_index = 1
 	    
@@ -356,9 +363,29 @@ while isRunning:
       device_name = "Stereo Vision 2"
       width = 720
       height = 500
-      port = 5000
+      port = '5000'
       isUSB = True
       cam_index = 0
+      
+    elif feed_input == '4':
+	    # Change to Arm Single Stereo feed
+	    cur_feedType = FeedType.FT_Stereo_Single_2
+	    device_name = "Stereo Vision 2"
+	    width = 720
+	    height = 500
+	    port = '5006'
+	    isUSB = True
+	    cam_index = 8
+	    
+    elif feed_input == '3':
+		  # Change to Arm Dual Stereo feed
+      cur_feedType = FeedType.FT_Stereo_Dual_2
+      device_name = "Stereo Vision 2"
+      width = 720
+      height = 500
+      port = '5006'
+      isUSB = True
+      cam_index = 7
       
     else:
       # No value pressed
@@ -406,22 +433,26 @@ while isRunning:
     if len(devices) > 0 or not isUSB:
 		  # Get the appropriate GST pipeline command
       if cur_feedType == FeedType.FT_Stereo_Dual:
-        gstCode = gst_pipeline_stereo()
+        gstCode = gst_pipeline_stereo(0)
       elif cur_feedType == FeedType.FT_Stereo_Single:
         gstCode = gst_pipeline_single(0)
       elif cur_feedType == FeedType.FT_Telescopic:
-			  gstCode = gst_pipeline_single(0)
+        gstCode = gst_pipeline_single(0)
       elif cur_feedType == FeedType.FT_FoscamBlack:
-			  gstCode = gst_pipeline_foscam(53)
+        gstCode = gst_pipeline_foscam(53)
       elif cur_feedType == FeedType.FT_FoscamWhite:
-			  gstCode = gst_pipeline_foscam(52)
+        gstCode = gst_pipeline_foscam(52)
       elif cur_feedType == FeedType.FT_Arm_1:
-			  gstCode = gst_pipeline_single(1)
+        gstCode = gst_pipeline_single(1)
       elif cur_feedType == FeedType.FT_Arm_2:
-			  gstCode = gst_pipeline_single(2)
+        gstCode = gst_pipeline_single(2)
+      elif cur_feedType == FeedType.FT_Stereo_Dual_2:
+        gstCode = gst_pipeline_stereo(2)
+      elif cur_feedType == FeedType.FT_Stereo_Single_2:
+        gstCode = gst_pipeline_single(2)
 		
 		
-	  # Create pipeline
+	  	# Create pipeline
       pipeline = Gst.parse_launch(gstCode)
       bus = pipeline.get_bus()  
 
@@ -434,8 +465,7 @@ while isRunning:
       # Add a new pipeline to the list
       pipelines[cam_index] = pipeline
       buses[cam_index] = bus
-      
-      
+           
       # Start the pipeline in the playing state
       pipelines[cam_index].set_state(Gst.State.PLAYING)
       
@@ -470,9 +500,6 @@ while isRunning:
 	
 	# Foscam adjustments
   if command in ('f', 'foscam'):
-		
-		# End IP of foscam
-		fos_end_ip = 53
 
 		# Run in a loop
 		isFosMenu = True
@@ -488,6 +515,8 @@ while isRunning:
 			  'Press (X) for Stop Rotation\n' +
 			  'Press (I) for Zoom In\n' +
 			  'Press (O) for Zoom Out\n' +
+			  'Press (1) for Black Foscam\n' +
+			  'Press (2) for White Foscam\n' +
 			  'Press (C) to Cancel\n' +
 			  '\t: ')).lower()
 			  
@@ -525,6 +554,13 @@ while isRunning:
 		  if fos_input == 'o':
 		  	fosCommand = 'zoomOut'
 		  	
+		  # Change to Black Foscam
+		  if fos_input == '1':
+		  	fos_end_ip = 53
+		  	
+		  # Change to White Foscam
+		  if fos_input == '2':
+		  	fos_end_ip = 52		  	
 		  
 		  # Run the command
 		  if fosCommand != "":
