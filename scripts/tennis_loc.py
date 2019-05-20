@@ -76,10 +76,11 @@ def tennis_loc():
     sock.setblocking(0)
     steer_limit = rospy.get_param('steer_limit',0.3)
     rpm_limit   = rospy.get_param('rpm_limit',0.3)
+    data = '0'
     while not rospy.is_shutdown():
     	if getAutoMode() != 'Off': 
           data = connection.recv(100) # 1 Byte per character
-          if data != '0':
+          if data != '0' and data != None:
               data_parsed = ast.literal_eval(data)
               #print(data_parsed)
               #array = Float32MultiArray(4,data_parsed)
