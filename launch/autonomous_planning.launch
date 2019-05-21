@@ -16,10 +16,10 @@
         </node>
 
         <!-- constructs waypoints from the rover's current position to the global objective -->
-        <node pkg="core_rover" name="planner_node" type="planner_node.py"/>
+        <node pkg="core_rover" name="planner_node" type="planner_node.py" output="screen"/>
 
         <!-- issues drive commands that direct the rover towards the nearest waypoint -->
-        <node pkg="core_rover" name="planner_controller_node" type="planner_controller_node.py"/>
+        <node pkg="core_rover" name="planner_controller_node" type="planner_controller_node.py" output="screen"/>
     </group>
    
 </launch>

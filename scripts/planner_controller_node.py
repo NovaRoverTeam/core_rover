@@ -25,12 +25,15 @@ def is_ready():
            and state_waypoint_pose != None
 
 def odom_callback(msg):
+    global state_rover_pose
     state_rover_pose = msg
 
 def gps_callback(msg):
+    global state_rover_gps
     state_rover_gps = msg
 
 def waypoint_callback(msg):
+    global state_waypoint_pose
     state_waypoint_pose = msg
 
 def construct_drive_cmd(current_pose, waypoint_pose):

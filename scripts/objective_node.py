@@ -5,17 +5,19 @@ from sensor_msgs.msg import NavSatFix
 from nova_common.msg import *
 from nova_common.srv import *
 
-state_objective_latitude = None
-state_objective_longitude = None
+state_objective_latitude = -33.8688
+state_objective_longitude = 151.2093
 
 NODE_NAME = "objective_node"
 OBJECTIVE_GPS_TOPIC = "/planner/objective_gps"
 
 def is_ready():
     return state_objective_latitude != None \
-           and state_objecctive_longitude != None
+           and state_objective_longitude != None
 
 def handle_receive_objective(req):
+    global state_objective_latitude
+    global state_objective_longitude
     state_objective_latitude = req.latitude
     state_objective_longitude = req.longitude
 

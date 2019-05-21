@@ -48,8 +48,8 @@ def pose_to_gridcell(pose):
     """
     origin_pose = state_occupancy_grid.info.origin
 
-    origin_point = origin_pose.point
-    point = pose.point
+    origin_point = origin_pose.position
+    point = pose.pose.pose.position
     
     x = int(point.x - origin_point.x)
     y = int(point.y - origin_point.y)
@@ -102,18 +102,21 @@ def odom_callback(msg):
     to be in the "map" frame.
     """
     # TODO: check if rover's pose is actually published in "map"
+    global state_rover_pose
     state_rover_pose = msg
 
 def map_callback(msg):
     """
     Saves the most recent occupancy grid to internal state.
     """
+    global state_occupancy_grid
     state_occupancy_grid = msg
 
 def objective_callback(msg):
     """
     Saves the current objective to the node's internal state.
     """
+    global state_objective_pose
     state_objective_pose = msg
 
 def get_objective_grid(occupancy_grid, start_grid, end_grid):
@@ -223,26 +226,27 @@ def planner():
     while not rospy.is_shutdown():
 
         if is_ready():
-            rospy.logdebug("Planner ready to publish.")
+            rospy.loginfo("Planner ready to publish.")
 
             start = pose_to_gridcell(state_rover_pose)
-            end = latlon_to_gridcell(state_objective_pose)
+            end = pose_to_gridcell(state_objective_pose)
+            grid = preprocess_occupancy_grid(state_occupancy_grid)
 
             # handle out-of-grid issue, get the right end grid
             end = get_objective_grid(grid, start, end)
 
-            grid = preprocess_occupancy_grid(state_occupancy_grid)
+            # call A* for waypoints
             waypoints = a_star(grid, start, end)
 
             if len(waypoints) == 0:
-                rospy.logdebug("No waypoints returned by A*")
+                rospy.loginfo("Not publishing - no waypoints returned by A*.")
             else:
-                # get smoothed waypoint
+                rospy.loginfo("Publishing waypoints retuend by A*.")
                 waypoint = get_smooth_waypoint(start, waypoints)
                 waypoint_publisher.publish(gridcell_to_pose(waypoint))
 
         else:
-            rospy.logdebug("Planner not ready to publish.")
+            rospy.loginfo("Planner not ready to publish.")
 
         publish_rate.sleep()
 

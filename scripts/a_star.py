@@ -59,7 +59,7 @@ def node_with_min_fscore(open_set, f_cost):
     Find the cell in open set with the smallest f score.
     """
     # TODO: replace this nasty implementation with a heapq
-    min_score = 10e5
+    min_score = float("Inf")
     min_node = None
     for node in open_set:
         if f_cost[node] < min_score:
@@ -103,10 +103,8 @@ def a_star(grid, start, end, heuristic_cost=euclidean_heuristic_cost):
     g_cost[start] = 0
     f_cost[start] = heuristic_cost(start, end)
 
-    while len(open_set) != 0:
+    while len(open_set) > 0:
         # node in open set with min fscore
-
-        # should shoul be f_cost + g_cos
         curr = node_with_min_fscore(open_set, f_cost)
         
         # if we've reached the destination
