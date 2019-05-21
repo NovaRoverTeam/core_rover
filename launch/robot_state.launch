@@ -1,9 +1,18 @@
 <?xml version="1.0"?>
 
 <launch>
-  <param name="robot_description" command="$(find xacro)/xacro '$(find core_rover)/params/elp_standalone.urdf.xacro'" />
 
-  <!-- start publishing transforms -->
+  <!--
+    This launch file spins up publishers to the transform tree, necessary to publish transforms between:
+    * base_link and the stero camera frames
+    * base_link and the lidar
+
+    Note: YOU DO NOT NEED TO RUN THIS LAUNCH FILE DIRECTLY, it will automatically be run whenever you run
+    "stereo_odometry.launch" is run (which, in turn, is run whenever "autonomous_localization.launch" is run).
+  -->
+
+  <param name="robot_description" command="$(find xacro)/xacro '$(find core_rover)/params/elp_standalone.urdf.xacro'" />
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+
 </launch>

@@ -6,7 +6,15 @@
             (1) decompress the raw stereo images
             (2) rectify the unrectified (fisheye) images
             (3) convert the rectified images to odometry
+
+        Note: YOU DO NOT NEED TO LAUNCH THIS FILE DIRECTLY, it will be launched by autonomous_localization.launch.
+
+        Note: the stereo_odometry node requires transforms between base_link and the stereo camera frames. These are published
+        by robot_state.launch (which is automatically run when you launch this file).
     -->
+
+    <!-- call robot_state.launch to publish base_link -> stereo camera transforms -->
+    <include file="$(find core_rover)/launch/robot_state.launch"/>
 
     <!-- (1) DECOMPRESS STEREO IMAGES -->
     <group ns="/elp">
@@ -50,4 +58,5 @@
         <param name="frame_id" type="string" value="base_link"/>
         <param name="odom_frame_id" type="string" value="odom"/>
     </node>
+
 </launch>
