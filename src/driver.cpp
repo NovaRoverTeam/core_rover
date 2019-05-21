@@ -17,6 +17,7 @@
 #include <ros/console.h>
 #include <nova_common/DriveCmd.h>
 #include <nova_common/TuneCmd.h>
+#include <nova_common/EncoderData.h>
 
 //..**.. Simulator includes
 #include <signal.h>
@@ -40,13 +41,11 @@
 #include <string>
 
 //--*-- Talon SRX includes
-
 #define Phoenix_No_WPI // remove WPI dependencies
 #include "ctre/Phoenix.h"
 #include "ctre/phoenix/platform/Platform.h"
 #include "ctre/phoenix/unmanaged/Unmanaged.h"
 #include "ctre/phoenix/MotorControl/CAN/WPI_TalonSRX.h"
-
 #include <string>
 #include <iostream>
 #include <chrono>
@@ -65,23 +64,20 @@ bool hbeat = false;
 int hbeat_cnt = 0;
 double prev_left = 0.0;
 double prev_right = 0.0;
-double max_delta = 0.04;
+double max_delta = 0.02;
 std::string tune_cmd = "";
+ros::Publisher encoder_data_pub;
 float tune_num;
 ros::NodeHandle *n; // Create node handle to talk to ROS
 const int kTimeoutMs = 0;
 const int kPIDLoopIdx = 0;
 //Declaring and creating talonSRX objects to control the 6 motors. 
-
 TalonSRX talon1(1); 
 TalonSRX talon2(2);
 TalonSRX talon3(3);
 TalonSRX talon4(4);
 TalonSRX talon5(5);
 TalonSRX talon0(0);
-
-
-
 
 //Forward Declare functions
 void ConfigTalon(TalonSRX* talon);
@@ -147,7 +143,7 @@ void TuneCb(const nova_common::TuneCmd::ConstPtr& msg)
 
 //--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 // PIDCb():
-//    Change between PID control
+//    Change between PID control and voltage control of the motors
 //    
 //--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-
 void PIDCb(const std_msgs::Bool::ConstPtr& msg)
@@ -158,6 +154,31 @@ void PIDCb(const std_msgs::Bool::ConstPtr& msg)
   else{
     n->setParam("/core_rover/driver/control_mode","Voltage");
   }
+}
+
+//--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+// EncoderFeedback():
+//    Publishes encoder data to rostopic
+//    
+//--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..-
+void EncoderFeedback(){
+  nova_common::EncoderData msg;
+  msg.talon0Velocity=talon0.GetSelectedSensorVelocity()*0.0818;
+  msg.talon1Velocity=talon1.GetSelectedSensorVelocity()*0.0818;
+  msg.talon2Velocity=-talon2.GetSelectedSensorVelocity()*0.0818;
+  msg.talon3Velocity=talon3.GetSelectedSensorVelocity()*0.0818;
+  msg.talon4Velocity=talon4.GetSelectedSensorVelocity()*0.0818;
+  msg.talon5Velocity=talon5.GetSelectedSensorVelocity()*0.0818;
+
+  msg.talon0Position=talon0.GetSelectedSensorPosition()*0.00818;
+  msg.talon1Position=talon1.GetSelectedSensorPosition()*0.00818;
+  msg.talon2Position=-talon2.GetSelectedSensorPosition()*0.00818;
+  msg.talon3Position=talon3.GetSelectedSensorPosition()*0.00818;
+  msg.talon4Position=talon4.GetSelectedSensorPosition()*0.00818;
+  msg.talon5Position=talon5.GetSelectedSensorPosition()*0.00818;
+  
+  encoder_data_pub.publish(msg);
+  
 }
 
 void ConfigTalon(TalonSRX* talon) {
@@ -190,8 +211,6 @@ int main(int argc, char **argv)
   //Talon SRX Setup
   std::string interface;
   interface = "can0";
-
-  
   ctre::phoenix::platform::can::SetCANInterface(interface.c_str());
   talon3.ConfigFactoryDefault();
 
@@ -224,7 +243,6 @@ int main(int argc, char **argv)
   ConfigTalon(&talon1);
   ConfigTalon(&talon0);
   //printf("test!");
-  
 
   ros::init(argc, argv, "driver", ros::init_options::AnonymousName); // Initialise node
   n = new ros::NodeHandle;
@@ -238,6 +256,8 @@ int main(int argc, char **argv)
   ros::Subscriber PID_sub = n->subscribe("/base_station/PID_cmd", 1, PIDCb);
   ros::Subscriber PID_tune = n->subscribe("/core_rover/PID_tune", 1, TuneCb);
 
+  encoder_data_pub = n->advertise<nova_common::EncoderData>("/core_rover/encoder_data", 1);
+ 
   // Boolean variable describing whether we are using the simulator
   // or a real rover. 
   string vehicle;
@@ -249,7 +269,6 @@ int main(int argc, char **argv)
   n->getParam(paramKey, vehicle);
   if (vehicle == "Simulator"){
     simulator = true;
-    simulator = false;
   }
 
   double wheel[6]; //array to update motor values
@@ -298,8 +317,6 @@ int main(int argc, char **argv)
       n->getParam(paramKey2, mode);
 
       if(hbeat || mode.compare("Auto") == 0){
-           talon_speed = speed / 50.0;
-      if(hbeat){
            talon_speed = speed / 50.0;
            talon_steer = steer / 100.0;
       }
@@ -394,6 +411,9 @@ int main(int argc, char **argv)
       talon4.Set(ControlMode::PercentOutput, right);
       talon5.Set(ControlMode::PercentOutput, right);
      
+      }
+
+
       
       //Output debug information
       if (loopCount >= 0) {
@@ -403,6 +423,7 @@ int main(int argc, char **argv)
         //std::cout << "talon0 velocity: " << talon0.GetSelectedSensorVelocity() << std::endl;
       }
 
+      EncoderFeedback();
       //Enable rover with a timeout of 100ms
       ctre::phoenix::unmanaged::FeedEnable(100);
     }                     
@@ -419,3 +440,4 @@ int main(int argc, char **argv)
 
   return 0;
 }
+
