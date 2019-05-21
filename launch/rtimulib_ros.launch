@@ -1,5 +1,5 @@
 <launch>
-    <node pkg="core_rover" type="rtimulib_ros" name="rtimulib_node" output="screen ">
+    <node pkg="core_rover" type="rtimulib_ros" name="rtimulib_node" output="screen">
         <param name="calibration_file_path" value="$(find core_rover)/include"/>
         <param name="calibration_file_name" value="RTIMULib" />
         <param name="frame_id" value="imu"/>
