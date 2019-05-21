@@ -42,7 +42,11 @@
         <!-- PUBLISH to: stereo odometry -->
         <remap from="odom"                  to="/stereo_odometry"/>
 
-        <!-- note, for stereo_odometry to publish, we require transforms base_link->elp, elp->left_cam, elp->right_cam -->
+        <!--note, for stereo_odometry to publish, we require the transform hierarchy from:
+                base_link->|left_cam_frame|
+                base_link->|right_cam_frame
+            this tree is currently published by robot_state.launch
+        -->
         <param name="frame_id" type="string" value="base_link"/>
         <param name="odom_frame_id" type="string" value="odom"/>
     </node>
