@@ -1,0 +1,11 @@
+<launch>
+
+    <!--
+        This launch file is a wrapper around the localization and mapping launch files. It just launches both
+        "autonomous_localization.launch" and "autonomous_mapping.launch".
+    -->
+
+    <include file="$(find core_rover)/launch/autonomous_localization.launch"/>
+    <include file="$(find core_rover)/launch/autonomous_mapping.launch"/>
+
+</launch>

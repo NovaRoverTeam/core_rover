@@ -1,13 +1,24 @@
 <launch>
 
+    <!-- 
+        This is the launch file for the planning subsystem. It relies on the output of "autonomous_slam.launch",
+        so our recommendation is to always run the two in tandem.
+    -->
+
     <group ns="planner">
+        <!-- publishes the current global objective (as UTM) -->
         <node pkg="core_rover" name="objective_node" type="objective_node.py"/>
+
+        <!-- converts GPS to pose in the map frame -->
         <node pkg="gps_common" name="gps_to_pose_node" type="utm_odometry_node">
             <remap from="fix" to="/planner/objective_gps"/>
             <remap from="odom" to="/planner/objective_pose"/>
         </node>
 
+        <!-- constructs waypoints from the rover's current position to the global objective -->
         <node pkg="core_rover" name="planner_node" type="planner_node.py"/>
+
+        <!-- issues drive commands that direct the rover towards the nearest waypoint -->
         <node pkg="core_rover" name="planner_controller_node" type="planner_controller_node.py"/>
     </group>
    
