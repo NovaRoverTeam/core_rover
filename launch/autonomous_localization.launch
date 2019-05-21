@@ -1,12 +1,6 @@
 <launch>
 
-    <!-- params required by navigation.py and auto.py-->
-    <rosparam param="/core_rover/Mode">"Auto"</rosparam>
-    <rosparam param="rpm_limit">1000</rosparam>
-    <rosparam param="steer_limit">1000</rosparam>
     <arg name="pi/2" value="1.5707963267948966"/> 
-
-   <!-- <node pkg="tf" type="static_transform_publisher" name="imu_to_base_link" args="0 0 0 0 0 0 imu base_link 100"/> -->
 
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_local">
         <!-- switch on debug -->
@@ -25,8 +19,7 @@
         <!--param name="base_link_frame" value="imu"/--> <!-- to run with uav-bag -->
         <param name="world_frame" value="odom"/>
 
-        <!-- SUBUSCRIBE to: IMU "/nova_common/IMU" -->
-	
+        <!-- SUBUSCRIBE to: raw imu -->
         <param name="imu0" value="/nova_common/IMU"/>
         <param name="imu0_remove_gravitational_acceleration" value = "true"/>
 	<param name="imu0_differential" value="false"/> <!-- set false if with navsat transform -->
@@ -36,6 +29,7 @@
                                        true,true,true,
                                        true,true,false]</rosparam>
 
+        <!-- SUBSCRIBE to: raw stereo odometry -->
 	<param name="odom0" value="/stereo_odometry"/>
 	<rosparam param="odom0_config">[true,  true,  false,
                                false, false, true,
@@ -43,8 +37,7 @@
                                false, false, true,
                                false, false, false]</rosparam> 
 
-
-        <!-- PUBLISH to: "/ekf/Odometry" -->
+        <!-- PUBLISH to: "/ekf/Odometry/local" -->
         <remap from="/odometry/filtered" to="/ekf/Odometry/local"/>
     </node>
 
@@ -64,8 +57,7 @@
         <!--param name="base_link_frame" value="imu"/--> <!-- to run with uav-bag -->
         <param name="world_frame" value="map"/>
 
-        <!-- SUBUSCRIBE to: IMU "/nova_common/IMU" -->
-	
+        <!-- SUBUSCRIBE to: IMU raw imu -->
         <param name="imu0" value="/nova_common/IMU"/>
         <param name="imu0_differential" value="false"/> <!-- set false if with navsat transform -->
         <rosparam param="imu0_config">[true,true,true,
@@ -74,6 +66,7 @@
                                        true,true,true,
                                        true,true,true]</rosparam>
 
+        <!-- SUBSCRIBE to: raw stereo odometry -->
 	<param name="odom0" value="/stereo_odometry"/>
 	<rosparam param="odom0_config">[true,  true,  false,
                                false, false, true,
@@ -81,15 +74,14 @@
                                false, false, true,
                                false, false, false]</rosparam> 
 
-        <!-- PUBLISH to: "/ekf/Odometry" -->
-
+        <!-- PUBLISH to: "/ekf/Odometry/global" -->
         <remap from="/odometry/filtered" to="/ekf/Odometry/global"/>
     </node>
 
     <node pkg="robot_localization" type="navsat_transform_node" name="navsat_transform_node">
         <param name="frequency" value="30"/>
 
-        <!-- SUBSCRIBE to: "/nova_common/IMU"; "/nova_common/gps_data"; "/ekf/Odometry" -->
+        <!-- SUBSCRIBE to: raw imu, raw gps, and ekf's odometry/global" -->
         <remap from="imu/data" to="/nova_common/IMU"/>
         <remap from="gps/fix" to="/nova_common/gps_data"/>
         <remap from="/odometry/filtered" to="/ekf/Odometry/global"/>
@@ -104,6 +96,6 @@
         <!-- PUBLISH to: "/ekf/gps_data"-->
         <param name="publish_filtered_gps" value="true"/>
 	<param name="broadcast_utm_transform" value="true"/>
-
     </node>
+
 </launch>
