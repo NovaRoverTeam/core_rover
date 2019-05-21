@@ -7,10 +7,10 @@
             (2) rectify the unrectified (fisheye) images
             (3) convert the rectified images to odometry
 
-        Note: YOU DO NOT NEED TO LAUNCH THIS FILE DIRECTLY, it will be launched by autonomous_localization.launch.
+        Note: YOU DO NOT NEED TO LAUNCH THIS FILE DIRECTLY, it will be launched by "autonomous_mapping.launch".
 
         Note: the stereo_odometry node requires transforms between base_link and the stereo camera frames. These are published
-        by robot_state.launch (which is automatically run when you launch this file).
+        by "robot_state.launch" (which is automatically run when you launch this file).
     -->
 
     <!-- call robot_state.launch to publish base_link -> stereo camera transforms -->

@@ -8,7 +8,7 @@
     * base_link and the lidar
 
     Note: YOU DO NOT NEED TO RUN THIS LAUNCH FILE DIRECTLY, it will automatically be run whenever you run
-    "stereo_odometry.launch" is run (which, in turn, is run whenever "autonomous_localization.launch" is run).
+    "stereo_odometry.launch".
   -->
 
   <param name="robot_description" command="$(find xacro)/xacro '$(find core_rover)/params/elp_standalone.urdf.xacro'" />
