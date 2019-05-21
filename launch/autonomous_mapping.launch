@@ -17,7 +17,7 @@
 
 
   <!-- Run the ROS package stereo_image_proc for image rectification -->
-  <group ns="$(arg CAMERA_NAME)" >
+<!--  <group ns="$(arg CAMERA_NAME)" >
      <node pkg="stereo_image_proc" type="stereo_image_proc" name="stereo_image_proc">
         <remap from="left/image_raw"    to="left/image_raw"/>
         <remap from="left/camera_info"  to="left/camera_info"/>
@@ -34,7 +34,7 @@
      </node> 
 
   </group>
-
+-->
     <!--*********************** Visual Odometry ***********************-->
    <node pkg="rtabmap_ros" type="stereo_odometry" name="stereo_odometry" output="screen">
       <remap from="left/image_rect"       to="/elp/left/image_rect"/>
@@ -82,8 +82,8 @@
          <remap from="right/camera_info" to="/elp/right/camera_info"/>
 <!--         <remap from="scan_cloud" to="/ptcloud_merge"/> 
 -->
-         <remap from="odom" to="/ekf/Odometry/global"/>
-         <!--remap from="odom" to="/stereo_odometry"/-->
+         <!--<remap from="odom" to="/ekf/Odometry/global"/>-->
+         <remap from="odom" to="/stereo_odometry"/>
 <!--         <remap from="scan_cloud" to="/elp/points2"/>
 -->
 

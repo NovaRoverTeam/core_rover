@@ -1,7 +1,7 @@
 <launch>
   <arg name="CAMERA_NAME" default="elp" />
-  <arg name="LEFT_DEVICE" default="/dev/video0" />
-  <arg name="RIGHT_DEVICE" default="/dev/video1" />
+  <arg name="LEFT_DEVICE" default="/dev/video1" />
+  <arg name="RIGHT_DEVICE" default="/dev/video2" />
   <arg name="LEFT_INFO_URL" value="package://core_rover/include/calibration/elp_left.yaml" />
   <arg name="RIGHT_INFO_URL" value="package://core_rover/include/calibration/elp_right.yaml" />
   <arg name="WIDTH" default="1280" />
