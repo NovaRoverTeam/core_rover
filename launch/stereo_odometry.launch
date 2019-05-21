@@ -57,6 +57,23 @@
         -->
         <param name="frame_id" type="string" value="base_link"/>
         <param name="odom_frame_id" type="string" value="odom"/>
+
+        <!-- other parameters -->
+        <param name="Vis/InlierDistance" type="string" value="0.1"/>
+        <param name="Vis/MinInliers" type="string" value="10"/>
+        <param name="Vis/RoiRatios" type="string" value="0.03 0.03 0.04 0.04"/>
+        <param name="Vis/MaxDepth" type="string" value="10"/>
+
+        <param name="Vis/MaxFeatures" type="string" value="500"/>
+        <param name="GFTT/MinDistance" type="string" value="5"/>
+        <param name="GFTT/QualityLevel"  type="string" value="0.00001"/>
+
+        <param name="Odom/Strategy"      type="string" value="0"/> <!-- 0=Frame-to-Map, 1=Frame=to=Frame -->
+
+        <param name="Vis/EstimationType" type="string" value="1"/> <!-- 0=3D->3D 1=3D->2D (PnP) -->
+        <param name="Odom/GuessMotion" type="string" value="true"/>
+        <!-- param unless="$(arg local_bundle)" name="OdomF2M/BundleAdjustment" type="string" value="0"/ -->
+        <param name="OdomF2M/MaxSize"    type="string" value="1000"/>
     </node>
 
 </launch>

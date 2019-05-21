@@ -31,6 +31,30 @@
             <!-- PUBLISH to: rtabmap occupancy grid -->
 
             <param name="frame_id" type="string" value="base_link"/>
+
+            <!-- other params -->
+            <!-- Grid Map Params-->
+            <param name="Grid/MinSize" value="0.0"/>
+            <param name="Grid/Eroded" value="false"/>
+            <param name="Grid/Scan2dUnknownSpaceFilled" type="bool" value="false"/>
+
+            <!-- Map Projection Params -->
+            <param name="Grid/NormalsSegmentation" value="true"/>
+            <param name="Grid/MaxGroundAngle" value="45"/>
+            <param name="Grid/MinClusterSize" value="20"/>
+            <param name="Grid/MaxGroundHeight" value="0.2"/>
+            <param name="Grid/MinGroundHeight" value="-0.2"/>
+            <param name="Grid/FootprintLength" value="1.0"/>
+            <param name="Grid/FootprintWidth" value="1.0"/>
+            <param name="Grid/DepthDecimation" type="string" value="4"/>
+
+            <!-- RTAB-Map's parameters -->
+            <param name="Rtabmap/TimeThr" type="string" value="700"/>
+            <param name="Rtabmap/DetectionRate" type="string" value="1"/>
+            <param name="Kp/MaxDepth" type="string" value="10"/>
+            <param name="Kp/DetectorStrategy" type="string" value="6"/>
+            <param name="Vis/EstimationType"  type="string" value="1"/>
+            <param name="Vis/MaxDepth" type="string" value="10"/>  
         </node>
     </group>
 
