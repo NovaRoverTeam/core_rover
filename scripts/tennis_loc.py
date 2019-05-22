@@ -80,7 +80,7 @@ def tennis_loc():
     while not rospy.is_shutdown():
     	if getAutoMode() != 'Off': 
           data = connection.recv(100) # 1 Byte per character
-          if data != '0' and data != None:
+          if 'x' in data:
               data_parsed = ast.literal_eval(data)
               #print(data_parsed)
               #array = Float32MultiArray(4,data_parsed)

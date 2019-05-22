@@ -1,12 +1,13 @@
-#include <Servo.h>
+#include <SimpleServo.h>
 
-Servo flag_servo;
-const int jetson_i = 7;
+SimpleServo flag_servo;
+const int jetson_i = 2;
 
 void setup() {
   // put your setup code here, to run once:
-  flag_servo.attach(6);
+  flag_servo.attach(1);
   pinMode(jetson_i, INPUT);
+  flag_servo.write(120);
   
 }
 
@@ -15,11 +16,11 @@ void loop() {
   int val = digitalRead(jetson_i);
 
   if (val == HIGH){
-    flag_servo.write(20); //on
-   }
+    flag_servo.write(0); //on
+  }
   else{
     flag_servo.write(120); //off
-    }
+  }
     
   delay(100);
   
