@@ -28,17 +28,17 @@
         <!-- SUBUSCRIBE to: IMU "/nova_common/IMU" -->
 	
         <param name="imu0" value="/nova_common/IMU"/>
-        <param name="imu0_remove_gravitational_acceleration" value = "true"/>
+    	
 	<param name="imu0_differential" value="false"/> <!-- set false if with navsat transform -->
         <rosparam param="imu0_config">[false,false,false,
                                        true,true,true,
                                        false,false,false,
                                        true,true,true,
-                                       true,true,false]</rosparam>
+                                       false,false,false]</rosparam>
 
 	<param name="odom0" value="/stereo_odometry"/>
 	<rosparam param="odom0_config">[true,  true,  false,
-                               false, false, true,
+                               true, true, true,
                                true,  false, false,
                                false, false, true,
                                false, false, false]</rosparam> 
@@ -68,15 +68,15 @@
 	
         <param name="imu0" value="/nova_common/IMU"/>
         <param name="imu0_differential" value="false"/> <!-- set false if with navsat transform -->
-        <rosparam param="imu0_config">[true,true,true,
+        <rosparam param="imu0_config">[false,false,false,
                                        true,true,true,
+                                       false,false,false,
                                        true,true,true,
-                                       true,true,true,
-                                       true,true,true]</rosparam>
+                                       false,false,false]</rosparam>
 
 	<param name="odom0" value="/stereo_odometry"/>
 	<rosparam param="odom0_config">[true,  true,  false,
-                               false, false, true,
+                               true, true, true,
                                true,  false, false,
                                false, false, true,
                                false, false, false]</rosparam> 
