@@ -15,7 +15,7 @@
         <!-- node configuration -->
         <param name="frequency" value="30"/>
         <param name="sensor_timeout" value="0.1"/>
-        <param name="two_d_mode" value="false"/>
+        <param name="two_d_mode" value="true"/>
 	<param name="acceleration_limits" value = "[1.3, 0.0, 0.0, 0.0, 0.0, 4.5]"/>
 
         <!-- may need to change these depending on the frame_ids used by the playback data -->
