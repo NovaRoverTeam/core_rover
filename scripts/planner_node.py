@@ -172,7 +172,7 @@ def get_smooth_waypoint(start, waypoints):
     """
     # start with the second waypoint in the list
     # the second waypoint could represent the turning directions of the rover
-    next_index = 1
+    next_index = 0
     next_point = waypoints[next_index]
 
     smooth_waypoint = next_point
@@ -190,14 +190,14 @@ def get_smooth_waypoint(start, waypoints):
         increment_point = (smooth_waypoint[0] - start[0], smooth_waypoint[1] - start[1])
 
     # investigate if the next point is on the same line
-    # increment the index by 2 each time
-    next_index += 2
+    # increment the index by 1 each time
+    next_index += 1
     while next_index < len(waypoints):
         next_point_on_line = \
         (smooth_waypoint[0] + increment_point[0], smooth_waypoint[1] + increment_point[1])
         if next_point_on_line == waypoints[next_index]:
             smooth_waypoint = waypoints[next_index]
-            next_index += 2
+            next_index += 1
             continue
         break
     
