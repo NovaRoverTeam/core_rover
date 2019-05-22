@@ -16,11 +16,16 @@
     <!-- call robot_state.launch to publish base_link -> stereo camera transforms -->
     <include file="$(find core_rover)/launch/robot_state.launch"/>
 
-    <!-- (1) DECOMPRESS STEREO IMAGES -->
+    <!--
+        (1) DECOMPRESS STEREO IMAGES 
+        Removed decompression node - the stereo camera publishes raw (uncompressed) images already
+    -->
+    <!--
     <group ns="/elp">
         <node name="republish_left" type="republish" pkg="image_transport" args="compressed in:=/elp/left/image_raw raw out:=/elp/left/image_raw" />
         <node name="republish_right" type="republish" pkg="image_transport" args="compressed in:=/elp/right/image_raw raw out:=/elp/right/image_raw" />
     </group>
+    -->
 
     <!-- (2) RECTIFY STEREO IMAGES -->
     <group ns="/elp">
