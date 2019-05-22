@@ -22,11 +22,18 @@
 
             <!-- SUBSCRIBE to: rectified stereo images -->
             <param name="subscribe_stereo" type="bool" value="true"/>
+            <param name="subscribe_rgb" type="bool" value="false"/>
             <param name="subscribe_depth" type="bool" value="false"/> <!-- this is required for mono cameras -->
             <remap from="left/image_rect" to="/elp/left/image_rect_color"/> <!-- for some reason, left has to be RGB or mono-->
             <remap from="right/image_rect" to="/elp/right/image_rect"/>
             <remap from="left/camera_info" to="/elp/left/camera_info"/>
             <remap from="right/camera_info" to="/elp/right/camera_info"/>
+
+            <!-- SUBSCRIBE to: lidar -->
+            <!-- commented-out, could not get lidar to work alongside stereo
+            <param name="subscribe_scan_cloud" value="true"/>
+            <remap from="scan_cloud" to="/ptcloud_merge"/>
+            -->
 
             <!-- PUBLISH to: rtabmap occupancy grid -->
 
