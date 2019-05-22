@@ -65,7 +65,14 @@
         <param name="frame_id" type="string" value="base_link"/>
         <param name="odom_frame_id" type="string" value="odom"/>
 
+        <!-- DO NOT PUBBLISH: odom->base_link transform - this should be "false" only if
+             running with "autonomous_localiation.launch"
+        -->
+        <param name="publish_tf" type="bool" value="false"/>
+
         <!-- other parameters -->
+        <param name="wait_for_transform" value="true"/>
+
         <param name="Vis/InlierDistance" type="string" value="0.1"/>
         <param name="Vis/MinInliers" type="string" value="10"/>
         <param name="Vis/RoiRatios" type="string" value="0.03 0.03 0.04 0.04"/>
