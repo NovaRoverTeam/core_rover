@@ -38,10 +38,10 @@
             <!-- DO NOT PUBLISH: map->odom transform - this should be "false" only if
                  running with "autonomous_localiation.launch"
             -->
-            <param name="publish_tf" type="bool" value="false"/>
+            <param name="publish_tf" type="bool" value="true"/>
 
             <!-- PUBLISH to: rtabmap occupancy grid -->
-
+            
             <param name="frame_id" type="string" value="base_link"/>
 
             <!-- other params -->

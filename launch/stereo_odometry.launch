@@ -20,12 +20,10 @@
         (1) DECOMPRESS STEREO IMAGES 
         Removed decompression node - the stereo camera publishes raw (uncompressed) images already
     -->
-    <!--
     <group ns="/elp">
         <node name="republish_left" type="republish" pkg="image_transport" args="compressed in:=/elp/left/image_raw raw out:=/elp/left/image_raw" />
         <node name="republish_right" type="republish" pkg="image_transport" args="compressed in:=/elp/right/image_raw raw out:=/elp/right/image_raw" />
     </group>
-    -->
 
     <!-- (2) RECTIFY STEREO IMAGES -->
     <group ns="/elp">
@@ -38,7 +36,7 @@
             <remap from="right/image_raw"   to="/elp/right/image_raw"/>
             <remap from="right/camera_info" to="/elp/right/camera_info"/>
 
-            <!-- PUBLISH to: left/rigwht rectified stereo -->
+            <!-- PUBLISH to: left/right rectified stereo -->
 
             <param name="disparity_range" value="128"/>
         </node>
@@ -66,28 +64,9 @@
         <param name="odom_frame_id" type="string" value="odom"/>
 
         <!-- DO NOT PUBBLISH: odom->base_link transform - this should be "false" only if
-             running with "autonomous_localiation.launch"
+             running with "autonomous_localization.launch"
         -->
-        <param name="publish_tf" type="bool" value="false"/>
-
-        <!-- other parameters -->
-        <param name="wait_for_transform" value="true"/>
-
-        <param name="Vis/InlierDistance" type="string" value="0.1"/>
-        <param name="Vis/MinInliers" type="string" value="10"/>
-        <param name="Vis/RoiRatios" type="string" value="0.03 0.03 0.04 0.04"/>
-        <param name="Vis/MaxDepth" type="string" value="10"/>
-
-        <param name="Vis/MaxFeatures" type="string" value="500"/>
-        <param name="GFTT/MinDistance" type="string" value="5"/>
-        <param name="GFTT/QualityLevel"  type="string" value="0.00001"/>
-
-        <param name="Odom/Strategy"      type="string" value="0"/> <!-- 0=Frame-to-Map, 1=Frame=to=Frame -->
-
-        <param name="Vis/EstimationType" type="string" value="1"/> <!-- 0=3D->3D 1=3D->2D (PnP) -->
-        <param name="Odom/GuessMotion" type="string" value="true"/>
-        <!-- param unless="$(arg local_bundle)" name="OdomF2M/BundleAdjustment" type="string" value="0"/ -->
-        <param name="OdomF2M/MaxSize"    type="string" value="1000"/>
+        <param name="publish_tf" type="bool" value="true"/>
     </node>
 
 </launch>
