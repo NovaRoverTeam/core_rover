@@ -12,6 +12,8 @@ http://wiki.ros.org/ROS/Tutorials
 
 sudo apt-get install libsdl2-dev
 sudo apt-get install ros-kinetic-robot-localization
+sudo apt-get install ros-kinetic-gps-common
+pip install Jetson.GPIO
 
 Create a directory with path core_rover/include/lib/x86-64 and include the Phoenix-Linux-SocketCAN-Example/lib/x86-64 binaries from this link in there:
 ```

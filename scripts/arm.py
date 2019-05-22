@@ -6,7 +6,7 @@ from std_msgs.msg import Empty
 from nova_common.msg import * #motor_arm
 import time
 bustype = 'socketcan_native'
-channel = 'can1' #cantx is set virtual can, can set up by running the run_can.batch file in sim
+channel = 'can2' #cantx is set virtual can, can set up by running the run_can.batch file in sim
 bus = can.interface.Bus(channel=channel, bustype=bustype)  #Define the can bus interface to transmit on. 
 global trig_r_init
 trig_r_init = False
@@ -18,7 +18,11 @@ hbeat_cnt = 0;
 max_hbeat = 15;
 ignore_endstops = False;
 
+toggle_finger = False;
+finger_debouncer = 3;
 def RightCallback(data):
+    global finger_debouncer
+    global toggle_finger
     global ignore_endstops
     data_array = [-data.axis_ly_val,data.axis_lx_val,data.trig_l_val,data.trig_r_val]
     #rospy.set_param('base_station/drive_mode','RightDrive')
@@ -41,13 +45,18 @@ def RightCallback(data):
                   data_array[i] = -sub_data
         values[i+3] = data_array[i]**1.8 if data_array[i]>0 else -(abs(data_array[i])**1.8)
 	#rospy.loginfo(data_array[i])
-        if data.but_x_trg == True:
+        """if data.but_x_trg == True:
             rospy.loginfo("Switching to joystick drive")
-            rospy.set_param('base_station/drive_mode','RightDrive')
+            rospy.set_param('base_station/drive_mode','RightDrive') """
         if data.but_b_trg == True:
             ignore_endstops = True
         else:
             ignore_endstops = False
+        
+        if data.but_y_trg == True and finger_debouncer>4: # Extending finger
+            toggle_finger = True
+            rospy.loginfo("Switching to joystick drive")
+            finger_debouncer = 0
         #rospy.loginfo(ignore_endstops)
 
 
@@ -73,11 +82,11 @@ def LeftCallback(data):
 def HBeatCb(data):
   global hbeat
   global hbeat_cnt
+  global ignore_endstops
   hbeat = True
   hbeat_cnt = 0
 
 def listener():
-
     rospy.init_node('arm', anonymous=True)
     rospy.set_param('base_station/drive_mode','XboxDrive')
     rospy.Subscriber("/base_station/rjs_raw_ctrl", RawCtrl, RightCallback)
@@ -85,7 +94,8 @@ def listener():
     rospy.Subscriber("/heartbeat", Empty, HBeatCb)
     #rospy.spin()
     while(True):
-
+      global finger_debouncer
+      global toggle_finger
 #	    sock.recv()
       global hbeat_cnt
       hbeat_cnt+=1
@@ -110,10 +120,16 @@ def listener():
             field = 0x3
             if values[i]<0:
               field = 0x4
-        complete_id = (ids[i] << 4)+field
+        value = int(abs(values[i])*4095)
+        if(i==6):
+          if toggle_finger == True:
+             rospy.loginfo("Dust") 
+             field = 0x7
+             toggle_finger = False
+           
 
 #complete_id = format(complete_id, '#013b')
-        value = int(abs(values[i])*4095)
+        complete_id = (ids[i] << 4)+field
         if value<10:
           value = 0  #Getting rid of off centre
         bit1 = value>>8&0xFF
@@ -122,6 +138,8 @@ def listener():
         msg = can.Message(arbitration_id=complete_id, data=[bit1, bit2], extended_id = False)
         bus.send(msg)
         #rospy.loginfo("Id %s", field)
+      if finger_debouncer<15:
+        finger_debouncer+=1
       time.sleep(0.1)
 
 if __name__ == '__main__':
