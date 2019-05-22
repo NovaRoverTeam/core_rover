@@ -5,7 +5,7 @@ from sensor_msgs.msg import NavSatFix
 from nova_common.msg import *
 from nova_common.srv import *
 
-state_objective_latitude = -33.8688
+state_objective_latitude = -38.0
 state_objective_longitude = 151.2093
 
 NODE_NAME = "objective_node"
@@ -20,6 +20,7 @@ def handle_receive_objective(req):
     global state_objective_longitude
     state_objective_latitude = req.latitude
     state_objective_longitude = req.longitude
+    return StartAutoResponse(True, "Input objective coordinates for planning subsystem.")
 
 def objective_node():
 
@@ -37,9 +38,10 @@ def objective_node():
             msg.header.stamp = rospy.get_rostime()
             msg.latitude = state_objective_latitude
             msg.longitude = state_objective_longitude
+            rospy.loginfo("Objective being published: %f, %f", msg.latitude, msg.longitude)
             objective_publisher.publish(msg)
         else:
-            rospy.logdebug("Objective node not ready to publish.")
+            rospy.loginfo("Objective node not ready to publish.")
         publish_rate.sleep()
 
 if __name__ == "__main__":

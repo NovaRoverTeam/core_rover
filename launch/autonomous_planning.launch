@@ -7,10 +7,10 @@
 
     <group ns="planner">
         <!-- publishes the current global objective (as UTM) -->
-        <node pkg="core_rover" name="objective_node" type="objective_node.py"/>
+        <node pkg="core_rover" name="objective_node" type="objective_node.py" output="screen"/>
 
         <!-- converts GPS to pose in the map frame -->
-        <node pkg="gps_common" name="gps_to_pose_node" type="utm_odometry_node">
+        <node pkg="gps_common" name="gps_to_pose_node" type="utm_odometry_node" output="screen">
             <remap from="fix" to="/planner/objective_gps"/>
             <remap from="odom" to="/planner/objective_pose"/>
         </node>
