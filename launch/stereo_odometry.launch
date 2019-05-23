@@ -66,7 +66,7 @@
         <!-- DO NOT PUBBLISH: odom->base_link transform - this should be "false" only if
              running with "autonomous_localization.launch"
         -->
-        <param name="publish_tf" type="bool" value="true"/>
+        <param name="publish_tf" type="bool" value="false"/>
     </node>
 
 </launch>

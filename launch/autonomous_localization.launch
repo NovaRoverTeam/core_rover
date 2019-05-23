@@ -75,6 +75,9 @@
 
         <!-- PUBLISH to: "/ekf/Odometry/global" -->
         <remap from="/odometry/filtered" to="/ekf/Odometry/global"/>
+
+        <!-- DO NOT PUBLSH: transform (this should be done by rtabmap) -->
+        <param name="publish_tf" value="false"/>
     </node>
 
     <node pkg="robot_localization" type="navsat_transform_node" name="navsat_transform_node">
@@ -94,7 +97,8 @@
 
         <!-- PUBLISH to: "/ekf/gps_data"-->
         <param name="publish_filtered_gps" value="true"/>
-	<param name="broadcast_utm_transform" value="true"/>
+        <param name="broadcast_utm_transform" value="true"/>
+	<param name="broadcast_utm_transform_as_parent_frame" value="true"/>
     </node>
 
 </launch>
