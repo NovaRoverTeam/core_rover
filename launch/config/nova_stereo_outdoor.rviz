@@ -50,7 +50,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/TF
       Enabled: true
-      Frame Timeout: 15
+      Frame Timeout: 100
       Frames:
         All Enabled: true
         base_link:
@@ -255,7 +255,7 @@ Visualization Manager:
       Name: Current View
       Near Clip Distance: 0.00999999978
       Pitch: 0.635397971
-      Target Frame: base_footprint
+      Target Frame: base_link
       Value: OrbitOriented (rtabmap)
       Yaw: 3.0704
     Saved: ~
