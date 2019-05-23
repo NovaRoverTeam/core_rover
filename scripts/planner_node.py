@@ -51,8 +51,10 @@ def pose_to_gridcell(pose):
     origin_point = origin_pose.position
     point = pose.pose.pose.position
     
-    x = int(point.x - origin_point.x)
-    y = int(point.y - origin_point.y)
+    # size of the resolution
+    k = 50
+    x = int((point.x - origin_point.x) * k)
+    y = int((point.y - origin_point.y) * k)
 
     return (x, y)
 
@@ -85,12 +87,15 @@ def gridcell_to_pose(cell):
     Converts an (x,y) cell coordinate into a pose. Both are assumed to be i
     the "map" frame.
     """
-    origin_point = state_occupancy_grid.info.origin.position
+    origin_position = state_occupancy_grid.info.origin.position
     origin_orientation = state_occupancy_grid.info.origin.orientation
 
     pose = Pose()
-    pose.position.x = origin_point.x - cell[0]
-    pose.position.y = origin_point.y - cell[1]
+
+    # size of the resolution
+    k = 50 
+    pose.position.x = cell[0] * k + origin_position.x
+    pose.position.y = cell[1] * k + origin_position.y
     pose.position.z = origin_point.z
     pose.orientation = origin_orientation
 
