@@ -35,13 +35,11 @@
             <remap from="scan_cloud" to="/ptcloud_merge"/>
             -->
 
-            <!-- DO NOT PUBLISH: map->odom transform - this should be "false" only if
-                 running with "autonomous_localiation.launch"
-            -->
-            <param name="publish_tf" type="bool" value="true"/>
-
             <!-- PUBLISH to: rtabmap occupancy grid -->
             
+            <!-- PUBLISH: map->odom transform -->
+            <param name="publish_tf" type="bool" value="true"/>
+
             <param name="frame_id" type="string" value="base_link"/>
 
             <!-- other params -->

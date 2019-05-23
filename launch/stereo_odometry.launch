@@ -63,10 +63,8 @@
         <param name="frame_id" type="string" value="base_link"/>
         <param name="odom_frame_id" type="string" value="odom"/>
 
-        <!-- DO NOT PUBBLISH: odom->base_link transform - this should be "false" only if
-             running with "autonomous_localization.launch"
-        -->
-        <param name="publish_tf" type="bool" value="false"/>
+        <!-- DO NOT PUBBLISH: odom->base_link transform -->
+        <param name="publish_tf" type="bool" value="true"/>
     </node>
 
 </launch>
