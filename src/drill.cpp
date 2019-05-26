@@ -12,9 +12,9 @@
 #include <sys/ioctl.h>
 #include "std_msgs/Int8.h"
 #include <std_msgs/Empty.h>
+#include <iostream>
+#define LOOP_HERTZ 50
 
-
-#define DEBUG 0
 ros::NodeHandle *nh;
 std::string inputString;
 int fd;
@@ -22,8 +22,13 @@ int fd;
 bool isNumber(std::string str);
 bool hbeat = false;
 int hbeat_cnt = 0;
-int hbeat_timeout = 3;
+const int hbeat_timeout = 1.5*LOOP_HERTZ; //Duration without heartbeat before turning off
 int stop = 4;
+
+//--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+// DrillCmdCb():
+//    Receives int8 ros messages from /base_station/drill_cmd and sends it on the serial
+//--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 void DrillCmdCb(const std_msgs::Int8::ConstPtr& msg)
 {
   int data = msg->data;
@@ -32,6 +37,10 @@ void DrillCmdCb(const std_msgs::Int8::ConstPtr& msg)
   write(fd, &data, 1);
 }
 
+//--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
+// HbeatCb():
+//    Receives empty messages at 1 Hz from base_sync
+//--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
 void HbeatCb(const std_msgs::Empty::ConstPtr& msg)
 {
   hbeat = true;
@@ -48,7 +57,7 @@ int main(int argc, char *argv[])
   ros::Subscriber drill_cmd_sub = nh->subscribe("/base_station/drill_cmd", 1, DrillCmdCb);
   ros::Subscriber hbeat_sub = nh->subscribe("/heartbeat", 1, HbeatCb);
 
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(LOOP_HERTZ);
 
   char buf[64] = "temp text";
   struct termios toptions;
@@ -74,33 +83,13 @@ int main(int argc, char *argv[])
   toptions.c_lflag |= ICANON;
   /* commit the serial port settings */
   tcsetattr(fd, TCSANOW, &toptions);
-
-  /* Send byte to trigger Arduino to send string back */
-  ROS_INFO("cat");
-//  write(fd, "0", 1);
-//  write(fd, "1", 1);
-  /* Receive string from Arduino */
-  //n = read(fd, buf, 64);
-  /* insert terminating zero in the string */
-  //buf[n] = 0;
-
-  //printf("%i bytes read, buffer contains: %s\n", n, buf);
- 
-  if(DEBUG)
-    {
-      printf("Printing individual characters in buf as integers...\n\n");
-      for(i=0; i<n; i++)
-	{
-	  printf("Byte %i:%i, ",i+1, (int)buf[i]);
-	}
-      printf("\n");
-    }
+  ROS_INFO("Ready to send");
 
   while (ros::ok()){
     hbeat_cnt++;
 
     if(hbeat_cnt > hbeat_timeout){
-        write(fd, &stop, 1);
+        write(fd, &stop, 1); // Write the stop drill command
         hbeat = true;
     }
     ros::spinOnce();
@@ -112,26 +101,23 @@ int main(int argc, char *argv[])
   std::getline(std::cin, inputString);
 
   int inputInt;
+  /*Check if input is a number and convert it*/
   if (isNumber(inputString)) {
     inputInt = std::stoi(inputString);
   }
   else {
-    inputInt = 0;
+    inputInt = 4; // Stops drill if not a number
   }
 
-  //std::cin >> inputString;
-  std::cout << inputString;
-  ROS_INFO("Test");
-
-	ROS_INFO("dog");
-	write(fd, &inputInt, 1);
+  std::cout << inputString << " Sent";
+  write(fd, &inputInt, 1);
 
   
   if(inputString == "exit"){
-     break;
+     break; //Break and close the file
   }
   }
-  printf("end");
+  std::cout << "end";
   close(fd);
   return 0;
 }

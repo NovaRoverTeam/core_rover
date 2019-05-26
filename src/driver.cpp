@@ -115,6 +115,7 @@ void TuneCb(const nova_common::TuneCmd::ConstPtr& msg)
 {
     
     tune_cmd = msg->constant;
+    cout << tune_cmd;
     if (tune_cmd == "p"){
     talon0.Config_kP(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
     talon1.Config_kP(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
@@ -214,9 +215,13 @@ int main(int argc, char **argv)
   ctre::phoenix::platform::can::SetCANInterface(interface.c_str());
   talon3.ConfigFactoryDefault();
 
+
+  //Set left side inverted 
   talon0.SetInverted(true);
   talon1.SetInverted(true);
   talon2.SetInverted(false);
+
+  //Set all talons to brake when receiving a 0 command
   talon0.SetNeutralMode(Brake);
   talon1.SetNeutralMode(Brake);
   talon2.SetNeutralMode(Brake);
@@ -224,6 +229,7 @@ int main(int argc, char **argv)
   talon4.SetNeutralMode(Brake);
   talon5.SetNeutralMode(Brake);
   
+  //Voltage ramp for running on voltage mode
   double delay = 0.0;
   talon0.ConfigOpenloopRamp(delay,0);
   talon1.ConfigOpenloopRamp(delay,0);
@@ -232,8 +238,6 @@ int main(int argc, char **argv)
   talon4.ConfigOpenloopRamp(delay,0);
   talon5.ConfigOpenloopRamp(delay,0);
   //talon5.ConfigFactoryDefault();
-  //talon5.Set(ControlMode::Velocity, 500);
- //printf("test");
 
   //Configure talons for pid control
   ConfigTalon(&talon5);
@@ -242,33 +246,28 @@ int main(int argc, char **argv)
   ConfigTalon(&talon2);
   ConfigTalon(&talon1);
   ConfigTalon(&talon0);
-  //printf("test!");
 
   ros::init(argc, argv, "driver", ros::init_options::AnonymousName); // Initialise node
   n = new ros::NodeHandle;
-  ros::Rate loop_rate(LOOP_HERTZ);
+  ros::Rate loop_rate(LOOP_HERTZ); //Set loop rate of ROS, utilised to time heartbeat
 
   n->setParam("/core_rover/driver/control_mode","Voltage"); //Sets control mode of talons
 
-  // Declare subscriber to drive cmds
+  // Declare subscribers to drive cmds
   ros::Subscriber drive_cmd_sub = n->subscribe("/core_rover/driver/drive_cmd", 1, DriveCmdCb);
   ros::Subscriber hbeat_sub = n->subscribe("/heartbeat", 1, HbeatCb);
-  ros::Subscriber PID_sub = n->subscribe("/base_station/PID_cmd", 1, PIDCb);
-  ros::Subscriber PID_tune = n->subscribe("/core_rover/PID_tune", 1, TuneCb);
-
-  encoder_data_pub = n->advertise<nova_common::EncoderData>("/core_rover/encoder_data", 1);
+  ros::Subscriber PID_sub = n->subscribe("/base_station/PID_cmd", 1, PIDCb); //Toggle PID or velocity
+  ros::Subscriber PID_tune = n->subscribe("/core_rover/PID_tune", 1, TuneCb); // Tune PID
+  encoder_data_pub = n->advertise<nova_common::EncoderData>("/core_rover/encoder_data", 1); //Publishes position and velocity of all encoders
  
-  // Boolean variable describing whether we are using the simulator
-  // or a real rover. 
   string vehicle;
   bool simulator = false;
 
-  const int hbeat_timeout = 0.5*LOOP_HERTZ;
-
+  const int hbeat_timeout = 0.5*LOOP_HERTZ; //Set heartbeat timeout amount
   string paramKey = "Vehicle";
   n->getParam(paramKey, vehicle);
   if (vehicle == "Simulator"){
-    simulator = true;
+    simulator = true; //If base_station is set up on same device
   }
 
   double wheel[6]; //array to update motor values
@@ -307,8 +306,6 @@ int main(int argc, char **argv)
     }
     else
     {
-      //ROS_INFO("Running JDB");
-      //-50 to 50 for RPM | -100 to 100 for steer
 
       float talon_speed;
       float talon_steer;
@@ -316,7 +313,9 @@ int main(int argc, char **argv)
       string paramKey2 = "/core_rover/Mode";
       n->getParam(paramKey2, mode);
 
-      if(hbeat || mode.compare("Auto") == 0){
+
+	  //If heartbeat detected speed and steer equal published amount, else set speed and steer to 0 until new heartbeat.
+      if(hbeat || mode.compare("Auto") == 0){ 
            talon_speed = speed / 50.0;
            talon_steer = steer / 100.0;
       }
@@ -327,105 +326,82 @@ int main(int argc, char **argv)
 	   
       }
 
-     // float talon_steer = steer *0.75;
-      //float talon2_speed = talon_speed - talon_steer; 
-      //float talon4_speed = talon_speed + talon_steer;
-     // talon_speed = 0.0;
-     /* if(speed>0){
-         talon_speed = 0.3;
-}
-      else if (speed<0){
-         talon_speed = -0.3;
-} PID STUFF*/ 
-
+      
       float right;
       float left; 
       string param;
       n->getParam("/core_rover/driver/control_mode", param);
+
+      //PID MODE
       if(param == "PID"){
-      talon_speed = talon_speed * 250;
-      talon_steer = talon_steer * 250;
-      right = talon_speed - talon_steer;
-      left = talon_speed + talon_steer;
-      //std::cout << "speed: " << talon_speed << "second" << speed << std::endl;
-      talon0.Set(ControlMode::Velocity, left);
-      talon1.Set(ControlMode::Velocity, left);
-      talon2.Set(ControlMode::Velocity, left);
-      //RIGHT SIDE
-      talon3.Set(ControlMode::Velocity, right);
-      talon4.Set(ControlMode::Velocity, right);
-      talon5.Set(ControlMode::Velocity, right);
+		  talon_speed = talon_speed * 250;
+		  talon_steer = talon_steer * 250;
+		  right = talon_speed - talon_steer;
+		  left = talon_speed + talon_steer;
+		  //std::cout << "speed: " << talon_speed << "second" << speed << std::endl;
+		  talon0.Set(ControlMode::Velocity, left);
+		  talon1.Set(ControlMode::Velocity, left);
+		  talon2.Set(ControlMode::Velocity, left);
+		  //RIGHT SIDE
+		  talon3.Set(ControlMode::Velocity, right);
+		  talon4.Set(ControlMode::Velocity, right);
+		  talon5.Set(ControlMode::Velocity, right);
       }    
       else{
-      right = talon_speed - talon_steer;   //Positive turn decreases right motors speeds to turn right.
-      left = talon_speed + talon_steer;
-      float delta_right = right - prev_right;
-      float delta_left = left - prev_left;
+		  right = talon_speed - talon_steer;   //Positive turn decreases right motors speeds to turn right.
+		  left = talon_speed + talon_steer;
+		  float delta_right = right - prev_right;
+		  float delta_left = left - prev_left;
  
-    //Slowing down ramp
-     if (abs(right)<0.02){  // If value is basically 0, set it off.
-         right = 0;
-      }
-      else{
-      if (abs(right) < abs(prev_right) && abs(delta_right)>max_delta){
-          if (delta_right > 0){
-               right = prev_right + max_delta;
-               delta_right = max_delta;
-          }
-          else{
-               right = prev_right - max_delta;
-               delta_right = max_delta;
-          }
-      }
-      }
-
-     
-      if(abs(left)<0.02){
-         left = 0;
-      }
-      else{
-      if (abs(left) < abs(prev_left) && abs(delta_left)>max_delta){
-          if (delta_left > 0){
-               left = prev_left + max_delta;
-               delta_left = max_delta;
-          }
-          else{
-               left = prev_left - max_delta;
-               delta_left = max_delta;
-          }
-      }
-      prev_right = right;
-      prev_left = left;
-      }
-/*      if(abs(right)>0.4){
-          right = 0.0;
-      }
-      if(abs(left)>0.4){
-          left = 0.0;
-      } */
-      talon0.Set(ControlMode::PercentOutput, left);
-      talon1.Set(ControlMode::PercentOutput, left);
-      talon2.Set(ControlMode::PercentOutput, left);
-      //RIGHT SIDE
-      talon3.Set(ControlMode::PercentOutput, right);
-      talon4.Set(ControlMode::PercentOutput, right);
-      talon5.Set(ControlMode::PercentOutput, right);
-     
-      }
+		//TALON Protection
+		  if (abs(right)<0.02) right=0;  // If value is basically 0, set it off.
+		  else{
+			  if (abs(right) < abs(prev_right) && abs(delta_right)>max_delta){
+				  if (delta_right > 0){
+				       right = prev_right + max_delta;
+				       delta_right = max_delta;
+				  }
+				  else{
+				       right = prev_right - max_delta;
+				       delta_right = max_delta;
+				  }
+			  }
+	  	  }
+		  if(abs(left)<0.02){ // If value is basically 0, set it off
+		     left = 0;
+		  }
+		  else{
+		  if (abs(left) < abs(prev_left) && abs(delta_left)>max_delta){
+		      if (delta_left > 0){
+		           left = prev_left + max_delta;
+		           delta_left = max_delta;
+		      }
+		      else{
+		           left = prev_left - max_delta;
+		           delta_left = max_delta;
+		      }
+		  }
+		  //Setting the previous amount for each side
+		  prev_right = right;
+		  prev_left = left;
+		  }
+		  talon0.Set(ControlMode::PercentOutput, left);
+		  talon1.Set(ControlMode::PercentOutput, left);
+		  talon2.Set(ControlMode::PercentOutput, left);
+		  talon3.Set(ControlMode::PercentOutput, right);
+		  talon4.Set(ControlMode::PercentOutput, right);
+		  talon5.Set(ControlMode::PercentOutput, right);
+		  }
 
 
       
       //Output debug information
       if (loopCount >= 0) {
         loopCount = 0;
-        //std::cout << "talon5 motor output: " << talon5.GetMotorOutputPercent() << std::endl;
-      // std::cout << "talon motor delta: " << delta_right << std::endl;
-        //std::cout << "talon0 velocity: " << talon0.GetSelectedSensorVelocity() << std::endl;
       }
 
-      EncoderFeedback();
-      //Enable rover with a timeout of 100ms
-      ctre::phoenix::unmanaged::FeedEnable(100);
+      EncoderFeedback(); //Publish Encoder data
+      ctre::phoenix::unmanaged::FeedEnable(100); //Enable rover with a timeout of 100ms
     }                     
     loopCount++;
 
