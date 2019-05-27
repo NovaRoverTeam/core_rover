@@ -5,8 +5,9 @@ import math
 from nav_msgs.msg import Odometry, OccupancyGrid, MapMetaData
 from geometry_msgs.msg import Pose, Point, Quaternion
 from sensor_msgs.msg import NavSatFix
-
 import numpy as np
+from scipy.ndimage import maximum_filter
+
 from a_star import a_star
 
 EPSILON = 10e-10
@@ -22,6 +23,7 @@ ODOM_TOPIC = "/ekf/Odometry/global" # nav_msgs/Odommetry
 MAP_TOPIC = "/rtabmap/grid_prob_map" # nav_msgs/OccupancyGrid
 OBJECTIVE_POSE_TOPIC = "/planner/objective_pose" # geometry_msgs/Pose
 WAYPOINT_TOPIC = "/planner/next_waypoint_pose" # nav_msgs/Odometry
+BASE_LINK_SIZE = 1.2 # actual size of base link + padding
 
 QUEUE_SIZE = 10
 PUBLISH_FREQUENCY = 10
@@ -50,7 +52,7 @@ def pose_to_gridcell(pose):
 
     origin_point = origin_pose.position
     point = pose.pose.pose.position
-    
+    # todo (naverill) validate this
     # size of the resolution
     k = 50
     x = int((point.x - origin_point.x) * k)
@@ -69,18 +71,84 @@ def preprocess_occupancy_grid(occupancy_grid):
     map_info = occupancy_grid.info
     map_width = map_info.width
     map_height = map_info.height
+    map_resolution = map_info.resolution
     raw_grid = occupancy_grid.data
 
     # (1) reshape to 2D matrix
     matrix = np.reshape(raw_grid, (map_height, map_width))
 
-    # (2) set costs of cells 
+    # (2) set costs of cells
     matrix[ matrix <= -1 ] = COST_OF_UNKNOWN
     matrix[ matrix >= OBSTACLE_PROBABILITY_THRESHOLD ] = COST_OF_OBSTACLE
 
-    # (3) TODO: apply max convolution
+    matrix = grid_to_max_grid(matrix, resolution)
+
+    # todo (naverill) handle downsampled map -> path conversion
 
     return matrix
+
+def grid_to_max_grid(occupancy_grid, resolution):
+    """
+    Downsamples the grid by applying a max pool and then
+    """
+    # base_link / map_resolution  = step_size * 3
+    # ceil ensures value of step_size is >= 1
+    step_size = math.ceil(BASE_LINK_WIDTH / (resolution * 3))
+
+    # prevent against redundant processing
+    if step_size <= 1:
+        return occupancy_grid
+
+    # converts grid from size n^2 to (n // step_size)^2, retaining obstacle info
+    down_sampled_grid = max_pooling(occupancy_grid, step_size)
+
+    max_filtered_grid = max_filter(occupancy_grid, step_size)
+
+    return max_filtered_grid
+
+def max_filter(occupancy_grid, step_size):
+    """
+    Applies a maximum filter to the occupancy grid, equivalent to the size of
+    base_link. Sets each cell value to be equal to the max of all
+    step_size*step_size surrounding cells. Each grid cell is now an accurate
+    measure of its traversability by the rover of size BASE_LINK_WIDTH
+    """
+    return maximum_filter(occupancy_grid, size=step_size, mode="constant", cval=COST_OF_UNKNOWN)
+
+def max_pooling(mat, step_size, pad=False):
+    '''Non-overlapping pooling on 2D or 3D data.
+    ref : <https://stackoverflow.com/questions/42463172/how-to-perform-max-mean-pooling-on-a-2d-array-using-numpy>
+
+    mat         : ndarray, input array to pool.
+    step_size   : tuple of 2, kernel size in (ky, kx).
+    pad         : bool, pad <mat> or not. If no pad, output has size
+                    n//f, n being <mat> size, f being kernel size.
+                    if pad, output has size ceil(n/f).
+
+    Return <result>: max pooled matrix.
+    '''
+
+    m, n = mat.shape[:2]
+    ky, kx=ksize
+
+    _ceil=lambda x, y: int(numpy.ceil(x / float(y)))
+
+    if pad:
+        ny = _ceil(m, ky)
+        nx = _ceil(n, kx)
+        size = ( ny * ky, nx * kx) + mat.shape[2:]
+        mat_pad = numpy.full(size, COST_OF_UNKNOWN) # np.nan
+        mat_pad[:m, :n, ...] = mat
+    else:
+        ny = m//ky
+        nx = n//kx
+        mat_pad = mat[:ny * ky, :nx * kx, ...]
+
+    new_shape = (ny, ky, nx, kx) + mat.shape[2:]
+
+    result = numpy.nanmax(mat_pad.reshape(new_shape),axis=(1, 3))
+    return result
+
 
 def gridcell_to_pose(cell):
     """
@@ -93,7 +161,7 @@ def gridcell_to_pose(cell):
     pose = Pose()
 
     # size of the resolution
-    k = 50 
+    k = 50
     pose.position.x = cell[0] * k + origin_position.x
     pose.position.y = cell[1] * k + origin_position.y
     pose.position.z = origin_point.z
@@ -133,12 +201,12 @@ def get_objective_grid(occupancy_grid, start_grid, end_grid):
     """
     x_max = len(occupancy_grid[0]) - 1
     y_max = len(occupancy_grid) - 1
-    
+
     # if the objective is outside the occuoancy grid
     if end_grid[0] < 0 or end_grid[0] > x_max \
         or end_grid[1] < 0 or end_grid[1] > y_max:
         # the line connecting end_grid and start_grid will have conjunctions with
-        # all 4 sides of the edge, only the one between start_grid and end_grid 
+        # all 4 sides of the edge, only the one between start_grid and end_grid
         # it the right objective
 
         if end_grid[0] == start_grid[0]:
@@ -208,7 +276,7 @@ def get_smooth_waypoint(start, waypoints):
             next_index += 1
             continue
         break
-    
+
     return smooth_waypoint
 
 def planner():
