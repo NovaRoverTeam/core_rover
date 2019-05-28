@@ -79,7 +79,7 @@ def HBeatCb(data):
 	  hbeat_cnt = 0
 
 def listener():
-    rospy.init_node('arm', anonymous=True)
+    rospy.init_node('arm', anonymous=False)
     rospy.set_param('base_station/drive_mode','XboxDrive')
     rospy.Subscriber("/base_station/rjs_raw_ctrl", RawCtrl, RightCallback)
     rospy.Subscriber("/base_station/ljs_raw_ctrl", RawCtrl, LeftCallback)
@@ -90,7 +90,7 @@ def listener():
       global hbeat_cnt
 
       hbeat_cnt+=1
-      if (hbeat_cnt > max_hbeat):
+      if (False):#(hbeat_cnt > max_hbeat):
          hbeat = False
          for i in range(0,len(values)):  #Sending stop commands to all
  	        field = 0x0
@@ -113,15 +113,16 @@ def listener():
               field = 0x7
               toggle_finger = False #Finger toggle debouncer 
 
-        complete_id = (ids[i] << 4)+field #Embedding ID's with chosen directional PWM command
-        if value<10:
-          value = 0  #Getting rid of off centre
-        bit1 = value>>8&0xFF
-        bit2 = value&0xFF 
-        msg = can.Message(arbitration_id=complete_id, data=[bit1, bit2], extended_id = False)
-        bus.send(msg)
-      if finger_debouncer<15:
-        finger_debouncer+=1
+          complete_id = (ids[i] << 4)+field #Embedding ID's with chosen directional PWM command
+          if value<10:
+            value = 0  #Getting rid of off centre
+          bit1 = value>>8&0xFF
+          bit2 = value&0xFF
+          rospy.loginfo(value) 
+          msg = can.Message(arbitration_id=complete_id, data=[bit1, bit2], extended_id = False)
+          bus.send(msg)
+        if finger_debouncer<15:
+          finger_debouncer+=1
       time.sleep(0.1)
 
 if __name__ == '__main__':

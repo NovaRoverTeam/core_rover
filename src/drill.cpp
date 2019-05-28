@@ -22,7 +22,7 @@ int fd;
 bool isNumber(std::string str);
 bool hbeat = false;
 int hbeat_cnt = 0;
-const int hbeat_timeout = 1.5*LOOP_HERTZ; //Duration without heartbeat before turning off
+const int hbeat_timeout = 0.5*LOOP_HERTZ; //Duration without heartbeat before turning off
 int stop = 4;
 
 //--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
   struct termios toptions;
 
   /* open serial port */
-  fd = open("/dev/ttyACM0", O_RDWR | O_NOCTTY);
+  fd = open("/dev/megaduino", O_RDWR | O_NOCTTY);
   printf("fd opened as %i\n", fd);
   
   /* wait for the Arduino to reboot */

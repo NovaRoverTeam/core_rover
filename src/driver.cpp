@@ -115,7 +115,7 @@ void TuneCb(const nova_common::TuneCmd::ConstPtr& msg)
 {
     
     tune_cmd = msg->constant;
-    cout << tune_cmd;
+    cout << "TEST"<< msg->coefficient <<"end";
     if (tune_cmd == "p"){
     talon0.Config_kP(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
     talon1.Config_kP(kPIDLoopIdx, msg->coefficient, kTimeoutMs);
@@ -166,14 +166,14 @@ void EncoderFeedback(){
   nova_common::EncoderData msg;
   msg.talon0Velocity=talon0.GetSelectedSensorVelocity()*0.0818;
   msg.talon1Velocity=talon1.GetSelectedSensorVelocity()*0.0818;
-  msg.talon2Velocity=-talon2.GetSelectedSensorVelocity()*0.0818;
+  msg.talon2Velocity=talon2.GetSelectedSensorVelocity()*0.0818;
   msg.talon3Velocity=talon3.GetSelectedSensorVelocity()*0.0818;
   msg.talon4Velocity=talon4.GetSelectedSensorVelocity()*0.0818;
   msg.talon5Velocity=talon5.GetSelectedSensorVelocity()*0.0818;
 
   msg.talon0Position=talon0.GetSelectedSensorPosition()*0.00818;
   msg.talon1Position=talon1.GetSelectedSensorPosition()*0.00818;
-  msg.talon2Position=-talon2.GetSelectedSensorPosition()*0.00818;
+  msg.talon2Position=talon2.GetSelectedSensorPosition()*0.00818;
   msg.talon3Position=talon3.GetSelectedSensorPosition()*0.00818;
   msg.talon4Position=talon4.GetSelectedSensorPosition()*0.00818;
   msg.talon5Position=talon5.GetSelectedSensorPosition()*0.00818;
@@ -195,9 +195,10 @@ void ConfigTalon(TalonSRX* talon) {
 
 	/* set closed loop gains in slot0 */
 	talon->Config_kF(kPIDLoopIdx, 0.1097, kTimeoutMs); //0.1097
-	talon->Config_kP(kPIDLoopIdx, 3, kTimeoutMs); //0.22
-	talon->Config_kI(kPIDLoopIdx, 0.02, kTimeoutMs); //0.02
+	talon->Config_kP(kPIDLoopIdx, 2.9, kTimeoutMs); //0.22
+	talon->Config_kI(kPIDLoopIdx, 0.03, kTimeoutMs); //0.02
 	talon->Config_kD(kPIDLoopIdx, 0.03, kTimeoutMs);
+        talon->Config_IntegralZone(kPIDLoopIdx, 10, kTimeoutMs);
 
 	talon->SetSelectedSensorPosition(0);
 }
@@ -215,19 +216,22 @@ int main(int argc, char **argv)
   ctre::phoenix::platform::can::SetCANInterface(interface.c_str());
   talon3.ConfigFactoryDefault();
 
-
+  talon2.SetSensorPhase(false); //Reverse encoder feedback
   //Set left side inverted 
   talon0.SetInverted(true);
   talon1.SetInverted(true);
-  talon2.SetInverted(false);
+  talon2.SetInverted(true);
 
   //Set all talons to brake when receiving a 0 command
   talon0.SetNeutralMode(Brake);
-  talon1.SetNeutralMode(Brake);
-  talon2.SetNeutralMode(Brake);
-  talon3.SetNeutralMode(Brake);
+//  talon1.SetNeutralMode(Brake);
+//  talon2.SetNeutralMode(Brake);
+//  talon3.SetNeutralMode(Brake);
   talon4.SetNeutralMode(Brake);
-  talon5.SetNeutralMode(Brake);
+//  talon5.SetNeutralMode(Brake);
+  
+  talon0.Follow(talon1);
+  talon3.Follow(talon4);
   
   //Voltage ramp for running on voltage mode
   double delay = 0.0;
@@ -247,11 +251,11 @@ int main(int argc, char **argv)
   ConfigTalon(&talon1);
   ConfigTalon(&talon0);
 
-  ros::init(argc, argv, "driver", ros::init_options::AnonymousName); // Initialise node
+  ros::init(argc, argv, "driver"); // Initialise node
   n = new ros::NodeHandle;
   ros::Rate loop_rate(LOOP_HERTZ); //Set loop rate of ROS, utilised to time heartbeat
 
-  n->setParam("/core_rover/driver/control_mode","Voltage"); //Sets control mode of talons
+  n->setParam("/core_rover/driver/control_mode","PID"); //Sets control mode of talons
 
   // Declare subscribers to drive cmds
   ros::Subscriber drive_cmd_sub = n->subscribe("/core_rover/driver/drive_cmd", 1, DriveCmdCb);
@@ -338,12 +342,12 @@ int main(int argc, char **argv)
 		  talon_steer = talon_steer * 250;
 		  right = talon_speed - talon_steer;
 		  left = talon_speed + talon_steer;
-		  //std::cout << "speed: " << talon_speed << "second" << speed << std::endl;
-		  talon0.Set(ControlMode::Velocity, left);
+		  //std::cout << "speed: " << talon1.GetSelectedSensorVelocity() << std::endl;
+		  //talon0.Set(ControlMode::Velocity, left);
 		  talon1.Set(ControlMode::Velocity, left);
 		  talon2.Set(ControlMode::Velocity, left);
 		  //RIGHT SIDE
-		  talon3.Set(ControlMode::Velocity, right);
+		  //talon3.Set(ControlMode::Velocity, right);
 		  talon4.Set(ControlMode::Velocity, right);
 		  talon5.Set(ControlMode::Velocity, right);
       }    
@@ -385,10 +389,10 @@ int main(int argc, char **argv)
 		  prev_right = right;
 		  prev_left = left;
 		  }
-		  talon0.Set(ControlMode::PercentOutput, left);
+		  //talon0.Set(ControlMode::PercentOutput, left);
 		  talon1.Set(ControlMode::PercentOutput, left);
 		  talon2.Set(ControlMode::PercentOutput, left);
-		  talon3.Set(ControlMode::PercentOutput, right);
+		  //talon3.Set(ControlMode::PercentOutput, right);
 		  talon4.Set(ControlMode::PercentOutput, right);
 		  talon5.Set(ControlMode::PercentOutput, right);
 		  }
