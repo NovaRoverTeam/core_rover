@@ -190,8 +190,8 @@ void ConfigTalon(TalonSRX* talon) {
 	/* set the peak and nominal outputs */
 	talon->ConfigNominalOutputForward(0, kTimeoutMs);
 	talon->ConfigNominalOutputReverse(0, kTimeoutMs);
-	talon->ConfigPeakOutputForward(0.4, kTimeoutMs);
-	talon->ConfigPeakOutputReverse(-0.4, kTimeoutMs);
+	talon->ConfigPeakOutputForward(0.7, kTimeoutMs);
+	talon->ConfigPeakOutputReverse(-0.7, kTimeoutMs);
 
 	/* set closed loop gains in slot0 */
 	talon->Config_kF(kPIDLoopIdx, 0.1097, kTimeoutMs); //0.1097
