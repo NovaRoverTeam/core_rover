@@ -26,8 +26,7 @@ class RoverStateMachine():
                 'trigger': 'setDrill', 'after':'drill',
                 'conditions':['missionSCI', 'connected']},
             {   'source': 'Standby', 'dest': 'Auto', 
-                'trigger': 'setAuto', 'after':'auto',
-                'conditions':['missionAUT', 'connected']},
+                'trigger': 'setAuto', 'after':'auto'},
 
             {   'source': 'Drive', 'dest': 'Standby', 
                 'trigger': 'setStandby', 'after':'standby'},

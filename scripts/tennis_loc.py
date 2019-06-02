@@ -20,7 +20,7 @@ def getAutoMode():
     return rospy.get_param('/core_rover/autonomous_mode','On')
 def X_Zone(x):
     zones = ('left','centre','right')
-    centre_border = (240,480)
+    centre_border = (120,600) # For 720 width
     x = int(x)
     if x<centre_border[0]:
         return 'left'
@@ -35,22 +35,29 @@ def Drive_Forward(w,h,threshold):
     except Exception() as me:
         print(me)
     avg = sum([w,h])/float(2)
-    #rospy.loginfo("avg: %d", avg)
+    rospy.loginfo("avg: %d", avg)
     return avg<threshold
 
 def DriverMsg(data,steer_limit,rpm_limit):
-    steer = {'left':-steer_limit * 80,'centre':0,'right':steer_limit*80}
-    cmd = DriveCmd()
-    cmd.rpm = 0
-    direction = X_Zone(data[0])
-    forward_or_not = Drive_Forward(data[2],data[3],60)
-    #rospy.loginfo(forward_or_not)
-    cmd.steer_pct = steer[direction]
-    if (direction == 'centre' and forward_or_not):
-        cmd.rpm = rpm_limit * 50
-    else:
-        cmd.rpm = 0
-    return cmd
+    try:
+      steer = {'left':-steer_limit * 80,'centre':0,'right':steer_limit*80}
+      cmd = DriveCmd()
+      cmd.rpm = 0
+      direction = X_Zone(data[0])
+      forward_or_not = Drive_Forward(data[2],data[3], 30)
+      #rospy.loginfo(forward_or_not)
+      cmd.steer_pct = steer[direction]
+      if (direction == 'centre' and forward_or_not):
+          cmd.rpm = rpm_limit * 50
+      else:
+          cmd.rpm = 0
+      return cmd
+    except:
+      print("Error socket")
+      cmd = DriveCmd()
+      cmd.rpm = 0
+      cmd.steer_pct = 0
+      return cmd
 
 def tennis_loc():
     global debug
@@ -74,28 +81,25 @@ def tennis_loc():
     sock.listen(1)
     connection, client_address = sock.accept()
     sock.setblocking(0)
-    steer_limit = rospy.get_param('steer_limit',0.3)
-    rpm_limit   = rospy.get_param('rpm_limit',0.3)
+    steer_limit = rospy.get_param('steer_limit',0.4)
+    rpm_limit   = rospy.get_param('rpm_limit',0.4)
     data = '0'
     while not rospy.is_shutdown():
-    	if getAutoMode() != 'Off': 
+    	if getAutoMode() == 'Search' or getAutoMode() == 'Destroy': 
           data = connection.recv(100) # 1 Byte per character
-          if 'x' in data:
+          if data != '0' and ']0[' not in data:
               data_parsed = ast.literal_eval(data)
               #print(data_parsed)
               #array = Float32MultiArray(4,data_parsed)
               msg = DriverMsg(data_parsed,steer_limit,rpm_limit)
               if msg.rpm==0 and msg.steer_pct==0:
                   status_pub.publish("Complete")
-                  #rospy.loginfo("Complete")
               else:
                   status_pub.publish("Found")
-                  #rospy.loginfo("Found")
               if getAutoMode() == "Destroy" or debug:
                   ball_pub.publish(msg)
           else:
               status_pub.publish("Lost")
-              #rospy.loginfo("Lost")
           rate_active.sleep()
     	else:
           rate_inactive.sleep()

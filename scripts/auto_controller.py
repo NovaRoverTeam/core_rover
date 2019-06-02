@@ -8,16 +8,18 @@ from nova_common.msg import *
 from nova_common.srv import *
 from auto_classes import WaypointClass, RoveyPosClass
 from auto_functions import *
+import os, sys
 # from core_rover.srv import *
 from transitions import Machine
 simulator = False
 testing = False
+returnFlag = False
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 # Class representation of Autonomous state machine
 #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 class AutonomousStateMachine():
-    dist_to_dest_thres = 3 #Distance to destination point threshold (metres)
-    dist_to_way_thres = 4 #Distance to way point threshold (metres)
+    dist_to_dest_thres = 5.5 #Distance to destination point threshold (metres)
+    dist_to_way_thres = 5 #Distance to way point threshold (metres)
     distance_to_dest = None # In metres (default is empty)
     distance_to_waypt = None # In metres (default is empty)
     orientation = 0 # In degrees (default is empty)
@@ -46,7 +48,6 @@ class AutonomousStateMachine():
 
     def tbCallback(self,tbData):
         ''' Callback for tennisball status '''
-        rospy.loginfo(getAutonomousMode())
         if tbData.data == "Found":
             if getAutonomousMode() != "Destroy":
               self.toDestroy()
@@ -56,8 +57,9 @@ class AutonomousStateMachine():
                 self.lostTimer = time.time()
                 self.wasLost = True
             else: # if tennis ball was lost
-                if (time.time()-self.lostTimer) > 2:
-                    # If lost for more than 2 seconds then go to search.
+                if (time.time()-self.lostTimer) > 3:
+                    rospy.loginfo("Timer done")
+                    # If lost for more than 3 seconds then go to search.
                     self.lostTimer = 0 #reset timer
                     self.toSearch() #todo: go to panning instead
         elif tbData.data == "Complete":
@@ -65,8 +67,10 @@ class AutonomousStateMachine():
 
     def handleStartAuto(self,req):
         '''Service server handler for starting autonomous mission.'''
+        global returnFlag
         if getMode() == 'Standby':
-            self.des_pos = WaypointClass(req.latitude, req.longitude) # Set the desired latitude and longitude from the service request
+            #self.des_pos = WaypointClass(req.latitude, req.longitude) # Set the desired latitude and longitude from the service request
+            returnFlag = False
             self.toTraverse()
             return StartAutoResponse(True,"Inputting coords for Autonomous Mission.")
         else:
@@ -125,9 +129,9 @@ class AutonomousStateMachine():
     #    Takes current waypoint and rover position. Creates drive command.
     #    Publishes drive command.
     #--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--
-    def auto_drive(self):
+    def auto_drive(self, r, s):
         beta = angleBetween(self.rovey_pos.latitude, self.rovey_pos.longitude, self.waypoint.latitude, self.waypoint.longitude)
-        distance = distanceBetween(self.rovey_pos.latitude, self.rovey_pos.longitude, self.waypoint.latitude, self.waypoint.longitude)
+        distance = self.distance_to_waypt
         turn = turnDirection(beta, self.orientation)
         rospy.loginfo("\n")
         rospy.loginfo("beta: %s", beta)
@@ -135,8 +139,8 @@ class AutonomousStateMachine():
         rospy.loginfo("orientation: %s", self.orientation)
         rospy.loginfo("waypoint pos: %s", self.waypoint)
         rospy.loginfo("current pos: %s, %s", self.rovey_pos.latitude, self.rovey_pos.longitude)
-        rpm_limit   = rospy.get_param('rpm_limit', 0.2)
-        steer_limit = rospy.get_param('steer_limit', 0.3)
+        rpm_limit   = rospy.get_param('rpm_limit', r)
+        steer_limit = rospy.get_param('steer_limit', s)
         drive_msg = DriveCmd()
         drive_msg.rpm       = 50 * rpm_limit 
         drive_msg.steer_pct = turn * steer_limit
@@ -152,9 +156,23 @@ class AutonomousStateMachine():
     #--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--..--**--
 
     def startTraverse(self):
+        global returnFlag
         '''Intitialise Navigation to Tennis Ball GPS location'''
         self.metricCalculation()
-        self.waypoint_list = wayPoint(self.rovey_pos.longitude,self.rovey_pos.latitude,self.des_pos.longitude,self.des_pos.latitude,4)
+        waypoints = []
+        with open('/home/nvidia/catkin_ws/src/core_rover/scripts/auto/coords.txt') as f:
+          content = f.readlines()
+          for coord in content:
+            coordData = coord.split(' ')
+            waypoints.append(WaypointClass(float(coordData[0].split('\n')[0]), float(coordData[1].split('\n')[0])))
+        if returnFlag:
+          self.waypoint_list = waypoints[::-1]
+        else:
+          self.waypoint_list = waypoints[1:]
+        self.waypoint = self.waypoint_list[0]
+        self.des_pos = self.waypoint_list[-1] #last waypoint is final destination
+        print("cat", self.des_pos.longitude, self.des_pos.latitude)
+        #self.waypoint_list = wayPoint(self.rovey_pos.longitude,self.rovey_pos.latitude,self.des_pos.longitude,self.des_pos.latitude,4)
         self.waypoint_iter = iter(self.waypoint_list)
         self.waypoint = next(self.waypoint_iter)
         rospy.loginfo('DESTINATION:' + str(self.des_pos))
@@ -162,43 +180,49 @@ class AutonomousStateMachine():
         self.setAutonomousMode('Traverse')
     def Traverse(self):
         # Run Traverse
-        GPIO.output(7, GPIO.LOW)
+        GPIO.output(7, GPIO.HIGH)
         self.metricCalculation()
-        if ((self.distance_to_waypt<self.dist_to_dest_thres)):
+        if (self.distance_to_dest<self.dist_to_dest_thres):
+            rospy.loginfo('Rover close to GPS coordinate destination. Commencing Search')
+            self.toSearch()# Switch to search state
+        elif ((self.distance_to_waypt<self.dist_to_way_thres)):
             try:
                 self.waypoint = next(self.waypoint_iter)
             except StopIteration:
                 rospy.loginfo("Waypoint List Exhausted - Restarting Navigation to GPS coordinate")
+                returnFlag = True                
                 self.toTraverse()
-        if (self.distance_to_dest<self.dist_to_dest_thres):
-            rospy.loginfo('Rover close to GPS coordinate destination. Commencing Search')
-            self.toSearch()# Switch to search state
-        self.auto_drive()
+        
+        self.auto_drive(0.8, 0.5)
         self.setAutonomousMode('Traverse')
     def startSearch(self):
         '''Intitialise Search for Tennis Ball (Sector)'''
         self.metricCalculation()
+        print("cato")
         #self.waypoint_list = spiralSearch(self.rovey_pos,25,0,8*math.pi)
-        self.waypoint_list = sectorSearch(self.rovey_pos, 5, 10, self.rovey_pos.yaw)
-        self.waypoint_list += sectorSearch(self.rovey_pos, 10, 10, self.rovey_pos.yaw + 10)
-        self.waypoint_list += sectorSearch(self.rovey_pos, 15, 10, self.rovey_pos.yaw + 20)
-        self.waypoint_list += sectorSearch(self.rovey_pos, 20, 10, self.rovey_pos.yaw + 30)
+        self.waypoint_list += sectorSearch(self.rovey_pos, 10, 10, self.rovey_pos.yaw)
+        self.waypoint_list += sectorSearch(self.rovey_pos, 18, 10, self.rovey_pos.yaw + 10)
+        #self.waypoint_list += sectorSearch(self.rovey_pos, 20, 10, self.rovey_pos.yaw + 20)
+        #self.waypoint_list += sectorSearch(self.rovey_pos, 25, 10, self.rovey_pos.yaw + 30)
+	#self.waypoint_list += sectorSearch(self.rovey_pos, 30, 10, self.rovey_pos.yaw + 40)
         self.waypoint_iter = iter(self.waypoint_list)
         self.setAutonomousMode('Search')
         rospy.loginfo('Sector Search Engaged!')
         rospy.loginfo('Sector WaypointList: ' + str(self.waypoint_list))
 
     def Search(self):
+        global returnFlag
         '''Run Sector Search'''
         self.metricCalculation()
         rospy.loginfo('Sector Search for Tennis Ball')
-        if ((self.distance_to_waypt<self.dist_to_dest_thres)):
+        if ((self.distance_to_waypt<self.dist_to_way_thres)):
             try:
                 self.waypoint = next(self.waypoint_iter)
             except StopIteration:
                 rospy.loginfo("Sector Search Waypoint List Exhausted - Going back to GPS coordinate")
+                returnFlag = True
                 self.toTraverse()
-        self.auto_drive()
+        self.auto_drive(0.5, 0.5)
         self.setAutonomousMode('Search')
     def startDestroy(self):
         '''Start tracking the tennis ball to mow it down. '''
@@ -215,7 +239,7 @@ class AutonomousStateMachine():
         self.metricCalculation()
         self.setAutonomousMode('Panning')
     def startComplete(self):
-        GPIO.output(7, GPIO.HIGH)
+        GPIO.output(7, GPIO.LOW)
         self.metricCalculation()
         self.setAutonomousMode('Complete')
     def Complete(self):

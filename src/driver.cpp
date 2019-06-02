@@ -224,11 +224,11 @@ int main(int argc, char **argv)
 
   //Set all talons to brake when receiving a 0 command
   talon0.SetNeutralMode(Brake);
-//  talon1.SetNeutralMode(Brake);
-//  talon2.SetNeutralMode(Brake);
-//  talon3.SetNeutralMode(Brake);
+  talon1.SetNeutralMode(Brake);
+  talon2.SetNeutralMode(Brake);
+  talon3.SetNeutralMode(Brake);
   talon4.SetNeutralMode(Brake);
-//  talon5.SetNeutralMode(Brake);
+  talon5.SetNeutralMode(Brake);
   
   talon0.Follow(talon1);
   talon3.Follow(talon4);
@@ -255,7 +255,7 @@ int main(int argc, char **argv)
   n = new ros::NodeHandle;
   ros::Rate loop_rate(LOOP_HERTZ); //Set loop rate of ROS, utilised to time heartbeat
 
-  n->setParam("/core_rover/driver/control_mode","PID"); //Sets control mode of talons
+  n->setParam("/core_rover/driver/control_mode","Voltage"); //Sets control mode of talons
 
   // Declare subscribers to drive cmds
   ros::Subscriber drive_cmd_sub = n->subscribe("/core_rover/driver/drive_cmd", 1, DriveCmdCb);
@@ -339,7 +339,7 @@ int main(int argc, char **argv)
       //PID MODE
       if(param == "PID"){
 		  talon_speed = talon_speed * 250;
-		  talon_steer = talon_steer * 250;
+		  talon_steer = talon_steer * 300;
 		  right = talon_speed - talon_steer;
 		  left = talon_speed + talon_steer;
 		  //std::cout << "speed: " << talon1.GetSelectedSensorVelocity() << std::endl;

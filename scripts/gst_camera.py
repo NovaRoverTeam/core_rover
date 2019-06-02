@@ -19,7 +19,7 @@ Gst.init(sys.argv)
 
 
 # Number of feed types available
-numFeedTypes = 9
+numFeedTypes = 10
 
 
 
@@ -35,6 +35,8 @@ class FeedType (Enum):
 	FT_Arm_2			    	= 6
 	FT_Stereo_Dual_2		= 7
 	FT_Stereo_Single_2 	= 8
+	FT_Autonomous		= 9
+	FT_ALL              = 10
 	
 	
 # Create an enum for different quality types
@@ -115,25 +117,40 @@ fos_end_ip = 53
 
 
 # Returns the GST pipeline with updated variable values for Stereo Cam
-def gst_pipeline_stereo(_idx):
-  qual = QualityFactor(cur_qualityType)
+def gst_pipeline_stereo(_idx, _qual):
+  # Set quality depending on input
+  if _qual == None:
+    qual = QualityFactor(cur_qualityType)
+  else:
+    qual = _qual
+  
   return "v4l2src device=/dev/video{} ! videoscale ! video/x-raw, width={}, height={}, framerate={}/1, format={} ! compositor name=comp sink_1::xpos={} ! jpegenc ! rtpjpegpay ! udpsink host=192.168.1.{} port={} v4l2src device=/dev/video{} ! videoscale ! video/x-raw, width={}, height={}, framerate={}/1, format={} ! comp.".format(video_IDs[_idx], int(width * qual), int(height * qual), frame_rate, img_format, width, ip_end, port, video_IDs[_idx + 1], width * qual, height * qual, frame_rate, img_format)
 
 
 
 
 # Returns the GST pipeline with updated variable values for single USB Cameras
-def gst_pipeline_single(_idx):
-  qual = QualityFactor(cur_qualityType)
+def gst_pipeline_single(_idx, _qual):
+  # Set quality depending on input
+  if _qual == None:
+    qual = QualityFactor(cur_qualityType)
+  else:
+    qual = _qual
+  
   return "v4l2src device=/dev/video{} ! videoscale ! video/x-raw, width={}, height={}, framerate={}/1, format={} ! jpegenc ! rtpjpegpay ! udpsink host=192.168.1.{} port={}".format(video_IDs[_idx], int(width * qual), int(height * qual), frame_rate, img_format, ip_end, port)
 
 
 
 
 # Returns the GST pipeline with updated variable values for Foscam (with IP)
-def gst_pipeline_foscam(_foscamID):
-  qual = QualityFactor(cur_qualityType)
-  return("rtspsrc location=rtsp://nova:rovanova@192.168.1.{}:88/videoMain ! decodebin ! videoscale ! video/x-raw, width={}, height={} ! jpegenc ! rtpjpegpay ! udpsink host=192.168.1.{} port={} sync=false".format(_foscamID, int(width * qual), int(height * qual), ip_end, port))
+def gst_pipeline_foscam(_foscamID, _qual, _ipStart):
+  # Set quality type
+  if _qual == None:
+    qual = QualityFactor(cur_qualityType)
+  else:
+    qual = _qual
+  
+  return("rtspsrc location=rtsp://nova:rovanova@192.168.1.{}:88/videoMain ! decodebin ! videoscale ! video/x-raw, width={}, height={} ! jpegenc ! rtpjpegpay ! udpsink host={}.{} port={} sync=false".format(_foscamID, int(width * qual), int(height * qual), _ipStart, ip_end, port))
 
 
 
@@ -287,10 +304,12 @@ while isRunning:
 	    'Press (T) for Telescopic Cam\n' +
 	    'Press (B) for Black Foscam\n' +
 	    'Press (W) for White Foscam\n' +
+	    'Press (A) for Autonomous\n' +
 	    'Press (1) for Arm Cam 1\n' +
 	    'Press (2) for Arm Cam 2\n' +
 	    'Press (3) for Arm Dual Stereo Cam\n' +
 	    'Press (4) for Arm Single Stereo Cam\n' +
+	    'Press (X) for All\n' +
 	    '\t: ')).lower()
 	    
 	  # Print break
@@ -311,8 +330,8 @@ while isRunning:
 	    # Change to Arm Camera 1 feed
 	    cur_feedType = FeedType.FT_Arm_1
 	    device_name = 'HD USB Camera'
-	    width = 640
-	    height = 480
+	    width = 1040
+	    height = 780
 	    port = '5004'
 	    isUSB = True
 	    cam_index = 5
@@ -341,18 +360,28 @@ while isRunning:
 	    # Change to White Foscam feed
 	    cur_feedType = FeedType.FT_FoscamWhite
 	    device_name = 'White Foscam'
-	    width = 720
-	    height = 540
+	    width = 960
+	    height = 720
 	    port = '5003'
 	    isUSB = False
 	    cam_index = 4
+
+    elif feed_input == 'a':
+	    # Change to Autonomous Feed
+	    cur_feedType = FeedType.FT_Autonomous
+	    device_name = 'Black Foscam'
+	    width = 720
+	    height = 400
+	    port = '5002'
+	    isUSB = False
+	    cam_index = 9
 
     elif feed_input == 's':
 	    # Change to Single Stereo feed
 	    cur_feedType = FeedType.FT_Stereo_Single
 	    device_name = "Stereo Vision 2"
 	    width = 720
-	    height = 500
+	    height = 400
 	    port = '5000'
 	    isUSB = True
 	    cam_index = 1
@@ -386,6 +415,11 @@ while isRunning:
       port = '5006'
       isUSB = True
       cam_index = 7
+      
+    elif feed_input == 'x':
+      # Stop all feeds
+      cur_feedType = FeedType.FT_ALL
+      device_name = 'ALL'
       
     else:
       # No value pressed
@@ -433,23 +467,28 @@ while isRunning:
     if len(devices) > 0 or not isUSB:
 		  # Get the appropriate GST pipeline command
       if cur_feedType == FeedType.FT_Stereo_Dual:
-        gstCode = gst_pipeline_stereo(0)
+        gstCode = gst_pipeline_stereo(0, None)
       elif cur_feedType == FeedType.FT_Stereo_Single:
-        gstCode = gst_pipeline_single(0)
+        gstCode = gst_pipeline_single(0, None)
       elif cur_feedType == FeedType.FT_Telescopic:
-        gstCode = gst_pipeline_single(0)
+        gstCode = gst_pipeline_single(0, None)
       elif cur_feedType == FeedType.FT_FoscamBlack:
-        gstCode = gst_pipeline_foscam(53)
+        gstCode = gst_pipeline_foscam(53, None, '192.168.1')
       elif cur_feedType == FeedType.FT_FoscamWhite:
-        gstCode = gst_pipeline_foscam(52)
+        gstCode = gst_pipeline_foscam(52, None, '192.168.1')
+      elif cur_feedType == FeedType.FT_Autonomous:
+        prev_ip_end = ip_end
+        ip_end = 1
+        gstCode = gst_pipeline_foscam(53, None, '127.0.0')
+        ip_end = prev_ip_end
       elif cur_feedType == FeedType.FT_Arm_1:
-        gstCode = gst_pipeline_single(1)
+        gstCode = gst_pipeline_single(1, None)
       elif cur_feedType == FeedType.FT_Arm_2:
-        gstCode = gst_pipeline_single(2)
+        gstCode = gst_pipeline_single(2, None)
       elif cur_feedType == FeedType.FT_Stereo_Dual_2:
-        gstCode = gst_pipeline_stereo(2)
+        gstCode = gst_pipeline_stereo(2, None)
       elif cur_feedType == FeedType.FT_Stereo_Single_2:
-        gstCode = gst_pipeline_single(2)
+        gstCode = gst_pipeline_single(2, None)
 		
 		
 	  	# Create pipeline
@@ -485,13 +524,21 @@ while isRunning:
 	    
   # Stop Feed command
   if command in ('x', 'stop'):
-    if pipelines[cam_index] != None:
-      pipelines[cam_index].set_state(Gst.State.NULL)
-      print('Stopping stream from {} at IP = 192.168.1.{}:{}\n'.format(device_name, ip_end, port))
-      cameraStates[cam_index] = False
+    if cur_feedType != FeedType.FT_ALL:
+      if pipelines[cam_index] != None:
+        pipelines[cam_index].set_state(Gst.State.NULL)
+        print('Stopping stream from {} at IP = 192.168.1.{}:{}\n'.format(device_name, ip_end, port))
+        cameraStates[cam_index] = False
+      else:
+        print('No stream playing at this feed.')
+	  # Stop all feeds
     else:
-      print('No stream playing at this feed.')
-	
+      for i in range(len(pipelines)):
+        if cameraStates[i]:
+          pipelines[i].set_state(Gst.State.NULL)
+          print('Stopping stream from {} at IP = 192.168.1.{}:{}\n'.format(device_name, ip_end, port))
+          cameraStates[i] = False
+	    
 	
 	
 	##################################
