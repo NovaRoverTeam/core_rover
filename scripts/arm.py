@@ -30,35 +30,36 @@ def RightCallback(data):
     if rospy.get_param('base_station/drive_mode') == 'RightDrive': 
          data_array = [0.0,0.0,0.435,0.435]
     for i in range(0,len(data_array)):
-        if(i == 2 or i==3):  #if continuous rotation or end effector side switch
-                if(resets[i] == 0 and data_array[i] !=0.0):
-                      resets[i] = 1
-                elif(resets[i] == 0 and data_array[i] ==0.0):
-                      data_array[i] = 0.435
-                sub_data = data_array[i]-0.435 #Centering 0-1 joystick commands
-                if sub_data>0.0:
-                  sub_data = sub_data/(1-0.435)
-                else:
-                  sub_data = sub_data/(0.435)
-                data_array[i]=sub_data
-                if(i==2):
-                  data_array[i] = -sub_data #Reverse endeffector closing
+        """if(i == 2 or i==3):  #if continuous rotation or end effector side switch
+              if(resets[i] == 0 and data_array[i] !=0.0):
+                   resets[i] = 1
+              elif(resets[i] == 0 and data_array[i] ==0.0):
+                    data_array[i] = 0.435
+              sub_data = data_array[i]-0.435 #Centering 0-1 joystick commands
+              if sub_data>0.0:
+                sub_data = sub_data/(1-0.435)
+              else:
+                sub_data = sub_data/(0.435)
+              data_array[i]=sub_data
+              if(i==2):
+                data_array[i] = -sub_data #Reverse endeffector closing """
         values[i+3] = data_array[i]**1.8 if data_array[i]>0 else -(abs(data_array[i])**1.8) #Scaling response for higher preceision at low range
-        if data.but_b_trg == True: 
-            ignore_endstops = True
-        else:
-            ignore_endstops = False
-        
-        if data.but_y_trg == True and finger_debouncer>4: # Extending finger with screwdriver
-            toggle_finger = True
-            rospy.loginfo("Switching to joystick drive")
-            finger_debouncer = 0
+    if data.but_b_trg == True: 
+        ignore_endstops = True
+    else:
+        ignore_endstops = False
+    
+    if data.but_y_trg == True and finger_debouncer>4: # Extending finger with screwdriver
+        toggle_finger = True
+        rospy.loginfo("Switching to joystick drive")
+        finger_debouncer = 0
 
 def LeftCallback(data):
     global reset
     data_array = [-data.axis_ly_val,data.axis_lx_val,data.trig_l_val] 
+    print(data_array)
     for i in range(0,len(data_array)):
-        if(i == 2): #If base rotation 
+        """if(i == 2): #If base rotation 
             if(resets[1]==0 and data_array[i] !=0.0):
                   resets[1] = 1
             elif(resets[1]==0 and data_array[i] ==0.0):
@@ -69,6 +70,7 @@ def LeftCallback(data):
             else:
                   sub_data = sub_data/(0.435)
             data_array[i]=sub_data
+            """
         values[i] = data_array[i]**1.8 if data_array[i]>0.0 else -(abs(data_array[i])**1.8) #Scaling response for higher preceision at low range
     if data.but_x_trg == True:  
       rospy.loginfo("Switching to xbox drive")
@@ -105,8 +107,7 @@ def listener():
       global prev_finger
       rospy.loginfo(ignore_endstops)
       hbeat_cnt+=1
-
-      if (hbeat_cnt > max_hbeat) or (reset == True):
+      if False and ((hbeat_cnt > max_hbeat) or (reset == True)):
          hbeat = False
          values = [0.0,0.0,0.0, 0.0, 0.0, 0.0, 0.0]
          for i in range(0,len(values)):  #Sending stop commands to all
