@@ -19,26 +19,30 @@ Gst.init(sys.argv)
 
 
 # Number of feed types available
-numFeedTypes = 10
+numFeedTypes = 15
 
 
 
 # Create an enum of different feed types
 # Enum Name = Index
 class FeedType (Enum):
-	FT_Stereo_Dual			= 0
-	FT_Stereo_Single 		= 1
-	FT_Telescopic		 		= 2
-	FT_FoscamBlack			= 3
-	FT_FoscamWhite			= 4
-	FT_Arm_1			   		= 5
-	FT_Arm_2			    	= 6
-	FT_Stereo_Dual_2		= 7
-	FT_Stereo_Single_2 	= 8
-	FT_Autonomous		= 9
-	FT_ALL              = 10
-	
-	
+  FT_Stereo_Dual_1		= 0
+  FT_Stereo_Single_1 	= 1
+  FT_Stereo_Dual_2		= 2
+  FT_Stereo_Single_2 	= 3
+  FT_FoscamBlack			= 4
+  FT_FoscamWhite			= 5
+  FT_Telescopic_1		 	= 6 # HD USB Camera
+  FT_Telescopic_2			= 7
+  FT_Telescopic_3			= 8
+  FT_Telescopic_4     = 9
+  FT_Telescopic_5     = 10
+  FT_Autonomous       = 11
+  FT_3USB_1           = 12 # 3.0 USB Camera
+  FT_3USB_2           = 13
+  FT_Real_Sense       = 14 # Real Sense
+  FT_ALL              = 15
+
 # Create an enum for different quality types
 # Enum Name = Input
 class QualityType (Enum):
@@ -100,11 +104,12 @@ img_format = "I420"
 cur_qualityType = QualityType.QT_High
 
 # Networking Variables
-ip_end = 8
+ip_host = '192.168.1'
+ip_end = 230
 port = '5000'
 
 # Camera Identification Variables
-cur_feedType = FeedType.FT_Stereo_Dual
+cur_feedType = FeedType.FT_Stereo_Dual_1
 video_IDs = [1,2]
 device_name = "Stereo Vision 2"
 isUSB = True
@@ -124,7 +129,7 @@ def gst_pipeline_stereo(_idx, _qual):
   else:
     qual = _qual
   
-  return "v4l2src device=/dev/video{} ! videoscale ! video/x-raw, width={}, height={}, framerate={}/1, format={} ! compositor name=comp sink_1::xpos={} ! jpegenc ! rtpjpegpay ! udpsink host=192.168.1.{} port={} v4l2src device=/dev/video{} ! videoscale ! video/x-raw, width={}, height={}, framerate={}/1, format={} ! comp.".format(video_IDs[_idx], int(width * qual), int(height * qual), frame_rate, img_format, width, ip_end, port, video_IDs[_idx + 1], width * qual, height * qual, frame_rate, img_format)
+  return "v4l2src device=/dev/video{} ! videoscale ! video/x-raw, width={}, height={}, framerate={}/1, format={} ! compositor name=comp sink_1::xpos={} ! jpegenc ! rtpjpegpay ! udpsink host={}.{} port={} v4l2src device=/dev/{} ! videoscale ! video/x-raw, width={}, height={}, framerate={}/1, format={} ! comp.".format(video_IDs[_idx], int(width * qual), int(height * qual), frame_rate, img_format, width, ip_host, ip_end, port, video_IDs[_idx + 1], width * qual, height * qual, frame_rate, img_format)
 
 
 
@@ -137,7 +142,7 @@ def gst_pipeline_single(_idx, _qual):
   else:
     qual = _qual
   
-  return "v4l2src device=/dev/video{} ! videoscale ! video/x-raw, width={}, height={}, framerate={}/1, format={} ! jpegenc ! rtpjpegpay ! udpsink host=192.168.1.{} port={}".format(video_IDs[_idx], int(width * qual), int(height * qual), frame_rate, img_format, ip_end, port)
+  return "v4l2src device=/dev/{} ! videoscale ! video/x-raw, width={}, height={}, framerate={}/1, format={} ! decodebin ! jpegenc ! rtpjpegpay ! udpsink host={}.{} port={}".format(video_IDs[_idx], int(width * qual), int(height * qual), frame_rate, img_format, ip_host, ip_end, port)
 
 
 
@@ -195,7 +200,7 @@ while isRunning:
   
   print("Current Streaming Camera Indexes: [{}]".format(camStreams))
   
-  print("Quality Settings: {}\nIPv4 Address: 192.168.1.{}".format(cur_qualityType, ip_end))
+  print("Quality Settings: {}\nIPv4 Address: {}.{}".format(cur_qualityType, ip_host, ip_end))
 
 
 	# Get user command
@@ -217,6 +222,7 @@ while isRunning:
   "\nInformation:\t'.', 'info'" +
   "\nChange IP:\t'i', 'ip'" +
   "\nChange Quality:\t'q', 'quality'" +
+  "\nList Cameras:\t'l', 'list'" +
   "\nStart Feed:\t's', 'start'" +
   "\nStop Feed:\t'x', 'stop'" +
   "\nAdjust Foscam:\t'f', 'foscam'" +
@@ -299,16 +305,21 @@ while isRunning:
     # Get user input for camera feed type:
     feed_input = str(raw_input(
       '\n*******************************************\n' +
-	    'Press (D) for Dual Stereo Cam\n' +
-	    'Press (S) for Single Stereo Cam\n' +
-	    'Press (T) for Telescopic Cam\n' +
+	    'Press (D) for Dual Stereo Cam 1\n' +
+	    'Press (S) for Single Stereo Cam 1\n' +
+	    'Press (>) for Arm Dual Stereo Cam 2\n' +
+	    'Press (<) for Arm Single Stereo Cam 2\n' +
 	    'Press (B) for Black Foscam\n' +
 	    'Press (W) for White Foscam\n' +
+	    'Press (1) for Telescopic Cam 1\n' +
+	    'Press (2) for Telescopic Cam 2\n' +
+	    'Press (3) for Telescopic Cam 3\n' +
+	    'Press (4) for Telescopic Cam 4\n' +
+	    'Press (5) for Telescopic Cam 5\n' +
 	    'Press (A) for Autonomous\n' +
-	    'Press (1) for Arm Cam 1\n' +
-	    'Press (2) for Arm Cam 2\n' +
-	    'Press (3) for Arm Dual Stereo Cam\n' +
-	    'Press (4) for Arm Single Stereo Cam\n' +
+	    'Press (6) for USB 3.0 Cam 1\n' +
+	    'Press (7) for USB 3.0 Cam 2\n' +
+	    'Press (R) for Real Sense Depth Cam\n' +
 	    'Press (X) for All\n' +
 	    '\t: ')).lower()
 	    
@@ -316,35 +327,55 @@ while isRunning:
     print('*******************************************')
 
     # Change the feed type depending on user input
-    if feed_input == 't':
-	    # Change to Telescopic Camera feed
-	    cur_feedType = FeedType.FT_Telescopic
+    if feed_input == '1':
+	    # Change to Telescopic 1 Camera feed
+	    cur_feedType = FeedType.FT_Telescopic_1
 	    device_name = 'HD USB Camera'
 	    width = 640
 	    height = 480
-	    port = '5001'
-	    isUSB = True
-	    cam_index = 2
-
-    elif feed_input == '1':
-	    # Change to Arm Camera 1 feed
-	    cur_feedType = FeedType.FT_Arm_1
-	    device_name = 'HD USB Camera'
-	    width = 1040
-	    height = 780
-	    port = '5004'
-	    isUSB = True
-	    cam_index = 5
-
-    elif feed_input == '2':
-	    # Change to Arm Camera 2 feed
-	    cur_feedType = FeedType.FT_Arm_2
-	    device_name = 'HD USB Camera'
-	    width = 640
-	    height = 480
-	    port = '5005'
+	    port = '5010'
 	    isUSB = True
 	    cam_index = 6
+
+    elif feed_input == '2':
+	    # Change to Telescopic Camera 2 feed
+	    cur_feedType = FeedType.FT_Telescopic_2
+	    device_name = 'HD USB Camera'
+	    width = 640
+	    height = 480
+	    port = '5011'
+	    isUSB = True
+	    cam_index = 7
+
+    elif feed_input == '3':
+	    # Change to Telescopic Camera 4 feed
+	    cur_feedType = FeedType.FT_Telescopic_3
+	    device_name = 'HD USB Camera'
+	    width = 640
+	    height = 480
+	    port = '5012'
+	    isUSB = True
+	    cam_index = 8
+
+    elif feed_input == '4':
+	    # Change to Telescopic Camera 4 feed
+	    cur_feedType = FeedType.FT_Telescopic_4
+	    device_name = 'HD USB Camera'
+	    width = 640
+	    height = 480
+	    port = '5013'
+	    isUSB = True
+	    cam_index = 9
+
+    elif feed_input == '5':
+	    # Change to Telescopic Camera 5 feed
+	    cur_feedType = FeedType.FT_Telescopic_5
+	    device_name = 'HD USB Camera'
+	    width = 640
+	    height = 480
+	    port = '5014'
+	    isUSB = True
+	    cam_index = 10
 
     elif feed_input == 'b':
 	    # Change to Black Foscam feed
@@ -354,7 +385,7 @@ while isRunning:
 	    height = 540
 	    port = '5002'
 	    isUSB = False
-	    cam_index = 3
+	    cam_index = 4
 
     elif feed_input == 'w':
 	    # Change to White Foscam feed
@@ -364,7 +395,7 @@ while isRunning:
 	    height = 720
 	    port = '5003'
 	    isUSB = False
-	    cam_index = 4
+	    cam_index = 5
 
     elif feed_input == 'a':
 	    # Change to Autonomous Feed
@@ -374,11 +405,12 @@ while isRunning:
 	    height = 400
 	    port = '5002'
 	    isUSB = False
-	    cam_index = 9
+	    cam_index = 11
+	    ip_host = '127.0.0'
 
     elif feed_input == 's':
 	    # Change to Single Stereo feed
-	    cur_feedType = FeedType.FT_Stereo_Single
+	    cur_feedType = FeedType.FT_Stereo_Single_1
 	    device_name = "Stereo Vision 2"
 	    width = 720
 	    height = 400
@@ -388,7 +420,7 @@ while isRunning:
 	    
     elif feed_input == 'd':
 		  # Change to Dual Stereo feed
-      cur_feedType = FeedType.FT_Stereo_Dual
+      cur_feedType = FeedType.FT_Stereo_Dual_1
       device_name = "Stereo Vision 2"
       width = 720
       height = 500
@@ -396,25 +428,55 @@ while isRunning:
       isUSB = True
       cam_index = 0
       
-    elif feed_input == '4':
+    elif feed_input == '<':
 	    # Change to Arm Single Stereo feed
 	    cur_feedType = FeedType.FT_Stereo_Single_2
 	    device_name = "Stereo Vision 2"
 	    width = 720
 	    height = 500
-	    port = '5006'
+	    port = '5001'
 	    isUSB = True
-	    cam_index = 8
+	    cam_index = 2
 	    
-    elif feed_input == '3':
+    elif feed_input == '>':
 		  # Change to Arm Dual Stereo feed
       cur_feedType = FeedType.FT_Stereo_Dual_2
       device_name = "Stereo Vision 2"
       width = 720
       height = 500
-      port = '5006'
+      port = '5001'
       isUSB = True
-      cam_index = 7
+      cam_index = 3
+      
+    elif feed_input == '6':
+		  # Change to USB 3.0 Camera 1
+      cur_feedType = FeedType.FT_3USB_1
+      device_name = "3.0 USB Camera"
+      width = 640
+      height = 480
+      port = '5020'
+      isUSB = True
+      cam_index = 12
+      
+    elif feed_input == '7':
+		  # Change to USB 3.0 Camera 2
+      cur_feedType = FeedType.FT_3USB_2
+      device_name = "3.0 USB Camera"
+      width = 640
+      height = 480
+      port = '5021'
+      isUSB = True
+      cam_index = 13
+      
+    elif feed_input == 'r':
+		  # Change to Real Sense Camera
+      cur_feedType = FeedType.FT_Real_Sense
+      device_name = "Intel(R) RealSense(TM) Depth Ca"
+      width = 640
+      height = 480
+      port = '5033'
+      isUSB = True
+      cam_index = 14
       
     elif feed_input == 'x':
       # Stop all feeds
@@ -424,6 +486,11 @@ while isRunning:
     else:
       # No value pressed
       continue
+      
+    if feed_input in ('6','7'):
+      frame_rate = 60
+    else:
+      frame_rate = 30
 
 
 
@@ -452,13 +519,13 @@ while isRunning:
     devices = []
     for idx, val in enumerate(ids):
 	    if val == device_name:
-		    devices.append(devs[idx].replace('video',''))
+		    devices.append(devs[idx])
     print('{} Device Index(es): {}\n'.format(device_name, devices))
 
     # Update camera IDs
     video_IDs = devices
 
-    print('Attempting to stream data from {} at IP = 192.168.1.{}:{}\n'.format(device_name, ip_end, port))
+    print('Attempting to stream data from {} at IP = {}.{}:{}\n'.format(device_name, ip_host, ip_end, port))
 
 
 
@@ -466,11 +533,9 @@ while isRunning:
     # Check for error in camera detection
     if len(devices) > 0 or not isUSB:
 		  # Get the appropriate GST pipeline command
-      if cur_feedType == FeedType.FT_Stereo_Dual:
+      if cur_feedType == FeedType.FT_Stereo_Dual_1:
         gstCode = gst_pipeline_stereo(0, None)
-      elif cur_feedType == FeedType.FT_Stereo_Single:
-        gstCode = gst_pipeline_single(0, None)
-      elif cur_feedType == FeedType.FT_Telescopic:
+      elif cur_feedType == FeedType.FT_Stereo_Single_1:
         gstCode = gst_pipeline_single(0, None)
       elif cur_feedType == FeedType.FT_FoscamBlack:
         gstCode = gst_pipeline_foscam(53, None, '192.168.1')
@@ -481,9 +546,21 @@ while isRunning:
         ip_end = 1
         gstCode = gst_pipeline_foscam(53, None, '127.0.0')
         ip_end = prev_ip_end
-      elif cur_feedType == FeedType.FT_Arm_1:
+      elif cur_feedType == FeedType.FT_Telescopic_1:
+        gstCode = gst_pipeline_single(0, None)
+      elif cur_feedType == FeedType.FT_Telescopic_2:
         gstCode = gst_pipeline_single(1, None)
-      elif cur_feedType == FeedType.FT_Arm_2:
+      elif cur_feedType == FeedType.FT_Telescopic_3:
+        gstCode = gst_pipeline_single(2, None)
+      elif cur_feedType == FeedType.FT_Telescopic_4:
+        gstCode = gst_pipeline_single(3, None)
+      elif cur_feedType == FeedType.FT_Telescopic_5:
+        gstCode = gst_pipeline_single(4, None)
+      elif cur_feedType == FeedType.FT_3USB_1:
+        gstCode = gst_pipeline_single(0, None)
+      elif cur_feedType == FeedType.FT_3USB_2:
+        gstCode = gst_pipeline_single(1, None)
+      elif cur_feedType == FeedType.FT_Real_Sense:
         gstCode = gst_pipeline_single(2, None)
       elif cur_feedType == FeedType.FT_Stereo_Dual_2:
         gstCode = gst_pipeline_stereo(2, None)
@@ -527,7 +604,7 @@ while isRunning:
     if cur_feedType != FeedType.FT_ALL:
       if pipelines[cam_index] != None:
         pipelines[cam_index].set_state(Gst.State.NULL)
-        print('Stopping stream from {} at IP = 192.168.1.{}:{}\n'.format(device_name, ip_end, port))
+        print('Stopping stream from {} at IP = {}.{}:{}\n'.format(device_name, ip_host, ip_end, port))
         cameraStates[cam_index] = False
       else:
         print('No stream playing at this feed.')
@@ -536,7 +613,7 @@ while isRunning:
       for i in range(len(pipelines)):
         if cameraStates[i]:
           pipelines[i].set_state(Gst.State.NULL)
-          print('Stopping stream from {} at IP = 192.168.1.{}:{}\n'.format(device_name, ip_end, port))
+          print('Stopping stream from {} at IP = {}.{}:{}\n'.format(device_name, ip_host, ip_end, port))
           cameraStates[i] = False
 	    
 	
@@ -623,6 +700,46 @@ while isRunning:
 		  # Cancel the Foscam Menu
 		  if fos_input == 'c':
 		  	isFosMenu = False
+	
+	
+	
+	
+	#################################
+	######### LIST CAMERAS ##########
+	#################################
+  if command == 'l' or command == 'list' or command == 'ls':
+  
+    #print break
+    print('*******************************************\n')
+    
+    # Search /dev/ for video devices connected to rover
+    bash_cmd = "ls /dev/ | grep video"
+    output = subprocess.check_output(['bash','-c', bash_cmd])
+
+    # Create list of video devices (ie video1)
+    devs = []  
+    s = StringIO.StringIO(output)
+    for line in s:
+      devs.append(line.strip("\n"))
+
+     # Create list of video device names (ie HD USB Camera)
+    ids = []  
+    for i in range(len(devs)):  
+      bash_cmd  = "cat /sys/class/video4linux/" + devs[i] + "/name "
+      output = subprocess.check_output(['bash','-c', bash_cmd])
+      ids.append(output.strip("\n"))
+
+    # Create a set of cameras with names
+    cameras = zip(devs, ids)
+
+    print("\tCONNECTED CAMERAS: {}\n".format(len(cameras)))
+
+    # List out information for each camera
+    for cam in cameras:
+      print("ID: {}\n\tName: {}".format(cam[0], cam[1]))
+
+    #print break
+    print('*******************************************\n')
 	
 	
 	
