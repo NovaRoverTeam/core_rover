@@ -1,0 +1,4 @@
+ID,CameraName,Width,Height,FrameRate,Format,Port,KeyCode,Path
+Telescopic 3,HD USB Camera,640,480,30,I420,5023,3,2.4.2
+Telescopic 4,HD USB Camera,640,480,30,I420,5024,4,2.4.3
+USB3 Camera 1,3.0 USB Camera,640,480,60,I420,5031,6,1.1
